@@ -4,6 +4,10 @@
   const state = loadState();
   const $ = id => document.getElementById(id);
 
+  // One-time launch/test exception: Monday, 14.09.2026 counts WORK as completed.
+  // From 15.09.2026 onward the normal location rules apply without exceptions.
+  seedLaunchTestDay();
+
   const refs = {
     todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
     workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
@@ -20,6 +24,18 @@
   function loadState(){
     try { return Object.assign({days:{},pauses:[],weeklyOpened:{}}, JSON.parse(localStorage.getItem(STORE_KEY)||'{}')); }
     catch { return {days:{},pauses:[],weeklyOpened:{}}; }
+  }
+
+  function seedLaunchTestDay(){
+    const key='2026-09-14';
+    const existing=state.days && state.days[key];
+    if(existing && existing.work) return;
+    state.days ||= {};
+    const ds=state.days[key] ||= {work:false,home:false,rewardOpened:false};
+    ds.work=true;
+    ds.workAt='2026-09-14T10:00:00+02:00';
+    ds.workSource='launch-test';
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
   function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
