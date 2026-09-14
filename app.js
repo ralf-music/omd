@@ -13,7 +13,7 @@
     workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
     locationBtn:$('locationBtn'), locationHint:$('locationHint'), rewardCard:$('rewardCard'), rewardLock:$('rewardLock'),
     rewardTitle:$('rewardTitle'), rewardSubtitle:$('rewardSubtitle'), openRewardBtn:$('openRewardBtn'), rewardContent:$('rewardContent'),
-    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'),
+    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'), spotifyCoverWrap:$('spotifyCoverWrap'), spotifyCover:$('spotifyCover'), spotifyCoverFallback:$('spotifyCoverFallback'),
     weekDays:$('weekDays'), weekBadge:$('weekBadge'), weeklyRewardBox:$('weeklyRewardBox'), weeklyRewardStatus:$('weeklyRewardStatus'), weeklyRewardBtn:$('weeklyRewardBtn'),
     dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
@@ -112,8 +112,42 @@
     const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs[ds.songIndex];
     refs.dailyPicture.src=imageUrl(pic.file); refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source;
     refs.songTitle.textContent=song.title; refs.songArtist.textContent=song.artist; refs.spotifyBtn.href=song.url;
+    loadSpotifyCover(song);
     refs.rewardContent.classList.remove('hidden'); refs.rewardTitle.textContent=pic.title;
   }
+
+  async function loadSpotifyCover(song){
+    refs.spotifyCover.classList.add('hidden');
+    refs.spotifyCover.removeAttribute('src');
+    refs.spotifyCoverFallback.classList.remove('hidden');
+    refs.spotifyCoverFallback.textContent='SPOTIFY COVER WIRD GELADEN…';
+    const sourceUrl=song.coverUrl || (/open\.spotify\.com\/(?:intl-[^/]+\/)?(?:track|album)\//.test(song.url) ? song.url : '');
+    if(!sourceUrl){
+      refs.spotifyCoverFallback.textContent='COVER FÜR DIESEN SONG NOCH NICHT HINTERLEGT';
+      return;
+    }
+    try{
+      const endpoint='https://open.spotify.com/oembed?url='+encodeURIComponent(sourceUrl);
+      const response=await fetch(endpoint,{mode:'cors'});
+      if(!response.ok) throw new Error('Spotify oEmbed '+response.status);
+      const meta=await response.json();
+      if(!meta.thumbnail_url) throw new Error('Kein Cover vorhanden');
+      refs.spotifyCover.onload=()=>{
+        refs.spotifyCover.classList.remove('hidden');
+        refs.spotifyCoverFallback.classList.add('hidden');
+      };
+      refs.spotifyCover.onerror=()=>{
+        refs.spotifyCover.classList.add('hidden');
+        refs.spotifyCoverFallback.classList.remove('hidden');
+        refs.spotifyCoverFallback.textContent='SPOTIFY COVER KONNTE NICHT GELADEN WERDEN';
+      };
+      refs.spotifyCover.src=meta.thumbnail_url;
+    }catch(err){
+      console.warn('Spotify cover:',err);
+      refs.spotifyCoverFallback.textContent='SPOTIFY COVER KONNTE NICHT GELADEN WERDEN';
+    }
+  }
+
   function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; assignReward(key,ds); saveState(); showDailyReward(key,ds); renderStats(); renderHistory(); }
 
   function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }

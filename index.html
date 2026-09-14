@@ -75,6 +75,10 @@
           </div>
           <div class="song-panel">
             <p class="eyebrow">SONG OF THE DAY</p>
+            <div id="spotifyCoverWrap" class="spotify-cover-wrap">
+              <img id="spotifyCover" class="spotify-cover hidden" alt="Spotify Cover" />
+              <div id="spotifyCoverFallback" class="spotify-cover-fallback">SPOTIFY COVER WIRD GELADEN…</div>
+            </div>
             <h3 id="songTitle"></h3>
             <p id="songArtist" class="muted"></p>
             <a id="spotifyBtn" class="secondary-btn" target="_blank" rel="noopener">AUF SPOTIFY ÖFFNEN</a>
@@ -127,7 +131,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.1.2</button>
+      <button id="versionBtn" class="version-btn">v0.1.3</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -168,7 +172,7 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">CHANGELOG</p>
-      <h2>One More Day v0.1.2</h2>
+      <h2>One More Day v0.1.3</h2>
       <ul>
         <li>Startseiten-Header überarbeitet: größeres, zentriertes OMD-Logo mit Pink-Glow.</li>
         <li>Testtag 14.09.2026: WORK wird automatisch als erfüllt gespeichert; HOME bleibt regulär erforderlich.</li>
