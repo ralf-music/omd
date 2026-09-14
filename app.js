@@ -1,0 +1,146 @@
+(() => {
+  const DATA = window.OMD_DATA;
+  const STORE_KEY = 'omd-state-v1';
+  const state = loadState();
+  const $ = id => document.getElementById(id);
+
+  const refs = {
+    todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
+    workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
+    locationBtn:$('locationBtn'), locationHint:$('locationHint'), rewardCard:$('rewardCard'), rewardLock:$('rewardLock'),
+    rewardTitle:$('rewardTitle'), rewardSubtitle:$('rewardSubtitle'), openRewardBtn:$('openRewardBtn'), rewardContent:$('rewardContent'),
+    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'),
+    weekDays:$('weekDays'), weekBadge:$('weekBadge'), weeklyRewardBox:$('weeklyRewardBox'), weeklyRewardStatus:$('weeklyRewardStatus'), weeklyRewardBtn:$('weeklyRewardBtn'),
+    dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
+    historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
+    weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
+    versionBtn:$('versionBtn'), versionDialog:$('versionDialog')
+  };
+
+  function loadState(){
+    try { return Object.assign({days:{},pauses:[],weeklyOpened:{}}, JSON.parse(localStorage.getItem(STORE_KEY)||'{}')); }
+    catch { return {days:{},pauses:[],weeklyOpened:{}}; }
+  }
+  function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
+  function localDate(key){ const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d); }
+  function fmtDate(d){ return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long'}).format(d); }
+  function fmtTime(iso){ return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); }
+  function dayState(key){ return state.days[key] ||= {work:false,home:false,rewardOpened:false}; }
+  function isPaused(key){ return state.pauses.find(p => key>=p.from && key<=p.to) || null; }
+  function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return Math.abs(h>>>0); }
+  function imageUrl(file){ return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(file) + '?width=1200'; }
+
+  function distanceMeters(lat1,lon1,lat2,lon2){
+    const R=6371000, r=Math.PI/180, dLat=(lat2-lat1)*r, dLon=(lon2-lon1)*r;
+    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
+  }
+
+  function render(){
+    const now=new Date(), key=dateKey(now), ds=dayState(key), pause=isPaused(key);
+    refs.todayLabel.textContent=fmtDate(now);
+    refs.pauseBanner.classList.toggle('hidden',!pause);
+    if(pause){
+      refs.pauseBanner.innerHTML=`<p class="eyebrow">MISSION PAUSED</p><h2>${pause.reason}</h2><p class="muted">Heute ist kein Check-in nötig. Deine nächste Mission wartet danach.</p>`;
+    }
+
+    refs.workStep.classList.toggle('done',!!ds.work); refs.homeStep.classList.toggle('done',!!ds.home);
+    refs.workStatus.textContent=ds.work ? `Bestätigt · ${fmtTime(ds.workAt)}` : 'Vor 13:00 Uhr am Arbeitsort bestätigen';
+    refs.homeStatus.textContent=ds.home ? `Bestätigt · ${fmtTime(ds.homeAt)}` : (now.getHours()<13 ? 'Ab 13:00 Uhr verfügbar' : 'Jetzt zuhause bestätigen');
+    refs.dayBadge.textContent=`${Number(!!ds.work)+Number(!!ds.home)}/2`;
+
+    if(pause){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='HEUTE PAUSIERT'; }
+    else if(ds.work && ds.home){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='MISSION ERLEDIGT'; }
+    else { refs.locationBtn.disabled=false; refs.locationBtn.textContent='STANDORT PRÜFEN'; }
+
+    const unlocked=!!(ds.work&&ds.home);
+    refs.rewardCard.classList.toggle('unlocked',unlocked); refs.rewardCard.classList.toggle('locked',!unlocked);
+    refs.rewardLock.textContent=unlocked?'★':'🔒'; refs.rewardTitle.textContent=unlocked?'Reward bereit':'Noch gesperrt';
+    refs.rewardSubtitle.textContent=unlocked?'One More Day completed.':'Erst WORK + HOME abschließen.';
+    refs.openRewardBtn.disabled=!unlocked; refs.openRewardBtn.textContent=ds.rewardOpened?'REWARD ANZEIGEN':'TÜRCHEN ÖFFNEN';
+    if(ds.rewardOpened) showDailyReward(key,ds); else refs.rewardContent.classList.add('hidden');
+
+    renderWeek(now); renderStats(); renderHistory(); renderNextMission();
+  }
+
+  function checkLocation(){
+    const now=new Date(), key=dateKey(now), ds=dayState(key);
+    if(!navigator.geolocation){ refs.locationHint.textContent='Dieses Gerät unterstützt keine Standortabfrage.'; return; }
+    refs.locationBtn.disabled=true; refs.locationBtn.textContent='STANDORT WIRD GEPRÜFT…'; refs.locationHint.textContent='GPS/Standort wird einmalig abgefragt.';
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const {latitude,longitude,accuracy}=pos.coords;
+      const before13=now.getHours()<13;
+      const target=before13?DATA.locations.work:DATA.locations.home;
+      const dist=Math.round(distanceMeters(latitude,longitude,target.lat,target.lon));
+      if(accuracy>2000){ refs.locationHint.textContent=`Standort zu ungenau (±${Math.round(accuracy)} m). Bitte erneut versuchen.`; render(); return; }
+      if(dist<=target.radius){
+        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); refs.locationHint.textContent=`WORK bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        else { ds.home=true; ds.homeAt=new Date().toISOString(); refs.locationHint.textContent=`HOME bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        saveState(); render();
+      } else {
+        refs.locationHint.textContent=`Nicht in der ${target.name}-Zone · ca. ${(dist/1000).toFixed(1)} km entfernt.`; render();
+      }
+    },err=>{
+      const msg={1:'Standortberechtigung wurde verweigert.',2:'Standort ist momentan nicht verfügbar.',3:'Standortabfrage hat zu lange gedauert.'}[err.code]||'Standort konnte nicht geprüft werden.';
+      refs.locationHint.textContent=msg; render();
+    },{enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  }
+
+  function assignReward(key,ds){
+    if(ds.pictureIndex==null) ds.pictureIndex=hash(key+'pic')%DATA.pictures.length;
+    if(ds.songIndex==null) ds.songIndex=hash(key+'song')%DATA.songs.length;
+  }
+  function showDailyReward(key,ds){
+    assignReward(key,ds); saveState();
+    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs[ds.songIndex];
+    refs.dailyPicture.src=imageUrl(pic.file); refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source;
+    refs.songTitle.textContent=song.title; refs.songArtist.textContent=song.artist; refs.spotifyBtn.href=song.url;
+    refs.rewardContent.classList.remove('hidden'); refs.rewardTitle.textContent=pic.title;
+  }
+  function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; assignReward(key,ds); saveState(); showDailyReward(key,ds); renderStats(); renderHistory(); }
+
+  function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
+  function renderWeek(now){
+    const start=getWeekStart(now), labels=['MO','DI','MI','DO','FR']; let completed=0, required=0;
+    refs.weekDays.innerHTML='';
+    for(let i=0;i<5;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i); const key=dateKey(d), pause=isPaused(key), ds=state.days[key];
+      const done=!!(ds&&ds.work&&ds.home); if(!pause) required++; if(done) completed++;
+      const el=document.createElement('div'); el.className='week-day'+(done?' done':'')+(pause?' paused':''); el.innerHTML=`${labels[i]}<strong>${pause?'–':done?'✓':'○'}</strong>`; refs.weekDays.appendChild(el);
+    }
+    refs.weekBadge.textContent=`${completed}/${required}`;
+    const weekKey=dateKey(start), canUnlock=required>0 && completed===required && now.getDay()>=5;
+    refs.weeklyRewardBox.classList.toggle('ready',canUnlock); refs.weeklyRewardBtn.disabled=!canUnlock;
+    refs.weeklyRewardStatus.textContent=canUnlock?(state.weeklyOpened[weekKey]?'Freigeschaltet':'Bereit zum Öffnen'):'Alle aktiven Arbeitstage abschließen';
+    refs.weeklyRewardBtn.onclick=()=>openWeekly(weekKey);
+  }
+  function openWeekly(weekKey){
+    const idx=hash(weekKey+'weekly')%DATA.weeklyRewards.length, wr=DATA.weeklyRewards[idx]; state.weeklyOpened[weekKey]={index:idx,openedAt:new Date().toISOString()}; saveState();
+    refs.weeklyDialogTitle.textContent=wr.title; refs.weeklyDialogText.textContent=wr.text; refs.weeklyYoutubeLink.href='https://www.youtube.com/results?search_query='+encodeURIComponent(wr.query); refs.weeklyDialog.showModal(); render();
+  }
+
+  function renderStats(){
+    const entries=Object.entries(state.days), completed=entries.filter(([,d])=>d.work&&d.home).length, opened=entries.filter(([,d])=>d.rewardOpened).length;
+    refs.completedCount.textContent=completed; refs.dailyCount.textContent=opened; refs.weeklyCount.textContent=Object.keys(state.weeklyOpened).length;
+  }
+  function renderHistory(){
+    const items=Object.entries(state.days).filter(([,d])=>d.rewardOpened).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,5);
+    if(!items.length){ refs.historyList.innerHTML='<p class="muted">Noch nichts freigeschaltet.</p>'; return; }
+    refs.historyList.innerHTML=items.map(([key,d])=>{assignReward(key,d); const s=DATA.songs[d.songIndex]; return `<div class="history-item"><div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small></div>`}).join('');
+  }
+  function renderNextMission(){
+    let d=new Date(); for(let i=0;i<370;i++){ const key=dateKey(d), weekday=d.getDay(); if(weekday>=1&&weekday<=5&&!isPaused(key)){ refs.nextMissionText.textContent=`Nächste aktive Mission: ${fmtDate(d)}`; return;} d.setDate(d.getDate()+1); }
+  }
+
+  function savePause(ev){
+    ev.preventDefault(); const from=refs.pauseFrom.value, to=refs.pauseTo.value; if(!from||!to||to<from) return;
+    state.pauses.push({from,to,reason:refs.pauseReason.value}); state.pauses.sort((a,b)=>a.from.localeCompare(b.from)); saveState(); refs.pauseDialog.close(); render();
+  }
+
+  refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
+  refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
+  refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
+  if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  render(); setInterval(render,60000);
+})();

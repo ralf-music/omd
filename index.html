@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <meta name="description" content="One More Day – Kelly Me to Work" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>One More Day</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <img class="brand-icon" src="assets/icons/icon-192.png" alt="One More Day Icon" />
+      <div>
+        <p class="eyebrow">KELLY ME TO WORK</p>
+        <h1>ONE MORE DAY</h1>
+        <p id="todayLabel" class="muted"></p>
+      </div>
+    </header>
+
+    <main>
+      <section id="pauseBanner" class="card pause-banner hidden"></section>
+
+      <section class="card mission-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">TODAY'S MISSION</p>
+            <h2>Work. Home. Reward.</h2>
+          </div>
+          <div id="dayBadge" class="badge">0/2</div>
+        </div>
+
+        <div class="steps">
+          <div id="workStep" class="step">
+            <div class="step-icon">W</div>
+            <div class="step-copy">
+              <strong>WORK</strong>
+              <span id="workStatus">Vor 13:00 Uhr am Arbeitsort bestätigen</span>
+            </div>
+            <span id="workMark" class="status-dot"></span>
+          </div>
+
+          <div id="homeStep" class="step">
+            <div class="step-icon">H</div>
+            <div class="step-copy">
+              <strong>HOME</strong>
+              <span id="homeStatus">Ab 13:00 Uhr zuhause bestätigen</span>
+            </div>
+            <span id="homeMark" class="status-dot"></span>
+          </div>
+        </div>
+
+        <button id="locationBtn" class="primary-btn">STANDORT PRÜFEN</button>
+        <p id="locationHint" class="microcopy">Standort wird nur beim Tippen geprüft. Keine Hintergrund-Ortung.</p>
+      </section>
+
+      <section id="rewardCard" class="card reward-card locked">
+        <div class="reward-lock" id="rewardLock">🔒</div>
+        <p class="eyebrow">DAILY REWARD</p>
+        <h2 id="rewardTitle">Noch gesperrt</h2>
+        <p id="rewardSubtitle" class="muted">Erst WORK + HOME abschließen.</p>
+        <button id="openRewardBtn" class="primary-btn" disabled>TÜRCHEN ÖFFNEN</button>
+
+        <div id="rewardContent" class="reward-content hidden">
+          <div class="picture-wrap">
+            <img id="dailyPicture" alt="Picture of the Day" />
+            <div class="picture-caption">
+              <span>PICTURE OF THE DAY</span>
+              <a id="pictureSource" target="_blank" rel="noopener">Quelle</a>
+            </div>
+          </div>
+          <div class="song-panel">
+            <p class="eyebrow">SONG OF THE DAY</p>
+            <h3 id="songTitle"></h3>
+            <p id="songArtist" class="muted"></p>
+            <a id="spotifyBtn" class="secondary-btn" target="_blank" rel="noopener">AUF SPOTIFY ÖFFNEN</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="card weekly-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WEEKLY JOURNEY</p>
+            <h2 id="weekTitle">Diese Woche</h2>
+          </div>
+          <div id="weekBadge" class="badge">0/5</div>
+        </div>
+        <div id="weekDays" class="week-days"></div>
+        <div id="weeklyRewardBox" class="weekly-reward-box locked-box">
+          <strong>WEEKLY REWARD</strong>
+          <span id="weeklyRewardStatus">Noch gesperrt</span>
+          <button id="weeklyRewardBtn" class="secondary-btn" disabled>ÖFFNEN</button>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <section class="card compact-card">
+          <p class="eyebrow">COLLECTION</p>
+          <h2>Deine Sammlung</h2>
+          <div class="stat-row"><span>Daily Rewards</span><strong id="dailyCount">0</strong></div>
+          <div class="stat-row"><span>Weekly Rewards</span><strong id="weeklyCount">0</strong></div>
+          <div class="stat-row"><span>Erfolgreiche Tage</span><strong id="completedCount">0</strong></div>
+        </section>
+
+        <section class="card compact-card">
+          <p class="eyebrow">PAUSE</p>
+          <h2>Frei / Urlaub / Krank</h2>
+          <button id="pauseBtn" class="secondary-btn">PAUSE EINTRAGEN</button>
+          <p id="nextMissionText" class="microcopy"></p>
+        </section>
+      </section>
+
+      <section class="card history-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">RECENT UNLOCKS</p>
+            <h2>Zuletzt freigeschaltet</h2>
+          </div>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <footer>
+      <button id="versionBtn" class="version-btn">v0.1.0</button>
+      <span>One More Day · Kelly Me to Work</span>
+    </footer>
+  </div>
+
+  <dialog id="pauseDialog">
+    <form id="pauseForm" method="dialog" class="dialog-card">
+      <p class="eyebrow">PAUSE EINTRAGEN</p>
+      <h2>Mission verschieben</h2>
+      <label>Grund
+        <select id="pauseReason">
+          <option value="Frei">Frei</option>
+          <option value="Urlaub">Urlaub</option>
+          <option value="Krank">Krank</option>
+        </select>
+      </label>
+      <div class="date-grid">
+        <label>Von<input id="pauseFrom" type="date" required /></label>
+        <label>Bis<input id="pauseTo" type="date" required /></label>
+      </div>
+      <p class="microcopy">Pausentage zählen weder als geschafft noch als verpasst. Die nächste Mission erscheint automatisch danach.</p>
+      <div class="dialog-actions">
+        <button type="button" id="cancelPauseBtn" class="ghost-btn">ABBRECHEN</button>
+        <button id="savePauseBtn" value="default" class="primary-btn">SPEICHERN</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="weeklyDialog">
+    <div class="dialog-card">
+      <p class="eyebrow">WEEKLY REWARD</p>
+      <h2 id="weeklyDialogTitle"></h2>
+      <p id="weeklyDialogText" class="muted"></p>
+      <a id="weeklyYoutubeLink" class="primary-btn link-btn" target="_blank" rel="noopener">AUF YOUTUBE ÖFFNEN</a>
+      <button class="ghost-btn" onclick="document.getElementById('weeklyDialog').close()">SCHLIESSEN</button>
+    </div>
+  </dialog>
+
+  <dialog id="versionDialog">
+    <div class="dialog-card">
+      <p class="eyebrow">CHANGELOG</p>
+      <h2>One More Day v0.1.0</h2>
+      <ul>
+        <li>Zweistufiger Standort-Check: Arbeit vor 13 Uhr, Zuhause ab 13 Uhr.</li>
+        <li>1,5-km-Zonen für WORK und HOME.</li>
+        <li>Daily Reward mit Picture + Song of the Day.</li>
+        <li>Weekly Journey und Weekly Reward.</li>
+        <li>Pause-Zeiträume für Frei, Urlaub und Krank.</li>
+        <li>Lokale Collection und Verlauf.</li>
+        <li>Installierbare PWA inklusive Offline-App-Shell.</li>
+      </ul>
+      <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
+    </div>
+  </dialog>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
