@@ -1,6 +1,6 @@
 window.OMD_DATA = {
-  version: "0.2.2",
-  // Temporary local geo payload for v0.2.2. No street addresses are stored in the public frontend.
+  version: "0.2.4",
+  // Temporary local geo payload for v0.2.4. No street addresses are stored in the public frontend.
   // These values will move completely to the protected Cloudflare backend in the cloud phase.
   geo: {
     zones: {
@@ -61,7 +61,45 @@ window.OMD_DATA = {
     {id:"ak-on-road",artist:"Angelo Kelly",title:"On The Road",url:"https://open.spotify.com/track/6D5wDEZwMFuIFJsnI8Si3r"},
     {id:"ak-coming-home-christmas",artist:"Angelo Kelly",title:"Coming Home For Christmas",url:"https://open.spotify.com/track/6ZIzgqfxPCI0wG1E6LAy7Y"},
     {id:"ak-singapore-london",artist:"Angelo Kelly",title:"Singapore To London · 2011 Version",url:"https://open.spotify.com/track/5WiGB1UFP0AWD7iLkvw7DR"},
-    {id:"ak-finally-peace",artist:"Angelo Kelly",title:"Finally at Peace · 2009 Version",url:"https://open.spotify.com/track/2iP09fhDVlrTw4ax4UIQGh"}
+    {id:"ak-finally-peace",artist:"Angelo Kelly",title:"Finally at Peace · 2009 Version",url:"https://open.spotify.com/track/2iP09fhDVlrTw4ax4UIQGh"},
+
+    {id:"tkf-once-while-1994",artist:"The Kelly Family",title:"Once In A While",url:"https://open.spotify.com/track/1mKKkszQ2j1q0FtFpUdYgY"},
+    {id:"tkf-life-hard",artist:"The Kelly Family",title:"Life Is Hard Enough",url:"https://open.spotify.com/track/1bLMkyl27NvAeyqX42llTd"},
+    {id:"tkf-boys-town",artist:"The Kelly Family",title:"When The Boys Come Into Town",url:"https://open.spotify.com/track/2z3ybDM4OPUfvfxdCbOzAx"},
+    {id:"tkf-baby-smile",artist:"The Kelly Family",title:"Baby Smile",url:"https://open.spotify.com/track/18zEjhpAYNIrF3cwZCGWgH"},
+    {id:"tkf-rock-roll-soul",artist:"The Kelly Family",title:"Rock'n' Roll Stole My Soul",url:"https://open.spotify.com/track/0y0KKIkV1AjCv2ukkelYQi"},
+    {id:"tkf-you-belong",artist:"The Kelly Family",title:"You Belong To Me",url:"https://open.spotify.com/track/7vgg2IGEo55eHJN6MQdk04"},
+    {id:"tkf-fathers-nose-2019",artist:"The Kelly Family",title:"Father's Nose · 2019",url:"https://open.spotify.com/track/1K7QqGIRzVZcyaAUknQIau"},
+    {id:"tkf-cover-road",artist:"The Kelly Family",title:"Cover The Road",url:"https://open.spotify.com/track/1MqJrPpsNHbnnMsitsQt97"},
+    {id:"tkf-ill-swim",artist:"The Kelly Family",title:"I'll Swim, I'll Swim",url:"https://open.spotify.com/track/1dOqeDKxzkSRMzNxk2cGxu"},
+    {id:"tkf-staying-alive",artist:"The Kelly Family",title:"Staying Alive",url:"https://open.spotify.com/track/4FmutE0PdOqylzCyS1n2zb"},
+    {id:"tkf-hey-diddle",artist:"The Kelly Family",title:"Hey Diddle Diddle",url:"https://open.spotify.com/track/23wTr8TBnmlFJdFOKYdcj4"},
+    {id:"tkf-ares-qui",artist:"The Kelly Family",title:"Ares Qui",url:"https://open.spotify.com/track/4y3haYw5V1RGVXz4eS1kHE"},
+    {id:"tkf-break-free",artist:"The Kelly Family",title:"Break Free",url:"https://open.spotify.com/track/5EgS2d03vySXww1qRiVHx8"},
+    {id:"tkf-wholl-come-1979",artist:"The Kelly Family",title:"Who'll Come With Me (David's Song) · 1979",url:"https://open.spotify.com/track/4WCOFB0MI88jHitX6a0poE"},
+    {id:"tkf-agur-jaunak",artist:"The Kelly Family",title:"Agur Jaunak · 1979",url:"https://open.spotify.com/track/4LgMruy3fEWxE7nlMV6wXH"},
+    {id:"tkf-schneegebirge",artist:"The Kelly Family",title:"Und in dem Schneegebirge · 1980",url:"https://open.spotify.com/track/7Lv3Qcm5Oy59PbYJcXc2lY"},
+    {id:"tkf-alle-kinder",artist:"The Kelly Family",title:"Alle Kinder brauchen Freunde",url:"https://open.spotify.com/track/3B6dyUTOAb4w1iMqpkWOW4"},
+    {id:"tkf-say-na-na",artist:"The Kelly Family",title:"Say Na Na",url:"https://open.spotify.com/track/0GFNtyIEZNDBfL5PYmYedB"},
+    {id:"tkf-whats-matter",artist:"The Kelly Family",title:"What's A Matter You People",url:"https://open.spotify.com/track/0B8XOBN0F4n0yAupZrGL2R"},
+    {id:"tkf-fire",artist:"The Kelly Family",title:"Fire",url:"https://open.spotify.com/track/1lfNClQbd59GQLPqVSdbZv"},
+    {id:"tkf-baila",artist:"The Kelly Family",title:"Baila Mi Corazon",url:"https://open.spotify.com/track/1ImwXtsDdjIUyFlkgrsVK1"},
+    {id:"tkf-star-county",artist:"The Kelly Family",title:"Star Of The County Down",url:"https://open.spotify.com/track/1gGmioeztQ6IZEf5cDATxe"},
+    {id:"tkf-good-neighbor",artist:"The Kelly Family",title:"Good Neighbor",url:"https://open.spotify.com/track/0MNZcLhBYSE9hzHVPAAaoX"},
+    {id:"tkf-come-back-2017",artist:"The Kelly Family",title:"Come Back To Me · 2017",url:"https://open.spotify.com/track/3JBewhA30JgEHWDi7g9qHF"},
+    {id:"tkf-imagine",artist:"The Kelly Family",title:"Imagine",url:"https://open.spotify.com/track/19iZMEjqDc6PFUOKkW66II"},
+    {id:"tkf-we-world",artist:"The Kelly Family",title:"We Are The World",url:"https://open.spotify.com/track/3Goq0p25Wr9SlGfX0yJgwP"},
+    {id:"tkf-sweetest-angel",artist:"The Kelly Family",title:"Sweetest Angel",url:"https://open.spotify.com/track/5bYnog7t3s2TNmS9Zcq5sH"},
+    {id:"tkf-roses-live95",artist:"The Kelly Family",title:"Roses Of Red · Live 1995",url:"https://open.spotify.com/track/7KwVUamT28uHVphnN71fnt"},
+    {id:"tkf-wolf-live95",artist:"The Kelly Family",title:"The Wolf · Live 1995",url:"https://open.spotify.com/track/2DE1zRtLqisI3OZukayXHD"},
+    {id:"tkf-red-shoes-live",artist:"The Kelly Family",title:"Red Shoes · Live",url:"https://open.spotify.com/track/2QsG67SbUvOewIBDlE0iu1"},
+    {id:"tkf-boys-live-loreley",artist:"The Kelly Family",title:"When The Boys Come Into Town · Live",url:"https://open.spotify.com/track/1EuILCVJt4VLOF3bkbs7ys"},
+    {id:"tkf-fire-live19",artist:"The Kelly Family",title:"Fire · Live 2019",url:"https://open.spotify.com/track/49HVPpzGdfILeDxf0zKASe"},
+    {id:"tkf-we-dream-live19",artist:"The Kelly Family",title:"We Had A Dream · Live 2019",url:"https://open.spotify.com/track/07lWoDFuTaMXH3Ez2fguFa"},
+    {id:"tkf-never-break-live19",artist:"The Kelly Family",title:"Never Gonna Break Me Down · Live 2019",url:"https://open.spotify.com/track/7n8nvPegHHdI2HTuCCeYBQ"},
+    {id:"tkf-imagine-live",artist:"The Kelly Family",title:"Imagine · Live",url:"https://open.spotify.com/track/1afwJnpljBpGDL5i8bXxMo"},
+    {id:"tkf-come-back-live",artist:"The Kelly Family",title:"Come Back To Me · Live",url:"https://open.spotify.com/track/0MWu8BHF5tmU1nUvv63eeS"},
+    {id:"ak-never-too-late",artist:"Angelo Kelly",title:"Never Too Late",url:"https://open.spotify.com/track/41ttIdnkVLL90Zy0vmIvVO"}
   ],
   weeklyRewards: [
     {title:"90s Time Machine",text:"Ein Kelly-Family-Live-Abend aus den 90ern.",query:"The Kelly Family live concert 1990s"},

@@ -1,7 +1,7 @@
 (() => {
   const DATA = window.OMD_DATA;
   const STORE_KEY = 'omd-state-v1';
-  const SCHEMA_VERSION = 3;
+  const SCHEMA_VERSION = 4;
   const DAILY_CENTS = 50;
   const PERFECT_WEEK_CENTS = 200;
   const state = loadState();
@@ -23,7 +23,8 @@
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
     walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
-    versionBtn:$('versionBtn'), versionDialog:$('versionDialog')
+    versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
+    historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn')
   };
 
   function loadState(){
@@ -82,7 +83,7 @@
   function fmtTime(iso){ return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); }
   function dayState(key){ return state.days[key] ||= {work:false,home:false,rewardOpened:false}; }
   function isWorkday(d){ const wd=d.getDay(); return wd>=1&&wd<=5; }
-  function decodeZone(code){ const z=DATA.geo.zones[code], sc=DATA.geo.scale; return {name:code==='w'?'WORK':'HOME',lat:z[0]/sc[0],lon:z[1]/sc[1],radius:z[2]}; }
+  function decodeZone(code){ const z=DATA.geo.zones[code], sc=DATA.geo.scale; return {name:code==='w'?'ARBEIT':'ZUHAUSE',lat:z[0]/sc[0],lon:z[1]/sc[1],radius:z[2]}; }
   function euro(cents){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(cents/100); }
   function isPaused(key){ return state.pauses.find(p => key>=p.from && key<=p.to) || null; }
   function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return Math.abs(h>>>0); }
@@ -115,7 +116,7 @@
     const unlocked=!!(ds.work&&ds.home);
     refs.rewardCard.classList.toggle('unlocked',unlocked); refs.rewardCard.classList.toggle('locked',!unlocked);
     refs.rewardLock.textContent=unlocked?'★':'🔒'; refs.rewardTitle.textContent=unlocked?'Reward bereit':'Noch gesperrt';
-    refs.rewardSubtitle.textContent=unlocked?'One More Day completed.':'Erst WORK + HOME abschließen.';
+    refs.rewardSubtitle.textContent=unlocked?'One More Day geschafft.':'Erst ARBEIT + ZUHAUSE abschließen.';
     refs.openRewardBtn.disabled=!unlocked; refs.openRewardBtn.textContent=ds.rewardOpened?'REWARD ANZEIGEN':'TÜRCHEN ÖFFNEN';
     if(ds.rewardOpened) showDailyReward(key,ds); else refs.rewardContent.classList.add('hidden');
 
@@ -128,7 +129,7 @@
     if(isPaused(key)){ refs.locationHint.textContent='Dieser Tag ist pausiert.'; render(); return; }
     if(!navigator.geolocation){ refs.locationHint.textContent='Dieses Gerät unterstützt keine Standortabfrage.'; return; }
     const before13=now.getHours()<13;
-    if(!before13 && !ds.work){ refs.locationHint.textContent='HOME ist erst möglich, wenn WORK heute erfolgreich bestätigt wurde.'; render(); return; }
+    if(!before13 && !ds.work){ refs.locationHint.textContent='ZUHAUSE ist erst möglich, wenn ARBEIT heute erfolgreich bestätigt wurde.'; render(); return; }
     refs.locationBtn.disabled=true; refs.locationBtn.textContent='STANDORT WIRD GEPRÜFT…'; refs.locationHint.textContent='GPS/Standort wird einmalig abgefragt.';
     navigator.geolocation.getCurrentPosition(pos=>{
       const {latitude,longitude,accuracy}=pos.coords;
@@ -136,8 +137,8 @@
       const dist=Math.round(distanceMeters(latitude,longitude,target.lat,target.lon));
       if(accuracy>2000){ refs.locationHint.textContent=`Standort zu ungenau (±${Math.round(accuracy)} m). Bitte erneut versuchen.`; render(); return; }
       if(dist<=target.radius){
-        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); ds.workSource='geo-local'; refs.locationHint.textContent=`WORK bestätigt · ca. ${dist} m vom Zielpunkt.`; }
-        else { ds.home=true; ds.homeAt=new Date().toISOString(); ds.homeSource='geo-local'; refs.locationHint.textContent=`HOME bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); ds.workSource='geo-local'; refs.locationHint.textContent=`ARBEIT bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        else { ds.home=true; ds.homeAt=new Date().toISOString(); ds.homeSource='geo-local'; refs.locationHint.textContent=`ZUHAUSE bestätigt · ca. ${dist} m vom Zielpunkt.`; }
         saveState(); render();
       } else {
         refs.locationHint.textContent=`Nicht in der ${target.name}-Zone · ca. ${(dist/1000).toFixed(1)} km entfernt.`; render();
@@ -221,7 +222,7 @@
     for(let i=0;i<5;i++){
       const d=new Date(start); d.setDate(start.getDate()+i); const key=dateKey(d), pause=isPaused(key), ds=state.days[key];
       const done=!!(ds&&ds.work&&ds.home); if(done) completed++;
-      const el=document.createElement('div'); el.className='week-day'+(done?' done':'')+(pause?' paused':''); el.innerHTML=`${labels[i]}<strong>${pause?'–':done?'✓':'○'}</strong>`; refs.weekDays.appendChild(el);
+      const el=document.createElement('div'); el.className='week-day'+(done?' done':'')+(pause?' paused':'')+(done&&ds.rewardOpened?' clickable':''); el.innerHTML=`${labels[i]}<strong>${pause?'–':done?'✓':'○'}</strong>`; if(done&&ds.rewardOpened){ el.title='Tagesbelohnung erneut ansehen'; el.tabIndex=0; el.setAttribute('role','button'); el.addEventListener('click',()=>openHistoricalReward(key)); el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openHistoricalReward(key);}}); } refs.weekDays.appendChild(el);
     }
     refs.weekBadge.textContent=`${completed}/5`;
     const weekKey=dateKey(start), canUnlock=completed===5;
@@ -268,8 +269,32 @@
   }
   function renderHistory(){
     const items=Object.entries(state.days).filter(([,d])=>d.rewardOpened).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,5);
+    refs.historyList.innerHTML='';
     if(!items.length){ refs.historyList.innerHTML='<p class="muted">Noch nichts freigeschaltet.</p>'; return; }
-    refs.historyList.innerHTML=items.map(([key,d])=>{assignReward(key,d); const s=DATA.songs.find(s=>s.id===d.songId) || DATA.songs[d.songIndex]; return `<div class="history-item"><div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small></div>`}).join('');
+    for(const [key,d] of items){
+      assignReward(key,d); const s=DATA.songs.find(s=>s.id===d.songId) || DATA.songs[d.songIndex];
+      const item=document.createElement('button'); item.type='button'; item.className='history-item history-button';
+      item.innerHTML=`<div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small>`;
+      item.addEventListener('click',()=>openHistoricalReward(key)); refs.historyList.appendChild(item);
+    }
+  }
+  function openHistoricalReward(key){
+    const ds=state.days[key]; if(!ds || !ds.rewardOpened) return;
+    assignReward(key,ds); saveState();
+    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs.find(s=>s.id===ds.songId) || DATA.songs[ds.songIndex];
+    refs.historyDialogDate.textContent=new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(localDate(key)).toUpperCase();
+    refs.historyDialogTitle.textContent=pic.title;
+    refs.historyPicture.src=imageUrl(pic.file); refs.historyPicture.alt=pic.title; refs.historyPictureSource.href=pic.source;
+    refs.historyPictureInfo.textContent=pic.info||''; refs.historyPictureInfo.classList.toggle('hidden',!pic.info);
+    refs.historySongTitle.textContent=song.title; refs.historySongArtist.textContent=song.artist; refs.historySpotifyBtn.href=song.url;
+    loadHistoricalSpotifyCover(song); refs.historyDialog.showModal();
+  }
+  async function loadHistoricalSpotifyCover(song){
+    refs.historySpotifyCover.classList.add('hidden'); refs.historySpotifyCover.removeAttribute('src'); refs.historySpotifyFallback.classList.remove('hidden'); refs.historySpotifyFallback.textContent='SPOTIFY COVER WIRD GELADEN…';
+    const sourceUrl=song.coverUrl || (/open\.spotify\.com\/(?:intl-[^/]+\/)?(?:track|album)\//.test(song.url) ? song.url : '');
+    if(!sourceUrl){ refs.historySpotifyFallback.textContent='COVER FÜR DIESEN SONG NOCH NICHT HINTERLEGT'; return; }
+    try{ const response=await fetch('https://open.spotify.com/oembed?url='+encodeURIComponent(sourceUrl),{mode:'cors'}); if(!response.ok) throw new Error('Spotify oEmbed '+response.status); const meta=await response.json(); if(!meta.thumbnail_url) throw new Error('Kein Cover vorhanden'); refs.historySpotifyCover.onload=()=>{refs.historySpotifyCover.classList.remove('hidden');refs.historySpotifyFallback.classList.add('hidden');}; refs.historySpotifyCover.onerror=()=>{refs.historySpotifyCover.classList.add('hidden');refs.historySpotifyFallback.classList.remove('hidden');refs.historySpotifyFallback.textContent='SPOTIFY COVER KONNTE NICHT GELADEN WERDEN';}; refs.historySpotifyCover.src=meta.thumbnail_url; }
+    catch(err){ console.warn('Spotify history cover:',err); refs.historySpotifyFallback.textContent='SPOTIFY COVER KONNTE NICHT GELADEN WERDEN'; }
   }
   function renderNextMission(){
     let d=new Date(); for(let i=0;i<370;i++){ const key=dateKey(d), weekday=d.getDay(); if(weekday>=1&&weekday<=5&&!isPaused(key)){ refs.nextMissionText.textContent=`Nächste aktive Mission: ${fmtDate(d)}`; return;} d.setDate(d.getDate()+1); }

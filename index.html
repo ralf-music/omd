@@ -38,7 +38,7 @@
           <div id="workStep" class="step">
             <div class="step-icon">W</div>
             <div class="step-copy">
-              <strong>WORK</strong>
+              <strong>ARBEIT</strong>
               <span id="workStatus">Vor 13:00 Uhr am Arbeitsort bestätigen</span>
             </div>
             <span id="workMark" class="status-dot"></span>
@@ -47,7 +47,7 @@
           <div id="homeStep" class="step">
             <div class="step-icon">H</div>
             <div class="step-copy">
-              <strong>HOME</strong>
+              <strong>ZUHAUSE</strong>
               <span id="homeStatus">Ab 13:00 Uhr zuhause bestätigen</span>
             </div>
             <span id="homeMark" class="status-dot"></span>
@@ -62,7 +62,7 @@
         <div class="reward-lock" id="rewardLock">🔒</div>
         <p class="eyebrow">TAGESBELOHNUNG</p>
         <h2 id="rewardTitle">Noch gesperrt</h2>
-        <p id="rewardSubtitle" class="muted">Erst WORK + HOME abschließen.</p>
+        <p id="rewardSubtitle" class="muted">Erst ARBEIT + ZUHAUSE abschließen.</p>
         <button id="openRewardBtn" class="primary-btn" disabled>TÜRCHEN ÖFFNEN</button>
 
         <div id="rewardContent" class="reward-content hidden">
@@ -113,7 +113,7 @@
         </div>
         <div class="stat-row"><span>Heute verdient</span><strong id="todayEarned">0,00 €</strong></div>
         <div class="stat-row"><span>Diese Woche</span><strong id="weekEarned">0,00 €</strong></div>
-        <p class="microcopy">+0,50 € nach erfolgreichem WORK + HOME. +2,00 € nur für eine vollständige erfolgreiche Mo–Fr-Woche.</p>
+        <p class="microcopy">+0,50 € nach erfolgreicher ARBEIT + ZUHAUSE. +2,00 € nur für eine vollständige erfolgreiche Mo–Fr-Woche.</p>
       </section>
 
       <section class="grid-two">
@@ -145,7 +145,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.2.2</button>
+      <button id="versionBtn" class="version-btn">v0.2.4</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -173,6 +173,31 @@
     </form>
   </dialog>
 
+  <dialog id="historyDialog">
+    <div class="dialog-card history-dialog-card">
+      <p class="eyebrow" id="historyDialogDate">TAGESBELOHNUNG</p>
+      <h2 id="historyDialogTitle">Freigeschaltete Belohnung</h2>
+      <div class="reward-content">
+        <div class="picture-wrap">
+          <img id="historyPicture" alt="Bild des Tages" />
+          <p id="historyPictureInfo" class="picture-info hidden"></p>
+          <div class="picture-caption"><span>BILD DES TAGES</span><a id="historyPictureSource" target="_blank" rel="noopener">Quelle</a></div>
+        </div>
+        <div class="song-panel">
+          <p class="eyebrow">SONG DES TAGES</p>
+          <div class="spotify-cover-wrap">
+            <img id="historySpotifyCover" class="spotify-cover hidden" alt="Spotify Cover" />
+            <div id="historySpotifyFallback" class="spotify-cover-fallback">SPOTIFY COVER WIRD GELADEN…</div>
+          </div>
+          <h3 id="historySongTitle"></h3>
+          <p id="historySongArtist" class="muted"></p>
+          <a id="historySpotifyBtn" class="secondary-btn" target="_blank" rel="noopener">AUF SPOTIFY ÖFFNEN</a>
+        </div>
+      </div>
+      <button class="ghost-btn history-close" onclick="document.getElementById('historyDialog').close()">SCHLIESSEN</button>
+    </div>
+  </dialog>
+
   <dialog id="weeklyDialog">
     <div class="dialog-card">
       <p class="eyebrow">WOCHENBELOHNUNG</p>
@@ -186,15 +211,14 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.2.2</h2>
+      <h2>One More Day v0.2.4</h2>
       <ul>
-        <li>Songpool deutlich auf 37 direkt verlinkte Spotify-Tracks erweitert.</li>
-        <li>Spotify-Suchlinks aus dem produktiven Songpool entfernt: der Button öffnet jetzt immer einen konkreten Track.</li>
-        <li>Spotify-Cover werden für jeden Song über den direkten Track geladen.</li>
-        <li>Ein Song wird nach Verwendung 10 Tage lang nicht erneut ausgewählt.</li>
-        <li>Derselbe Interpret darf höchstens drei Tage hintereinander erscheinen.</li>
-        <li>Die Songs der Start-Rewards vom 14.09. und 15.09. werden rückwirkend auf das neue System migriert.</li>
-        <li>Bildinformationen werden angezeigt, wenn Anlass, Ort oder Datum zuverlässig hinterlegt sind.</li>
+        <li>Abgeschlossene Tage im Wochenfortschritt können angetippt und ihre Tagesbelohnungen erneut angesehen werden.</li>
+        <li>Einträge unter „Zuletzt freigeschaltet“ öffnen ebenfalls die damalige Tagesbelohnung.</li>
+        <li>Historische Belohnungen sind reine Ansicht und lösen keine neue Gutschrift oder Freischaltung aus.</li>
+        <li>Bereits zugewiesene Bilder und Songs bleiben für den jeweiligen Tag fest gespeichert.</li>
+        <li>WORK und HOME wurden in der sichtbaren Oberfläche zu ARBEIT und ZUHAUSE.</li>
+        <li>Songpool aus v0.2.3 bleibt vollständig erhalten.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>
