@@ -1,4 +1,4 @@
-ONE MORE DAY v0.4.2
+ONE MORE DAY v0.4.3
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -69,10 +69,13 @@ CHANGELOG v0.4.1
 - Service-Worker-Cache auf omd-v0.4.1 aktualisiert.
 
 
-CHANGELOG v0.4.2
+CHANGELOG v0.4.3
 - Erste optische Guthaben-Anforderungsansicht ergänzt.
 - Schnellbeträge 1/5/10/20 Euro; nicht verfügbare Beträge werden deaktiviert.
 - „Anderer Betrag“ erlaubt freie Eingabe mit Cent.
 - Optionales Feld „Wunsch / Verwendungszweck“.
 - Noch keine Backend-/Admin-Funktion, keine Reservierung und kein Abzug.
 - Songpool mit 103 Titeln unverändert übernommen.
+
+
+v0.4.3: Einmaliger Mittwoch-Sonderreward für 16.09.2026 mit Witz + verifiziertem Unnützes-Wissen-Eintrag; Auszahlung-Placeholder angepasst.

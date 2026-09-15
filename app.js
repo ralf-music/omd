@@ -20,7 +20,7 @@
     workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
     locationBtn:$('locationBtn'), locationHint:$('locationHint'), rewardCard:$('rewardCard'), rewardLock:$('rewardLock'),
     rewardTitle:$('rewardTitle'), rewardSubtitle:$('rewardSubtitle'), openRewardBtn:$('openRewardBtn'), rewardContent:$('rewardContent'),
-    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), pictureInfo:$('pictureInfo'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'), spotifyCoverWrap:$('spotifyCoverWrap'), spotifyCover:$('spotifyCover'), spotifyCoverFallback:$('spotifyCoverFallback'),
+    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), pictureInfo:$('pictureInfo'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'), spotifyCoverWrap:$('spotifyCoverWrap'), spotifyCover:$('spotifyCover'), spotifyCoverFallback:$('spotifyCoverFallback'), rewardExtras:$('rewardExtras'),
     weekDays:$('weekDays'), weekBadge:$('weekBadge'), weeklyRewardBox:$('weeklyRewardBox'), weeklyRewardStatus:$('weeklyRewardStatus'), weeklyRewardBtn:$('weeklyRewardBtn'),
     dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
@@ -28,7 +28,7 @@
     walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
     requestPayoutBtn:$('requestPayoutBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
-    historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'),
+    historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen')
   };
 
@@ -91,7 +91,10 @@
       lockedAt:ds.rewardOpenedAt || new Date().toISOString(),
       picture:{title:pic.title||'',info:pic.info||'',file:pic.file||'',source:pic.source||'',url:imageUrl(pic.file)},
       song:{id:song.id||'',title:song.title||'',artist:song.artist||'',url:song.url||'',coverUrl:song.coverUrl||''},
-      extras:[]
+      extras:key==='2026-09-16' ? [
+        {type:'wednesday-joke',label:'MITTWOCHSWITZ',text:'Ein Mann kommt zum Arzt und sagt: „Herr Doktor, überall wo ich hinfasse, tut es weh.“ Er tippt auf Knie, Schulter und Stirn und schreit jedes Mal auf. Der Arzt untersucht ihn kurz: „Ihr Finger ist gebrochen.“'},
+        {type:'useless-knowledge',label:'UNNÜTZES WISSEN DER MENSCHHEIT',text:'Wombats sind die einzigen bekannten Tiere, die würfelförmigen Kot produzieren. Die Würfelform entsteht bereits im Darm: unterschiedlich steife Bereiche des letzten Darmabschnitts formen beim Zusammenziehen flache Seiten und Kanten.',source:'https://cos.gatech.edu/news/studying-wombats-cubic-poop'}
+      ] : []
     };
   }
   function lockReward(key,ds){
@@ -316,6 +319,20 @@
     ds.songId=song.id;
     ds.songIndex=DATA.songs.findIndex(s=>s.id===song.id); // compatibility with older local state/history
   }
+  function renderRewardExtras(container,reward){
+    if(!container) return;
+    container.innerHTML='';
+    const extras=Array.isArray(reward?.extras)?reward.extras:[];
+    container.classList.toggle('hidden',extras.length===0);
+    for(const extra of extras){
+      const box=document.createElement('div'); box.className='reward-extra';
+      const label=document.createElement('p'); label.className='eyebrow'; label.textContent=extra.label||'EXTRA';
+      const text=document.createElement('p'); text.className='reward-extra-text'; text.textContent=extra.text||'';
+      box.append(label,text);
+      if(extra.source){ const a=document.createElement('a'); a.href=extra.source; a.target='_blank'; a.rel='noopener'; a.className='reward-extra-source'; a.textContent='Quelle'; box.appendChild(a); }
+      container.appendChild(box);
+    }
+  }
   function showDailyReward(key,ds){
     const reward=rewardFor(key,ds); if(!reward) return;
     saveState();
@@ -323,6 +340,7 @@
     refs.dailyPicture.src=pic.url; refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source; refs.pictureInfo.textContent=pic.info||''; refs.pictureInfo.classList.toggle('hidden',!pic.info);
     refs.songTitle.textContent=song.title; refs.songArtist.textContent=song.artist; refs.spotifyBtn.href=song.url;
     loadSpotifyCover(song);
+    renderRewardExtras(refs.rewardExtras,reward);
     refs.rewardContent.classList.remove('hidden'); refs.rewardTitle.textContent=pic.title;
   }
 
@@ -434,6 +452,7 @@
     refs.historyPicture.src=pic.url; refs.historyPicture.alt=pic.title; refs.historyPictureSource.href=pic.source;
     refs.historyPictureInfo.textContent=pic.info||''; refs.historyPictureInfo.classList.toggle('hidden',!pic.info);
     refs.historySongTitle.textContent=song.title; refs.historySongArtist.textContent=song.artist; refs.historySpotifyBtn.href=song.url;
+    renderRewardExtras(refs.historyRewardExtras,reward);
     loadHistoricalSpotifyCover(song); refs.historyDialog.showModal();
   }
 
