@@ -69,7 +69,7 @@
 
         <div id="rewardContent" class="reward-content hidden">
           <div class="picture-wrap">
-            <img id="dailyPicture" alt="Bild des Tages" />
+            <img id="dailyPicture" class="reward-picture-clickable" alt="Bild des Tages" title="Für Vollbild antippen" />
             <p id="pictureInfo" class="picture-info hidden"></p>
             <div class="picture-caption">
               <span>BILD DES TAGES</span>
@@ -147,7 +147,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.3.3</button>
+      <button id="versionBtn" class="version-btn">v0.3.4</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -181,7 +181,7 @@
       <h2 id="historyDialogTitle">Freigeschaltete Belohnung</h2>
       <div class="reward-content">
         <div class="picture-wrap">
-          <img id="historyPicture" alt="Bild des Tages" />
+          <img id="historyPicture" class="reward-picture-clickable" alt="Bild des Tages" title="Für Vollbild antippen" />
           <p id="historyPictureInfo" class="picture-info hidden"></p>
           <div class="picture-caption"><span>BILD DES TAGES</span><a id="historyPictureSource" target="_blank" rel="noopener">Quelle</a></div>
         </div>
@@ -210,6 +210,17 @@
     </div>
   </dialog>
 
+  <dialog id="pictureFullscreenDialog" class="picture-fullscreen-dialog">
+    <div class="picture-fullscreen-card">
+      <button id="closePictureFullscreen" class="motivation-close" type="button" aria-label="Vollbild schließen">×</button>
+      <img id="pictureFullscreenImage" alt="Bild des Tages im Vollbild" />
+      <div class="picture-fullscreen-meta">
+        <p id="pictureFullscreenInfo" class="muted hidden"></p>
+        <a id="pictureFullscreenSource" target="_blank" rel="noopener">QUELLE</a>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="joeyMotivationDialog" class="motivation-dialog">
     <div class="motivation-dialog-card">
       <button id="closeJoeyMotivation" class="motivation-close" type="button" aria-label="Vollbild schließen">×</button>
@@ -220,8 +231,11 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.3.3</h2>
+      <h2>One More Day v0.3.4</h2>
       <ul>
+        <li>Freigeschaltete Tagesbelohnungen werden ab jetzt als vollständiger Snapshot eingefroren und durch spätere Updates nicht mehr verändert.</li>
+        <li>Bereits geöffnete Rewards werden beim ersten Start auf v0.3.4 in ihren aktuellen Zustand übernommen und dauerhaft fixiert.</li>
+        <li>Das Bild des Tages ist im aktuellen und historischen Reward antippbar und öffnet vollständig und unbeschnitten im Vollbild.</li>
         <li>Das Joey-Kelly-Motiv im Header ist jetzt direkt antippbar und öffnet die bestehende Vollbildansicht.</li>
         <li>Die separate Joey-Motivationskarte unter dem Datum wurde entfernt, damit die Tagesmission auf dem Handy wieder weiter nach oben rückt.</li>
         <li>Testweise ersetzt das vorhandene Joey-Kelly-Motiv weiterhin das bisherige OMD-App-Icon und Header-Logo.</li>

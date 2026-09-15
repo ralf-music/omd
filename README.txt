@@ -1,4 +1,4 @@
-ONE MORE DAY v0.3.3
+ONE MORE DAY v0.3.4
 
 Erste Cloud-Geo-Version.
 
@@ -41,8 +41,11 @@ CHANGELOG v0.3.0
 - Service-Worker-Cache auf omd-v0.3.0 aktualisiert.
 
 
-CHANGELOG v0.3.3
+CHANGELOG v0.3.4
 - Separate Joey-Motivationskarte unter dem Datum entfernt.
 - Joey-Kelly-Motiv im Header direkt antippbar gemacht.
 - Antippen öffnet weiterhin die bestehende Vollbildansicht.
-- Service-Worker-Cache auf omd-v0.3.3 aktualisiert.
+- Service-Worker-Cache auf omd-v0.3.4 aktualisiert.
+
+
+v0.3.4: Tagesrewards werden beim ersten Öffnen vollständig als Snapshot fixiert. Bild des Tages kann im aktuellen und historischen Reward im Vollbild geöffnet werden.

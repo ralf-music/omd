@@ -1,7 +1,7 @@
 (() => {
   const DATA = window.OMD_DATA;
   const STORE_KEY = 'omd-state-v1';
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
   const DAILY_CENTS = 50;
   const PERFECT_WEEK_CENTS = 200;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
@@ -12,6 +12,7 @@
   // Regular WORK -> HOME geo rules start on 16.09.2026.
   seedLaunchDays();
   migrateRewards022();
+  migrateRewardSnapshots034();
 
   const refs = {
     todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
@@ -25,7 +26,8 @@
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
     walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
-    historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn')
+    historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'),
+    pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen')
   };
 
   function loadState(){
@@ -76,6 +78,37 @@
     }
     state.migrations.rewards022=true;
     saveState();
+  }
+  function makeRewardSnapshot(key,ds){
+    assignReward(key,ds);
+    const pic=DATA.pictures[ds.pictureIndex];
+    const song=DATA.songs.find(s=>s.id===ds.songId) || DATA.songs[ds.songIndex];
+    if(!pic || !song) return null;
+    return {
+      version:1,
+      lockedAt:ds.rewardOpenedAt || new Date().toISOString(),
+      picture:{title:pic.title||'',info:pic.info||'',file:pic.file||'',source:pic.source||'',url:imageUrl(pic.file)},
+      song:{id:song.id||'',title:song.title||'',artist:song.artist||'',url:song.url||'',coverUrl:song.coverUrl||''},
+      extras:[]
+    };
+  }
+  function lockReward(key,ds){
+    if(ds.rewardSnapshot) return ds.rewardSnapshot;
+    ds.rewardSnapshot=makeRewardSnapshot(key,ds);
+    return ds.rewardSnapshot;
+  }
+  function migrateRewardSnapshots034(){
+    state.migrations ||= {};
+    if(state.migrations.rewardSnapshots034) return;
+    for(const [key,ds] of Object.entries(state.days||{})){
+      if(ds&&ds.rewardOpened&&!ds.rewardSnapshot) lockReward(key,ds);
+    }
+    state.migrations.rewardSnapshots034=true;
+    saveState();
+  }
+  function rewardFor(key,ds){
+    if(ds.rewardOpened) return lockReward(key,ds);
+    return makeRewardSnapshot(key,ds);
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
   function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
@@ -192,9 +225,10 @@
     ds.songIndex=DATA.songs.findIndex(s=>s.id===song.id); // compatibility with older local state/history
   }
   function showDailyReward(key,ds){
-    assignReward(key,ds); saveState();
-    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs.find(s=>s.id===ds.songId) || DATA.songs[ds.songIndex];
-    refs.dailyPicture.src=imageUrl(pic.file); refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source; refs.pictureInfo.textContent=pic.info||''; refs.pictureInfo.classList.toggle('hidden',!pic.info);
+    const reward=rewardFor(key,ds); if(!reward) return;
+    saveState();
+    const pic=reward.picture, song=reward.song;
+    refs.dailyPicture.src=pic.url; refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source; refs.pictureInfo.textContent=pic.info||''; refs.pictureInfo.classList.toggle('hidden',!pic.info);
     refs.songTitle.textContent=song.title; refs.songArtist.textContent=song.artist; refs.spotifyBtn.href=song.url;
     loadSpotifyCover(song);
     refs.rewardContent.classList.remove('hidden'); refs.rewardTitle.textContent=pic.title;
@@ -232,7 +266,7 @@
     }
   }
 
-  function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; assignReward(key,ds); saveState(); showDailyReward(key,ds); renderStats(); renderHistory(); }
+  function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; ds.rewardOpenedAt ||= new Date().toISOString(); lockReward(key,ds); saveState(); showDailyReward(key,ds); renderStats(); renderHistory(); }
 
   function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
   function renderWeek(now){
@@ -291,7 +325,7 @@
     refs.historyList.innerHTML='';
     if(!items.length){ refs.historyList.innerHTML='<p class="muted">Noch nichts freigeschaltet.</p>'; return; }
     for(const [key,d] of items){
-      assignReward(key,d); const s=DATA.songs.find(s=>s.id===d.songId) || DATA.songs[d.songIndex];
+      const reward=rewardFor(key,d); const s=reward.song;
       const item=document.createElement('button'); item.type='button'; item.className='history-item history-button';
       item.innerHTML=`<div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small>`;
       item.addEventListener('click',()=>openHistoricalReward(key)); refs.historyList.appendChild(item);
@@ -299,15 +333,16 @@
   }
   function openHistoricalReward(key){
     const ds=state.days[key]; if(!ds || !ds.rewardOpened) return;
-    assignReward(key,ds); saveState();
-    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs.find(s=>s.id===ds.songId) || DATA.songs[ds.songIndex];
+    const reward=rewardFor(key,ds); if(!reward) return; saveState();
+    const pic=reward.picture, song=reward.song;
     refs.historyDialogDate.textContent=new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(localDate(key)).toUpperCase();
     refs.historyDialogTitle.textContent=pic.title;
-    refs.historyPicture.src=imageUrl(pic.file); refs.historyPicture.alt=pic.title; refs.historyPictureSource.href=pic.source;
+    refs.historyPicture.src=pic.url; refs.historyPicture.alt=pic.title; refs.historyPictureSource.href=pic.source;
     refs.historyPictureInfo.textContent=pic.info||''; refs.historyPictureInfo.classList.toggle('hidden',!pic.info);
     refs.historySongTitle.textContent=song.title; refs.historySongArtist.textContent=song.artist; refs.historySpotifyBtn.href=song.url;
     loadHistoricalSpotifyCover(song); refs.historyDialog.showModal();
   }
+
   async function loadHistoricalSpotifyCover(song){
     refs.historySpotifyCover.classList.add('hidden'); refs.historySpotifyCover.removeAttribute('src'); refs.historySpotifyFallback.classList.remove('hidden'); refs.historySpotifyFallback.textContent='SPOTIFY COVER WIRD GELADEN…';
     const sourceUrl=song.coverUrl || (/open\.spotify\.com\/(?:intl-[^/]+\/)?(?:track|album)\//.test(song.url) ? song.url : '');
@@ -323,6 +358,18 @@
     ev.preventDefault(); const from=refs.pauseFrom.value, to=refs.pauseTo.value; if(!from||!to||to<from) return;
     state.pauses.push({from,to,reason:refs.pauseReason.value}); state.pauses.sort((a,b)=>a.from.localeCompare(b.from)); saveState(); refs.pauseDialog.close(); render();
   }
+
+  function openPictureFullscreen(img,info,source){
+    if(!img?.src) return;
+    refs.pictureFullscreenImage.src=img.src; refs.pictureFullscreenImage.alt=img.alt||'Bild des Tages';
+    refs.pictureFullscreenInfo.textContent=info||''; refs.pictureFullscreenInfo.classList.toggle('hidden',!info);
+    refs.pictureFullscreenSource.href=source||'#'; refs.pictureFullscreenSource.classList.toggle('hidden',!source);
+    refs.pictureFullscreenDialog.showModal();
+  }
+  refs.dailyPicture.addEventListener('click',()=>openPictureFullscreen(refs.dailyPicture,refs.pictureInfo.textContent,refs.pictureSource.href));
+  refs.historyPicture.addEventListener('click',()=>openPictureFullscreen(refs.historyPicture,refs.historyPictureInfo.textContent,refs.historyPictureSource.href));
+  refs.closePictureFullscreen.addEventListener('click',()=>refs.pictureFullscreenDialog.close());
+  refs.pictureFullscreenDialog.addEventListener('click',e=>{if(e.target===refs.pictureFullscreenDialog) refs.pictureFullscreenDialog.close();});
 
   const joeyMotivationBtn=$('joeyMotivationBtn'), joeyMotivationDialog=$('joeyMotivationDialog'), closeJoeyMotivation=$('closeJoeyMotivation');
   joeyMotivationBtn.addEventListener('click',()=>joeyMotivationDialog.showModal());
