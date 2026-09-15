@@ -1,5 +1,5 @@
 window.OMD_DATA = {
-  version: "0.4.0",
+  version: "0.4.1",
   // Target coordinates are stored only as Cloudflare Worker secrets.
   pictures: [
     { title:"Kelly Family · 1989", file:"Kelly Family 1989.jpg", source:"https://commons.wikimedia.org/wiki/File:Kelly_Family_1989.jpg" },
@@ -91,7 +91,40 @@ window.OMD_DATA = {
     {id:"tkf-never-break-live19",artist:"The Kelly Family",title:"Never Gonna Break Me Down · Live 2019",url:"https://open.spotify.com/track/7n8nvPegHHdI2HTuCCeYBQ"},
     {id:"tkf-imagine-live",artist:"The Kelly Family",title:"Imagine · Live",url:"https://open.spotify.com/track/1afwJnpljBpGDL5i8bXxMo"},
     {id:"tkf-come-back-live",artist:"The Kelly Family",title:"Come Back To Me · Live",url:"https://open.spotify.com/track/0MWu8BHF5tmU1nUvv63eeS"},
-    {id:"ak-never-too-late",artist:"Angelo Kelly",title:"Never Too Late",url:"https://open.spotify.com/track/41ttIdnkVLL90Zy0vmIvVO"}
+    {id:"ak-never-too-late",artist:"Angelo Kelly",title:"Never Too Late",url:"https://open.spotify.com/track/41ttIdnkVLL90Zy0vmIvVO"},
+
+    // Michael Patrick Kelly · erweiterter Solo-Pool
+    {id:"mpk-run-free",artist:"Michael Patrick Kelly",title:"Run Free",url:"https://open.spotify.com/track/60Fzfp2K1eqr5Xpd2ynGwv"},
+    {id:"mpk-traces",artist:"Michael Patrick Kelly",title:"Traces",url:"https://open.spotify.com/track/02K9rGknqp9ZPLVCHLs2X4"},
+    {id:"mpk-wildflower",artist:"Michael Patrick Kelly",title:"Wildflower",url:"https://open.spotify.com/track/1bIeQdwWPefDKxD3VoZZ4W"},
+    {id:"mpk-healing",artist:"Michael Patrick Kelly",title:"Healing",url:"https://open.spotify.com/track/0elPjsYk4jvar9KMvlI9wI"},
+    {id:"mpk-rebellion",artist:"Michael Patrick Kelly",title:"Rebellion · mit R3HAB & Shaggy",url:"https://open.spotify.com/track/5XlZ6Z7MqWajjms2m2Qu7s"},
+    {id:"mpk-higher-love",artist:"Michael Patrick Kelly",title:"Higher Love",url:"https://open.spotify.com/track/2q6y0b41YzVIGaLgWuqwTP"},
+    {id:"mpk-friends-family",artist:"Michael Patrick Kelly",title:"Friends R Family",url:"https://open.spotify.com/track/7HRsRHFulGVmJSPGsDqA3q"},
+    {id:"mpk-lazarus",artist:"Michael Patrick Kelly",title:"Lazarus",url:"https://open.spotify.com/track/0FzKoUVSv6G46dI9rmYH99"},
+    {id:"mpk-fake-messiah",artist:"Michael Patrick Kelly",title:"Fake Messiah",url:"https://open.spotify.com/track/7hbM9mupJw1Kp0lWiUOkhc"},
+    {id:"mpk-paragliding",artist:"Michael Patrick Kelly",title:"Paragliding",url:"https://open.spotify.com/track/5DdmLLOUUribxKXDBM8X3r"},
+    {id:"mpk-ruah",artist:"Michael Patrick Kelly",title:"Ruah",url:"https://open.spotify.com/track/2ArpFiqGENYUSgf1DKQCk7"},
+    {id:"mpk-walk-line",artist:"Michael Patrick Kelly",title:"Walk the Line",url:"https://open.spotify.com/track/2NYa61msWttiZfHn29cMBX"},
+    {id:"mpk-dont-judas",artist:"Michael Patrick Kelly",title:"Don't Judas Me",url:"https://open.spotify.com/track/2T5h6S9hxW9jJ1iQocrSv2"},
+    {id:"mpk-renegade",artist:"Michael Patrick Kelly",title:"Renegade",url:"https://open.spotify.com/track/3QAzybKGyjaSRHELpE3bH9"},
+    {id:"mpk-thank-you",artist:"Michael Patrick Kelly",title:"Thank you",url:"https://open.spotify.com/track/5bM1YwgsfHSeepfz0RzYrq"},
+    {id:"mpk-blurry-duet",artist:"Michael Patrick Kelly",title:"Blurry Eyes · Duett mit ClockClock",url:"https://open.spotify.com/track/5j3VRd9pLbxhu3jxj9Z2YP"},
+    {id:"mpk-blurry-gromee",artist:"Michael Patrick Kelly",title:"Blurry Eyes · Gromee Remix",url:"https://open.spotify.com/track/3G8RmSe6XuEQpvJQnFVtSh"},
+    {id:"mpk-friends-family-live23",artist:"Michael Patrick Kelly",title:"Friends R Family · Live 2023",url:"https://open.spotify.com/track/6XArjS31oijMbQaSf8hs0q"},
+
+    // The Kelly Family · Klassiker, frühe Jahre und Live-Versionen
+    {id:"tkf-fathers-nose-oth",artist:"The Kelly Family",title:"Father's Nose · Over The Hump",url:"https://open.spotify.com/track/5zo8CsbBjLlFA5MxPnOKaq"},
+    {id:"tkf-calling-heaven",artist:"The Kelly Family",title:"Calling Heaven",url:"https://open.spotify.com/track/1iVNMloKwrdLsXzmfF4auD"},
+    {id:"tkf-take-my-hand",artist:"The Kelly Family",title:"Take My Hand",url:"https://open.spotify.com/track/0mEHKVzfqPhySfaxuu8HW9"},
+    {id:"tkf-the-rose",artist:"The Kelly Family",title:"The Rose",url:"https://open.spotify.com/track/6rnG1AaanQPzgnuyQffCKx"},
+    {id:"tkf-last-rose-summer",artist:"The Kelly Family",title:"The Last Rose Of Summer",url:"https://open.spotify.com/track/6TvqTP903J1w4Np8s0eKqi"},
+    {id:"tkf-swing-all-night",artist:"The Kelly Family",title:"Swing All Night",url:"https://open.spotify.com/track/3XXi3jChAe9sM4zB702zJu"},
+    {id:"tkf-nanana-live95",artist:"The Kelly Family",title:"Nanana · Live 1995",url:"https://open.spotify.com/track/0ymr6sAo4xcCVThTYnBTtL"},
+    {id:"tkf-fell-alien-live95",artist:"The Kelly Family",title:"Fell In Love With An Alien · Live 1995",url:"https://open.spotify.com/track/0uewRUtZA2y0z9mggBIJ1k"},
+    {id:"tkf-ares-live95",artist:"The Kelly Family",title:"Ares Qui · Live 1995",url:"https://open.spotify.com/track/5eyTjDuLoTXTQaQ26iix4P"},
+    {id:"tkf-cant-help-live96",artist:"The Kelly Family",title:"I Can't Help Myself · Live 1996",url:"https://open.spotify.com/track/4PbGlZdsf4qvCQnGwKfOyo"},
+    {id:"tkf-fathers-nose-live17",artist:"The Kelly Family",title:"Father's Nose · Live",url:"https://open.spotify.com/track/5LtAkRgapTGC2NzZZQb83g"}
   ],
   weeklyRewards: [
     {title:"90s Time Machine",text:"Ein Kelly-Family-Live-Abend aus den 90ern.",query:"The Kelly Family live concert 1990s"},

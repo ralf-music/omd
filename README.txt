@@ -1,4 +1,4 @@
-ONE MORE DAY v0.4.0
+ONE MORE DAY v0.4.2
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -59,3 +59,20 @@ CHANGELOG v0.4.0
 
 
 v0.4.0: Tagesrewards werden beim ersten Öffnen vollständig als Snapshot fixiert. Bild des Tages kann im aktuellen und historischen Reward im Vollbild geöffnet werden.
+
+
+CHANGELOG v0.4.1
+- Songpool von 74 auf 103 direkte Spotify-Titel erweitert.
+- Michael Patrick Kelly deutlich erweitert: Traces, iD, B.O.A.T.S, RUAH und weitere Solo-/Live-Titel.
+- The Kelly Family um Klassiker, frühe Aufnahmen und Live-Versionen erweitert; Over The Hump bleibt Schwerpunkt.
+- Bereits freigeschaltete Reward-Snapshots bleiben unverändert und D1-verriegelt.
+- Service-Worker-Cache auf omd-v0.4.1 aktualisiert.
+
+
+CHANGELOG v0.4.2
+- Erste optische Guthaben-Anforderungsansicht ergänzt.
+- Schnellbeträge 1/5/10/20 Euro; nicht verfügbare Beträge werden deaktiviert.
+- „Anderer Betrag“ erlaubt freie Eingabe mit Cent.
+- Optionales Feld „Wunsch / Verwendungszweck“.
+- Noch keine Backend-/Admin-Funktion, keine Reservierung und kein Abzug.
+- Songpool mit 103 Titeln unverändert übernommen.

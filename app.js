@@ -6,6 +6,7 @@
   const PERFECT_WEEK_CENTS = 200;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
   const state = loadState();
+  let payoutSelectedCents=0;
   const $ = id => document.getElementById(id);
 
   // Start migration: 14.09.2026 and 15.09.2026 count as fully completed launch days.
@@ -25,6 +26,7 @@
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
     walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
+    requestPayoutBtn:$('requestPayoutBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen')
@@ -405,6 +407,7 @@
     const weekEnd=new Date(getWeekStart(now)); weekEnd.setDate(weekEnd.getDate()+4); const weekEndKey=dateKey(weekEnd);
     const weekTotal=state.ledger.filter(t=>(t.date&&t.date>=week&&t.date<=weekEndKey)||t.week===week).reduce((s,t)=>s+t.cents,0);
     refs.walletBalance.textContent=euro(total); refs.todayEarned.textContent=euro(todayTotal); refs.weekEarned.textContent=euro(weekTotal);
+    if(refs.requestPayoutBtn) refs.requestPayoutBtn.disabled=total<=0;
   }
 
   function renderStats(){
@@ -466,6 +469,38 @@
   joeyMotivationBtn.addEventListener('click',()=>joeyMotivationDialog.showModal());
   closeJoeyMotivation.addEventListener('click',()=>joeyMotivationDialog.close());
   joeyMotivationDialog.addEventListener('click',e=>{ if(e.target===joeyMotivationDialog) joeyMotivationDialog.close(); });
+
+
+
+  function currentWalletCents(){
+    const localTotal=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
+    return Number.isFinite(state.cloudWallet?.balanceCents) ? state.cloudWallet.balanceCents : localTotal;
+  }
+  function parseEuroCents(value){
+    const normalized=String(value||'').trim().replace(/\s/g,'').replace('€','').replace(',', '.');
+    if(!/^\d+(?:\.\d{0,2})?$/.test(normalized)) return 0;
+    return Math.round(Number(normalized)*100);
+  }
+  function updatePayoutPreview(){
+    const available=Math.max(0,currentWalletCents());
+    refs.payoutAvailable.textContent=euro(available);
+    document.querySelectorAll('.payout-chip').forEach(btn=>{
+      const cents=Number(btn.dataset.cents||0); btn.disabled=cents>available||cents<=0; btn.classList.toggle('selected',cents===payoutSelectedCents);
+    });
+    const valid=payoutSelectedCents>0&&payoutSelectedCents<=available;
+    refs.payoutSelected.textContent=valid?euro(payoutSelectedCents):(payoutSelectedCents>available?'Mehr als verfügbar':'Noch nicht gewählt');
+    refs.submitPayoutBtn.disabled=!valid;
+  }
+  function openPayoutPreview(){
+    payoutSelectedCents=0; refs.customPayoutWrap.classList.add('hidden'); refs.customPayoutAmount.value=''; refs.payoutWish.value=''; refs.payoutMessage.classList.add('hidden'); refs.payoutMessage.textContent=''; updatePayoutPreview(); refs.payoutDialog.showModal();
+  }
+  refs.requestPayoutBtn.addEventListener('click',openPayoutPreview);
+  document.querySelectorAll('.payout-chip').forEach(btn=>btn.addEventListener('click',()=>{ payoutSelectedCents=Number(btn.dataset.cents||0); refs.customPayoutWrap.classList.add('hidden'); refs.customPayoutAmount.value=''; updatePayoutPreview(); }));
+  refs.customPayoutBtn.addEventListener('click',()=>{ refs.customPayoutWrap.classList.remove('hidden'); payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); refs.customPayoutAmount.focus(); });
+  refs.customPayoutAmount.addEventListener('input',()=>{ payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); });
+  refs.submitPayoutBtn.addEventListener('click',()=>{ refs.payoutMessage.textContent='Vorschau: Die Anforderung ist vorbereitet. Noch wurde nichts gesendet, reserviert oder abgezogen.'; refs.payoutMessage.classList.remove('hidden'); });
+  refs.closePayoutBtn.addEventListener('click',()=>refs.payoutDialog.close());
+  refs.payoutDialog.addEventListener('click',e=>{if(e.target===refs.payoutDialog) refs.payoutDialog.close();});
 
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
   refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });

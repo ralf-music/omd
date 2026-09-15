@@ -116,6 +116,7 @@
         <div class="stat-row"><span>Heute verdient</span><strong id="todayEarned">0,00 €</strong></div>
         <div class="stat-row"><span>Diese Woche</span><strong id="weekEarned">0,00 €</strong></div>
         <p class="microcopy">+0,50 € nach erfolgreicher ARBEIT + ZUHAUSE. +2,00 € nur für eine vollständige erfolgreiche Mo–Fr-Woche.</p>
+        <button id="requestPayoutBtn" class="secondary-btn wallet-request-btn" type="button">GUTHABEN ANFORDERN</button>
       </section>
 
       <section class="grid-two">
@@ -147,10 +148,38 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.4.0</button>
+      <button id="versionBtn" class="version-btn">v0.4.2</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
+
+
+  <dialog id="payoutDialog">
+    <div class="dialog-card payout-dialog-card">
+      <p class="eyebrow">ARBEITSGUTHABEN</p>
+      <h2>Guthaben anfordern</h2>
+      <div class="payout-available"><span>Verfügbar</span><strong id="payoutAvailable">0,00 €</strong></div>
+      <p class="microcopy">Wähle einen Betrag oder gib einen genauen Wunschbetrag inklusive Cent ein.</p>
+      <div id="payoutQuickAmounts" class="payout-quick-amounts">
+        <button type="button" class="payout-chip" data-cents="100">1,00 €</button>
+        <button type="button" class="payout-chip" data-cents="500">5,00 €</button>
+        <button type="button" class="payout-chip" data-cents="1000">10,00 €</button>
+        <button type="button" class="payout-chip" data-cents="2000">20,00 €</button>
+      </div>
+      <button id="customPayoutBtn" class="ghost-btn payout-custom-btn" type="button">ANDERER BETRAG</button>
+      <label id="customPayoutWrap" class="hidden">Gewünschter Betrag
+        <div class="money-input-wrap"><input id="customPayoutAmount" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-label="Gewünschter Betrag in Euro"><span>€</span></div>
+      </label>
+      <label>Wunsch / Verwendungszweck <span class="optional-label">optional</span>
+        <textarea id="payoutWish" rows="3" maxlength="180" placeholder="z. B. Spiel, Bestellung, ChatGPT Plus …"></textarea>
+      </label>
+      <div class="payout-summary"><span>Gewünschter Betrag</span><strong id="payoutSelected">Noch nicht gewählt</strong></div>
+      <p id="payoutMessage" class="geo-neutral hidden"></p>
+      <button id="submitPayoutBtn" class="primary-btn" type="button" disabled>GUTHABEN ANFORDERN</button>
+      <button id="closePayoutBtn" class="ghost-btn payout-close-btn" type="button">ABBRECHEN</button>
+      <p class="microcopy payout-preview-note">Vorschau: Es wird noch keine Anfrage gesendet und kein Guthaben reserviert oder abgezogen.</p>
+    </div>
+  </dialog>
 
   <dialog id="pauseDialog">
     <form id="pauseForm" method="dialog" class="dialog-card">
@@ -231,14 +260,14 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.4.0</h2>
+      <h2>One More Day v0.4.2</h2>
       <ul>
-        <li>D1-Synchronisation Stufe 1: Tagesstatus, Reward-Snapshots und Arbeitsguthaben werden mit der One-More-Day-Cloud synchronisiert.</li>
-        <li>Vorhandene lokale Reward-Snapshots werden einmalig nach D1 übertragen. Bereits in D1 verriegelte Rewards werden niemals überschrieben.</li>
-        <li>Neue ARBEIT/ZUHAUSE-Bestätigungen werden nach erfolgreicher Geo-Prüfung zusätzlich in D1 gespeichert.</li>
-        <li>Neue Tagesrewards werden beim Öffnen auch serverseitig als vollständiger Snapshot verriegelt.</li>
-        <li>Nach erfolgreicher Synchronisation verwendet die Gesamtguthaben-Anzeige den D1-Kontostand; localStorage bleibt vorerst als Sicherheitsnetz erhalten.</li>
-        <li>Bild-Vollansicht, Joey-Header, 74-Song-Pool und bestehendes Design bleiben unverändert.</li>
+        <li>Arbeitsguthaben um eine erste optische Auszahlungs-/Anforderungsansicht erweitert.</li>
+        <li>Schnellbeträge sowie „Anderer Betrag“ mit freier Cent-Eingabe vorbereitet.</li>
+        <li>Optionales Feld „Wunsch / Verwendungszweck“ ergänzt.</li>
+        <li>Die Ansicht berücksichtigt bereits das verfügbare Guthaben und deaktiviert zu hohe Beträge.</li>
+        <li>Noch reine Vorschau: Es wird keine Anfrage gesendet, nichts reserviert und nichts abgezogen.</li>
+        <li>Songpool mit 103 Titeln und bestehende Reward-Snapshots unverändert übernommen.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>
