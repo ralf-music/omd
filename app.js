@@ -1,7 +1,7 @@
 (() => {
   const DATA = window.OMD_DATA;
   const STORE_KEY = 'omd-state-v1';
-  const SCHEMA_VERSION = 5;
+  const SCHEMA_VERSION = 6;
   const DAILY_CENTS = 50;
   const PERFECT_WEEK_CENTS = 200;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
@@ -111,6 +111,92 @@
     return makeRewardSnapshot(key,ds);
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+  async function apiJson(path, options={}){
+    const response=await fetch(`${API_BASE}${path}`,options);
+    let result=null;
+    try{ result=await response.json(); }catch{}
+    if(!response.ok || !result || result.ok!==true) throw new Error(`API ${path}`);
+    return result;
+  }
+  function snapshotFromCloudReward(reward){
+    return reward?.extras?.snapshot || null;
+  }
+  async function syncRewardToCloud(key,ds){
+    if(!ds?.rewardOpened) return null;
+    const localSnapshot=lockReward(key,ds);
+    if(!localSnapshot) return null;
+    const result=await apiJson('/reward',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        date:key,
+        picture_id:localSnapshot.picture?.file || localSnapshot.picture?.title || null,
+        song_id:localSnapshot.song?.id || null,
+        extras:{snapshot:localSnapshot}
+      })
+    });
+    const locked=snapshotFromCloudReward(result.reward);
+    if(locked){ ds.rewardSnapshot=locked; ds.rewardOpened=true; ds.rewardOpenedAt ||= locked.lockedAt || new Date().toISOString(); saveState(); }
+    return locked;
+  }
+  async function syncDayWithCloud(key,ds){
+    try{
+      const existing=await apiJson(`/day?date=${encodeURIComponent(key)}`);
+      if(existing.day){
+        ds.work=!!existing.day.work_confirmed || !!ds.work;
+        ds.home=!!existing.day.home_confirmed || !!ds.home;
+        ds.workAt ||= existing.day.work_confirmed_at;
+        ds.homeAt ||= existing.day.home_confirmed_at;
+      }
+      if(ds.work || ds.home){
+        await apiJson('/day',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            date:key,work_confirmed:!!ds.work,work_confirmed_at:ds.workAt||null,
+            home_confirmed:!!ds.home,home_confirmed_at:ds.homeAt||null,
+            status:ds.work&&ds.home?'COMPLETE':'OPEN'
+          })
+        });
+      }
+    }catch(err){ console.warn('D1 day sync:',key,err); }
+  }
+  async function syncLedgerToCloud(){
+    for(const t of state.ledger||[]){
+      // 14/15 September were seeded manually in D1 with canonical IDs.
+      if(t.type==='DAILY_REWARD' && (t.date==='2026-09-14'||t.date==='2026-09-15')) continue;
+      const id=t.type==='DAILY_REWARD'&&t.date ? `daily-${t.date}` : t.type==='PERFECT_WEEK'&&t.week ? `week-${t.week}` : `local-${t.id}`;
+      try{
+        await apiJson('/transaction',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({id,type:t.type,amount_cents:Number(t.cents||0),day_date:t.date||null,note:t.type==='PERFECT_WEEK'?'Perfect Week':'Tagesbelohnung'})
+        });
+      }catch(err){ console.warn('D1 transaction sync:',id,err); }
+    }
+  }
+  async function refreshCloudWallet(){
+    try{
+      const result=await apiJson('/wallet');
+      state.cloudWallet={balanceCents:Number(result.balance_cents||0),transactions:result.transactions||[],syncedAt:new Date().toISOString()};
+      saveState(); renderWallet(new Date());
+    }catch(err){ console.warn('D1 wallet:',err); }
+  }
+  async function migrateAndSyncCloud(){
+    // First merge known day state, then lock/upload existing local rewards.
+    for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds);
+    for(const [key,ds] of Object.entries(state.days||{})){
+      if(!ds?.rewardOpened) continue;
+      try{
+        const existing=await apiJson(`/reward?date=${encodeURIComponent(key)}`);
+        const serverSnapshot=snapshotFromCloudReward(existing.reward);
+        if(serverSnapshot){ ds.rewardSnapshot=serverSnapshot; saveState(); }
+        else await syncRewardToCloud(key,ds);
+      }catch(err){ console.warn('D1 reward migration:',key,err); }
+    }
+    reconcileLedger();
+    await syncLedgerToCloud();
+    await refreshCloudWallet();
+    state.migrations ||= {}; state.migrations.cloud040=true; saveState(); render();
+  }
   function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
   function localDate(key){ const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d); }
   function fmtDate(d){ return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long'}).format(d); }
@@ -182,6 +268,10 @@
           if(before13){ ds.work=true; ds.workAt=nowIso; ds.workSource='geo-api'; }
           else { ds.home=true; ds.homeAt=nowIso; ds.homeSource='geo-api'; }
           saveState();
+          await syncDayWithCloud(key,ds);
+          reconcileLedger();
+          await syncLedgerToCloud();
+          await refreshCloudWallet();
           setGeoMessage('success',`✓ Standort erfolgreich bestätigt – ${label} · ca. ${Number(result.distance)||0} m vom Zielpunkt.`);
           render();
           return;
@@ -266,7 +356,7 @@
     }
   }
 
-  function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; ds.rewardOpenedAt ||= new Date().toISOString(); lockReward(key,ds); saveState(); showDailyReward(key,ds); renderStats(); renderHistory(); }
+  async function openDailyReward(){ const key=dateKey(), ds=dayState(key); if(!(ds.work&&ds.home)) return; ds.rewardOpened=true; ds.rewardOpenedAt ||= new Date().toISOString(); lockReward(key,ds); saveState(); try{ await syncRewardToCloud(key,ds); }catch(err){ console.warn('D1 reward lock:',err); } showDailyReward(key,ds); renderStats(); renderHistory(); }
 
   function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
   function renderWeek(now){
@@ -308,7 +398,8 @@
     if(changed) saveState();
   }
   function renderWallet(now){
-    const total=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
+    const localTotal=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
+    const total=Number.isFinite(state.cloudWallet?.balanceCents) ? state.cloudWallet.balanceCents : localTotal;
     const today=dateKey(now), week=dateKey(getWeekStart(now));
     const todayTotal=state.ledger.filter(t=>t.date===today).reduce((s,t)=>s+t.cents,0);
     const weekEnd=new Date(getWeekStart(now)); weekEnd.setDate(weekEnd.getDate()+4); const weekEndKey=dateKey(weekEnd);
@@ -380,5 +471,5 @@
   refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
   refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
   if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-  render(); setInterval(render,60000);
+  render(); migrateAndSyncCloud(); setInterval(render,60000);
 })();

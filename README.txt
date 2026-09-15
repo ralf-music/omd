@@ -1,4 +1,14 @@
-ONE MORE DAY v0.3.4
+ONE MORE DAY v0.4.0
+
+D1-SYNCHRONISATION – STUFE 1
+- Tagesstatus wird mit Cloudflare D1 synchronisiert.
+- Bereits geöffnete lokale Reward-Snapshots werden einmalig nach D1 übertragen.
+- Existiert in D1 bereits ein Reward, gewinnt der serverseitig verriegelte Snapshot und wird lokal übernommen.
+- Neue Rewards werden beim Öffnen serverseitig verriegelt.
+- Ledger-Buchungen werden mit eindeutigen IDs nach D1 gespiegelt; 14./15.09.2026 bleiben bei den bereits manuell angelegten D1-Buchungen.
+- Nach erfolgreichem Abruf ist der D1-Kontostand maßgeblich für die Gesamtanzeige.
+- localStorage bleibt in v0.4.0 als Fallback/Sicherheitsnetz erhalten.
+
 
 Erste Cloud-Geo-Version.
 
@@ -41,11 +51,11 @@ CHANGELOG v0.3.0
 - Service-Worker-Cache auf omd-v0.3.0 aktualisiert.
 
 
-CHANGELOG v0.3.4
+CHANGELOG v0.4.0
 - Separate Joey-Motivationskarte unter dem Datum entfernt.
 - Joey-Kelly-Motiv im Header direkt antippbar gemacht.
 - Antippen öffnet weiterhin die bestehende Vollbildansicht.
-- Service-Worker-Cache auf omd-v0.3.4 aktualisiert.
+- Service-Worker-Cache auf omd-v0.4.0 aktualisiert.
 
 
-v0.3.4: Tagesrewards werden beim ersten Öffnen vollständig als Snapshot fixiert. Bild des Tages kann im aktuellen und historischen Reward im Vollbild geöffnet werden.
+v0.4.0: Tagesrewards werden beim ersten Öffnen vollständig als Snapshot fixiert. Bild des Tages kann im aktuellen und historischen Reward im Vollbild geöffnet werden.

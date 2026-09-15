@@ -147,7 +147,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.3.4</button>
+      <button id="versionBtn" class="version-btn">v0.4.0</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -231,23 +231,14 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.3.4</h2>
+      <h2>One More Day v0.4.0</h2>
       <ul>
-        <li>Freigeschaltete Tagesbelohnungen werden ab jetzt als vollständiger Snapshot eingefroren und durch spätere Updates nicht mehr verändert.</li>
-        <li>Bereits geöffnete Rewards werden beim ersten Start auf v0.3.4 in ihren aktuellen Zustand übernommen und dauerhaft fixiert.</li>
-        <li>Das Bild des Tages ist im aktuellen und historischen Reward antippbar und öffnet vollständig und unbeschnitten im Vollbild.</li>
-        <li>Das Joey-Kelly-Motiv im Header ist jetzt direkt antippbar und öffnet die bestehende Vollbildansicht.</li>
-        <li>Die separate Joey-Motivationskarte unter dem Datum wurde entfernt, damit die Tagesmission auf dem Handy wieder weiter nach oben rückt.</li>
-        <li>Testweise ersetzt das vorhandene Joey-Kelly-Motiv weiterhin das bisherige OMD-App-Icon und Header-Logo.</li>
-        <li>Neue kompakte Joey-Kelly-Motivationskarte auf der Startseite.</li>
-        <li>Das Motiv lässt sich antippen und groß als Vollbild-Overlay öffnen.</li>
-        <li>Die kompakte Darstellung hält die eigentliche Tagesmission auf dem Handy im Blick.</li>
-        <li>ARBEIT und ZUHAUSE werden jetzt über die Cloudflare-API serverseitig geprüft.</li>
-        <li>Die privaten Zielkoordinaten wurden vollständig aus dem Frontend entfernt.</li>
-        <li>Erfolgreiche Geo-Prüfungen werden deutlich grün, fehlgeschlagene Prüfungen rot angezeigt.</li>
-        <li>Während der Prüfung erscheint ein neutraler Status „Standort wird geprüft …“.</li>
-        <li>Das aktuelle Datum ist im Header deutlich größer und mit pinkem Glow hervorgehoben.</li>
-        <li>Historische Rewards, Wallet und der bestehende Songpool bleiben erhalten.</li>
+        <li>D1-Synchronisation Stufe 1: Tagesstatus, Reward-Snapshots und Arbeitsguthaben werden mit der One-More-Day-Cloud synchronisiert.</li>
+        <li>Vorhandene lokale Reward-Snapshots werden einmalig nach D1 übertragen. Bereits in D1 verriegelte Rewards werden niemals überschrieben.</li>
+        <li>Neue ARBEIT/ZUHAUSE-Bestätigungen werden nach erfolgreicher Geo-Prüfung zusätzlich in D1 gespeichert.</li>
+        <li>Neue Tagesrewards werden beim Öffnen auch serverseitig als vollständiger Snapshot verriegelt.</li>
+        <li>Nach erfolgreicher Synchronisation verwendet die Gesamtguthaben-Anzeige den D1-Kontostand; localStorage bleibt vorerst als Sicherheitsnetz erhalten.</li>
+        <li>Bild-Vollansicht, Joey-Header, 74-Song-Pool und bestehendes Design bleiben unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>
