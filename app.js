@@ -324,6 +324,11 @@
     state.pauses.push({from,to,reason:refs.pauseReason.value}); state.pauses.sort((a,b)=>a.from.localeCompare(b.from)); saveState(); refs.pauseDialog.close(); render();
   }
 
+  const joeyMotivationBtn=$('joeyMotivationBtn'), joeyMotivationDialog=$('joeyMotivationDialog'), closeJoeyMotivation=$('closeJoeyMotivation');
+  joeyMotivationBtn.addEventListener('click',()=>joeyMotivationDialog.showModal());
+  closeJoeyMotivation.addEventListener('click',()=>joeyMotivationDialog.close());
+  joeyMotivationDialog.addEventListener('click',e=>{ if(e.target===joeyMotivationDialog) joeyMotivationDialog.close(); });
+
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
   refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
   refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());

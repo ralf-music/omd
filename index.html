@@ -23,6 +23,16 @@
     </header>
 
     <main>
+      <button id="joeyMotivationBtn" class="joey-motivation-card" type="button" aria-label="Joey Kelly Motivation im Vollbild öffnen">
+        <img src="assets/joey-motivation.png" alt="Joey Kelly Comic-Motiv mit One More Day Motivation" />
+        <span class="joey-motivation-copy">
+          <span class="eyebrow">JOEY KELLY · MOTIVATION</span>
+          <strong>ONE MORE DAY.</strong>
+          <small>Antippen für Vollbild</small>
+        </span>
+        <span class="joey-motivation-open" aria-hidden="true">↗</span>
+      </button>
+
       <section id="pauseBanner" class="card pause-banner hidden"></section>
 
       <section class="card mission-card">
@@ -145,7 +155,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.3.0</button>
+      <button id="versionBtn" class="version-btn">v0.3.2</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -208,11 +218,22 @@
     </div>
   </dialog>
 
+  <dialog id="joeyMotivationDialog" class="motivation-dialog">
+    <div class="motivation-dialog-card">
+      <button id="closeJoeyMotivation" class="motivation-close" type="button" aria-label="Vollbild schließen">×</button>
+      <img src="assets/joey-motivation.png" alt="Joey Kelly Comic-Motiv: Du musst dir ein Ziel setzen und dann einfach anfangen. One More Day. Jeden Tag einen Schritt weiter. Bis zum Ziel." />
+    </div>
+  </dialog>
+
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.3.0</h2>
+      <h2>One More Day v0.3.2</h2>
       <ul>
+        <li>Testweise ersetzt das vorhandene Joey-Kelly-Motiv das bisherige OMD-App-Icon und Header-Logo.</li>
+        <li>Neue kompakte Joey-Kelly-Motivationskarte auf der Startseite.</li>
+        <li>Das Motiv lässt sich antippen und groß als Vollbild-Overlay öffnen.</li>
+        <li>Die kompakte Darstellung hält die eigentliche Tagesmission auf dem Handy im Blick.</li>
         <li>ARBEIT und ZUHAUSE werden jetzt über die Cloudflare-API serverseitig geprüft.</li>
         <li>Die privaten Zielkoordinaten wurden vollständig aus dem Frontend entfernt.</li>
         <li>Erfolgreiche Geo-Prüfungen werden deutlich grün, fehlgeschlagene Prüfungen rot angezeigt.</li>
