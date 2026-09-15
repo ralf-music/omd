@@ -1,6 +1,9 @@
 (() => {
   const DATA = window.OMD_DATA;
   const STORE_KEY = 'omd-state-v1';
+  const SCHEMA_VERSION = 2;
+  const DAILY_CENTS = 50;
+  const PERFECT_WEEK_CENTS = 200;
   const state = loadState();
   const $ = id => document.getElementById(id);
 
@@ -18,12 +21,18 @@
     dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
+    walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog')
   };
 
   function loadState(){
-    try { return Object.assign({days:{},pauses:[],weeklyOpened:{}}, JSON.parse(localStorage.getItem(STORE_KEY)||'{}')); }
-    catch { return {days:{},pauses:[],weeklyOpened:{}}; }
+    const base={schemaVersion:SCHEMA_VERSION,days:{},pauses:[],weeklyOpened:{},ledger:[]};
+    try {
+      const loaded=Object.assign(base,JSON.parse(localStorage.getItem(STORE_KEY)||'{}'));
+      loaded.days ||= {}; loaded.pauses ||= []; loaded.weeklyOpened ||= {}; loaded.ledger ||= [];
+      loaded.schemaVersion=SCHEMA_VERSION;
+      return loaded;
+    } catch { return base; }
   }
 
   function seedLaunchTestDay(){
@@ -43,6 +52,9 @@
   function fmtDate(d){ return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long'}).format(d); }
   function fmtTime(iso){ return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); }
   function dayState(key){ return state.days[key] ||= {work:false,home:false,rewardOpened:false}; }
+  function isWorkday(d){ const wd=d.getDay(); return wd>=1&&wd<=5; }
+  function decodeZone(code){ const z=DATA.geo.zones[code], sc=DATA.geo.scale; return {name:code==='w'?'WORK':'HOME',lat:z[0]/sc[0],lon:z[1]/sc[1],radius:z[2]}; }
+  function euro(cents){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(cents/100); }
   function isPaused(key){ return state.pauses.find(p => key>=p.from && key<=p.to) || null; }
   function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return Math.abs(h>>>0); }
   function imageUrl(file){ return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(file) + '?width=1200'; }
@@ -54,7 +66,7 @@
   }
 
   function render(){
-    const now=new Date(), key=dateKey(now), ds=dayState(key), pause=isPaused(key);
+    const now=new Date(), key=dateKey(now), ds=dayState(key), pause=isPaused(key), workday=isWorkday(now);
     refs.todayLabel.textContent=fmtDate(now);
     refs.pauseBanner.classList.toggle('hidden',!pause);
     if(pause){
@@ -62,11 +74,12 @@
     }
 
     refs.workStep.classList.toggle('done',!!ds.work); refs.homeStep.classList.toggle('done',!!ds.home);
-    refs.workStatus.textContent=ds.work ? `Bestätigt · ${fmtTime(ds.workAt)}` : 'Vor 13:00 Uhr am Arbeitsort bestätigen';
-    refs.homeStatus.textContent=ds.home ? `Bestätigt · ${fmtTime(ds.homeAt)}` : (now.getHours()<13 ? 'Ab 13:00 Uhr verfügbar' : 'Jetzt zuhause bestätigen');
+    refs.workStatus.textContent=ds.work ? `Bestätigt · ${fmtTime(ds.workAt)}` : (!workday ? 'Heute keine Arbeitsmission' : 'Vor 13:00 Uhr am Arbeitsort bestätigen');
+    refs.homeStatus.textContent=ds.home ? `Bestätigt · ${fmtTime(ds.homeAt)}` : (!workday ? 'Heute keine Arbeitsmission' : (now.getHours()<13 ? 'Ab 13:00 Uhr verfügbar' : 'Jetzt zuhause bestätigen'));
     refs.dayBadge.textContent=`${Number(!!ds.work)+Number(!!ds.home)}/2`;
 
-    if(pause){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='HEUTE PAUSIERT'; }
+    if(!workday){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='HEUTE KEINE MISSION'; }
+    else if(pause){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='HEUTE PAUSIERT'; }
     else if(ds.work && ds.home){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='MISSION ERLEDIGT'; }
     else { refs.locationBtn.disabled=false; refs.locationBtn.textContent='STANDORT PRÜFEN'; }
 
@@ -77,22 +90,25 @@
     refs.openRewardBtn.disabled=!unlocked; refs.openRewardBtn.textContent=ds.rewardOpened?'REWARD ANZEIGEN':'TÜRCHEN ÖFFNEN';
     if(ds.rewardOpened) showDailyReward(key,ds); else refs.rewardContent.classList.add('hidden');
 
-    renderWeek(now); renderStats(); renderHistory(); renderNextMission();
+    reconcileLedger(); renderWeek(now); renderWallet(now); renderStats(); renderHistory(); renderNextMission();
   }
 
   function checkLocation(){
     const now=new Date(), key=dateKey(now), ds=dayState(key);
+    if(!isWorkday(now)){ refs.locationHint.textContent='Heute ist keine Arbeitsmission aktiv.'; render(); return; }
+    if(isPaused(key)){ refs.locationHint.textContent='Dieser Tag ist pausiert.'; render(); return; }
     if(!navigator.geolocation){ refs.locationHint.textContent='Dieses Gerät unterstützt keine Standortabfrage.'; return; }
+    const before13=now.getHours()<13;
+    if(!before13 && !ds.work){ refs.locationHint.textContent='HOME ist erst möglich, wenn WORK heute erfolgreich bestätigt wurde.'; render(); return; }
     refs.locationBtn.disabled=true; refs.locationBtn.textContent='STANDORT WIRD GEPRÜFT…'; refs.locationHint.textContent='GPS/Standort wird einmalig abgefragt.';
     navigator.geolocation.getCurrentPosition(pos=>{
       const {latitude,longitude,accuracy}=pos.coords;
-      const before13=now.getHours()<13;
-      const target=before13?DATA.locations.work:DATA.locations.home;
+      const target=decodeZone(before13?'w':'h');
       const dist=Math.round(distanceMeters(latitude,longitude,target.lat,target.lon));
       if(accuracy>2000){ refs.locationHint.textContent=`Standort zu ungenau (±${Math.round(accuracy)} m). Bitte erneut versuchen.`; render(); return; }
       if(dist<=target.radius){
-        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); refs.locationHint.textContent=`WORK bestätigt · ca. ${dist} m vom Zielpunkt.`; }
-        else { ds.home=true; ds.homeAt=new Date().toISOString(); refs.locationHint.textContent=`HOME bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); ds.workSource='geo-local'; refs.locationHint.textContent=`WORK bestätigt · ca. ${dist} m vom Zielpunkt.`; }
+        else { ds.home=true; ds.homeAt=new Date().toISOString(); ds.homeSource='geo-local'; refs.locationHint.textContent=`HOME bestätigt · ca. ${dist} m vom Zielpunkt.`; }
         saveState(); render();
       } else {
         refs.locationHint.textContent=`Nicht in der ${target.name}-Zone · ca. ${(dist/1000).toFixed(1)} km entfernt.`; render();
@@ -152,22 +168,50 @@
 
   function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
   function renderWeek(now){
-    const start=getWeekStart(now), labels=['MO','DI','MI','DO','FR']; let completed=0, required=0;
+    const start=getWeekStart(now), labels=['MO','DI','MI','DO','FR']; let completed=0;
     refs.weekDays.innerHTML='';
     for(let i=0;i<5;i++){
       const d=new Date(start); d.setDate(start.getDate()+i); const key=dateKey(d), pause=isPaused(key), ds=state.days[key];
-      const done=!!(ds&&ds.work&&ds.home); if(!pause) required++; if(done) completed++;
+      const done=!!(ds&&ds.work&&ds.home); if(done) completed++;
       const el=document.createElement('div'); el.className='week-day'+(done?' done':'')+(pause?' paused':''); el.innerHTML=`${labels[i]}<strong>${pause?'–':done?'✓':'○'}</strong>`; refs.weekDays.appendChild(el);
     }
-    refs.weekBadge.textContent=`${completed}/${required}`;
-    const weekKey=dateKey(start), canUnlock=required>0 && completed===required && now.getDay()>=5;
+    refs.weekBadge.textContent=`${completed}/5`;
+    const weekKey=dateKey(start), canUnlock=completed===5;
     refs.weeklyRewardBox.classList.toggle('ready',canUnlock); refs.weeklyRewardBtn.disabled=!canUnlock;
-    refs.weeklyRewardStatus.textContent=canUnlock?(state.weeklyOpened[weekKey]?'Freigeschaltet':'Bereit zum Öffnen'):'Alle aktiven Arbeitstage abschließen';
+    refs.weeklyRewardStatus.textContent=canUnlock?(state.weeklyOpened[weekKey]?'Freigeschaltet':'Bereit zum Öffnen'):'Montag bis Freitag vollständig abschließen';
     refs.weeklyRewardBtn.onclick=()=>openWeekly(weekKey);
   }
   function openWeekly(weekKey){
     const idx=hash(weekKey+'weekly')%DATA.weeklyRewards.length, wr=DATA.weeklyRewards[idx]; state.weeklyOpened[weekKey]={index:idx,openedAt:new Date().toISOString()}; saveState();
     refs.weeklyDialogTitle.textContent=wr.title; refs.weeklyDialogText.textContent=wr.text; refs.weeklyYoutubeLink.href='https://www.youtube.com/results?search_query='+encodeURIComponent(wr.query); refs.weeklyDialog.showModal(); render();
+  }
+
+  function transaction(id,type,cents,meta={}){
+    if(state.ledger.some(t=>t.id===id)) return false;
+    state.ledger.push({id,type,cents,createdAt:new Date().toISOString(),...meta});
+    return true;
+  }
+  function reconcileLedger(){
+    let changed=false;
+    for(const [key,d] of Object.entries(state.days)){
+      const date=localDate(key);
+      if(isWorkday(date) && d.work && d.home && !isPaused(key)) changed=transaction(`daily:${key}`,'DAILY_REWARD',DAILY_CENTS,{date:key})||changed;
+    }
+    const starts=new Set(Object.keys(state.days).map(k=>dateKey(getWeekStart(localDate(k)))));
+    for(const wk of starts){
+      const start=localDate(wk); let perfect=true;
+      for(let i=0;i<5;i++){ const d=new Date(start); d.setDate(start.getDate()+i); const k=dateKey(d), ds=state.days[k]; if(!(ds&&ds.work&&ds.home) || isPaused(k)){ perfect=false; break; } }
+      if(perfect) changed=transaction(`week:${wk}`,'PERFECT_WEEK',PERFECT_WEEK_CENTS,{week:wk})||changed;
+    }
+    if(changed) saveState();
+  }
+  function renderWallet(now){
+    const total=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
+    const today=dateKey(now), week=dateKey(getWeekStart(now));
+    const todayTotal=state.ledger.filter(t=>t.date===today).reduce((s,t)=>s+t.cents,0);
+    const weekEnd=new Date(getWeekStart(now)); weekEnd.setDate(weekEnd.getDate()+4); const weekEndKey=dateKey(weekEnd);
+    const weekTotal=state.ledger.filter(t=>(t.date&&t.date>=week&&t.date<=weekEndKey)||t.week===week).reduce((s,t)=>s+t.cents,0);
+    refs.walletBalance.textContent=euro(total); refs.todayEarned.textContent=euro(todayTotal); refs.weekEarned.textContent=euro(weekTotal);
   }
 
   function renderStats(){

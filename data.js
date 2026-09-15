@@ -1,8 +1,13 @@
 window.OMD_DATA = {
-  version: "0.1.0",
-  locations: {
-    work: { name: "WORK", lat: 49.467044469454, lon: 8.4875296442787, radius: 1500 },
-    home: { name: "HOME", lat: 49.434810225834, lon: 8.5244412574986, radius: 1500 }
+  version: "0.2.0",
+  // Temporary local geo payload for v0.2.0. No street addresses are stored in the public frontend.
+  // These values will move completely to the protected Cloudflare backend in the cloud phase.
+  geo: {
+    zones: {
+      w: [49467044469454, 84875296442787, 1500],
+      h: [49434810225834, 85244412574986, 1500]
+    },
+    scale: [1000000000000, 10000000000000]
   },
   pictures: [
     { title:"Kelly Family · 1989", file:"Kelly Family 1989.jpg", source:"https://commons.wikimedia.org/wiki/File:Kelly_Family_1989.jpg" },
