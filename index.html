@@ -28,8 +28,8 @@
       <section class="card mission-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">TODAY'S MISSION</p>
-            <h2>Work. Home. Reward.</h2>
+            <p class="eyebrow">HEUTIGE MISSION</p>
+            <h2>Arbeit. Zuhause. Belohnung.</h2>
           </div>
           <div id="dayBadge" class="badge">0/2</div>
         </div>
@@ -60,21 +60,21 @@
 
       <section id="rewardCard" class="card reward-card locked">
         <div class="reward-lock" id="rewardLock">🔒</div>
-        <p class="eyebrow">DAILY REWARD</p>
+        <p class="eyebrow">TAGESBELOHNUNG</p>
         <h2 id="rewardTitle">Noch gesperrt</h2>
         <p id="rewardSubtitle" class="muted">Erst WORK + HOME abschließen.</p>
         <button id="openRewardBtn" class="primary-btn" disabled>TÜRCHEN ÖFFNEN</button>
 
         <div id="rewardContent" class="reward-content hidden">
           <div class="picture-wrap">
-            <img id="dailyPicture" alt="Picture of the Day" />
+            <img id="dailyPicture" alt="Bild des Tages" />
             <div class="picture-caption">
-              <span>PICTURE OF THE DAY</span>
+              <span>BILD DES TAGES</span>
               <a id="pictureSource" target="_blank" rel="noopener">Quelle</a>
             </div>
           </div>
           <div class="song-panel">
-            <p class="eyebrow">SONG OF THE DAY</p>
+            <p class="eyebrow">SONG DES TAGES</p>
             <div id="spotifyCoverWrap" class="spotify-cover-wrap">
               <img id="spotifyCover" class="spotify-cover hidden" alt="Spotify Cover" />
               <div id="spotifyCoverFallback" class="spotify-cover-fallback">SPOTIFY COVER WIRD GELADEN…</div>
@@ -89,14 +89,14 @@
       <section class="card weekly-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">WEEKLY JOURNEY</p>
+            <p class="eyebrow">WOCHENFORTSCHRITT</p>
             <h2 id="weekTitle">Diese Woche</h2>
           </div>
           <div id="weekBadge" class="badge">0/5</div>
         </div>
         <div id="weekDays" class="week-days"></div>
         <div id="weeklyRewardBox" class="weekly-reward-box locked-box">
-          <strong>WEEKLY REWARD</strong>
+          <strong>WOCHENBELOHNUNG</strong>
           <span id="weeklyRewardStatus">Noch gesperrt</span>
           <button id="weeklyRewardBtn" class="secondary-btn" disabled>ÖFFNEN</button>
         </div>
@@ -105,7 +105,7 @@
       <section class="card wallet-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">WORK WALLET</p>
+            <p class="eyebrow">ARBEITSGUTHABEN</p>
             <h2>Dein Guthaben</h2>
           </div>
           <div id="walletBalance" class="badge">0,00 €</div>
@@ -117,10 +117,10 @@
 
       <section class="grid-two">
         <section class="card compact-card">
-          <p class="eyebrow">COLLECTION</p>
+          <p class="eyebrow">SAMMLUNG</p>
           <h2>Deine Sammlung</h2>
-          <div class="stat-row"><span>Daily Rewards</span><strong id="dailyCount">0</strong></div>
-          <div class="stat-row"><span>Weekly Rewards</span><strong id="weeklyCount">0</strong></div>
+          <div class="stat-row"><span>Tagesbelohnungen</span><strong id="dailyCount">0</strong></div>
+          <div class="stat-row"><span>Wochenbelohnungen</span><strong id="weeklyCount">0</strong></div>
           <div class="stat-row"><span>Erfolgreiche Tage</span><strong id="completedCount">0</strong></div>
         </section>
 
@@ -135,7 +135,7 @@
       <section class="card history-card">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">RECENT UNLOCKS</p>
+            <p class="eyebrow">ZULETZT FREIGESCHALTET</p>
             <h2>Zuletzt freigeschaltet</h2>
           </div>
         </div>
@@ -144,7 +144,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.2.0</button>
+      <button id="versionBtn" class="version-btn">v0.2.1</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -174,7 +174,7 @@
 
   <dialog id="weeklyDialog">
     <div class="dialog-card">
-      <p class="eyebrow">WEEKLY REWARD</p>
+      <p class="eyebrow">WOCHENBELOHNUNG</p>
       <h2 id="weeklyDialogTitle"></h2>
       <p id="weeklyDialogText" class="muted"></p>
       <a id="weeklyYoutubeLink" class="primary-btn link-btn" target="_blank" rel="noopener">AUF YOUTUBE ÖFFNEN</a>
@@ -184,18 +184,15 @@
 
   <dialog id="versionDialog">
     <div class="dialog-card">
-      <p class="eyebrow">CHANGELOG</p>
-      <h2>One More Day v0.2.0</h2>
+      <p class="eyebrow">ÄNDERUNGEN</p>
+      <h2>One More Day v0.2.1</h2>
       <ul>
-        <li>Fundament für das spätere Cloud-System und eine versionierte lokale Datenstruktur vorbereitet.</li>
-        <li>Work Wallet eingeführt: 0,50 € pro vollständig abgeschlossenem Arbeitstag.</li>
-        <li>2,00 € Perfect-Week-Bonus nur bei fünf erfolgreichen Tagen von Montag bis Freitag.</li>
-        <li>Wallet arbeitet mit einem Transaktions-Ledger und schützt lokale Buchungen vor Doppelgutschriften.</li>
-        <li>HOME kann nicht mehr bestätigt werden, wenn WORK am selben Tag fehlt.</li>
-        <li>Standort-Missionen sind auf Montag bis Freitag begrenzt.</li>
-        <li>Klartext-Adressen aus README und Frontend-Konfiguration entfernt.</li>
-        <li>Geo-Zielwerte liegen vorübergehend nur verschleiert im Frontend und wandern später vollständig ins Cloudflare-Backend.</li>
-        <li>Testtag 14.09.2026 bleibt für bestehende Installationen kompatibel.</li>
+        <li>14.09.2026 und 15.09.2026 werden als vollständig erfolgreiche Starttage übernommen.</li>
+        <li>Beide Tagesbelohnungen sind rückwirkend freigeschaltet.</li>
+        <li>Das Arbeitsguthaben startet dadurch mit 1,00 €.</li>
+        <li>Ab 16.09.2026 gelten die regulären WORK- und HOME-Geo-Regeln.</li>
+        <li>Die zentralen Bereichsüberschriften wurden auf Deutsch umgestellt.</li>
+        <li>Der bisherige einzelne Testtag-Patch vom 14.09.2026 wurde durch eine saubere Startmigration ersetzt.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>

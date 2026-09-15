@@ -7,9 +7,9 @@
   const state = loadState();
   const $ = id => document.getElementById(id);
 
-  // One-time launch/test exception: Monday, 14.09.2026 counts WORK as completed.
-  // From 15.09.2026 onward the normal location rules apply without exceptions.
-  seedLaunchTestDay();
+  // Start migration: 14.09.2026 and 15.09.2026 count as fully completed launch days.
+  // Regular WORK -> HOME geo rules start on 16.09.2026.
+  seedLaunchDays();
 
   const refs = {
     todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
@@ -35,15 +35,24 @@
     } catch { return base; }
   }
 
-  function seedLaunchTestDay(){
-    const key='2026-09-14';
-    const existing=state.days && state.days[key];
-    if(existing && existing.work) return;
+  function seedLaunchDays(){
+    const launchDays=[
+      {key:'2026-09-14',workAt:'2026-09-14T10:00:00+02:00',homeAt:'2026-09-14T15:00:00+02:00'},
+      {key:'2026-09-15',workAt:'2026-09-15T10:00:00+02:00',homeAt:'2026-09-15T15:00:00+02:00'}
+    ];
     state.days ||= {};
-    const ds=state.days[key] ||= {work:false,home:false,rewardOpened:false};
-    ds.work=true;
-    ds.workAt='2026-09-14T10:00:00+02:00';
-    ds.workSource='launch-test';
+    state.migrations ||= {};
+    if(state.migrations.launchDays021) return;
+    for(const item of launchDays){
+      const ds=state.days[item.key] ||= {work:false,home:false,rewardOpened:false};
+      ds.work=true; ds.home=true; ds.rewardOpened=true;
+      ds.workAt ||= item.workAt; ds.homeAt ||= item.homeAt;
+      ds.workSource='launch-migration'; ds.homeSource='launch-migration';
+      ds.rewardOpenedAt ||= item.homeAt;
+    }
+    // These two launch days are explicitly treated as completed, never paused.
+    state.pauses=(state.pauses||[]).filter(p=>!launchDays.some(d=>d.key>=p.from&&d.key<=p.to));
+    state.migrations.launchDays021=true;
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
@@ -70,7 +79,7 @@
     refs.todayLabel.textContent=fmtDate(now);
     refs.pauseBanner.classList.toggle('hidden',!pause);
     if(pause){
-      refs.pauseBanner.innerHTML=`<p class="eyebrow">MISSION PAUSED</p><h2>${pause.reason}</h2><p class="muted">Heute ist kein Check-in nötig. Deine nächste Mission wartet danach.</p>`;
+      refs.pauseBanner.innerHTML=`<p class="eyebrow">MISSION PAUSIERT</p><h2>${pause.reason}</h2><p class="muted">Heute ist kein Check-in nötig. Deine nächste Mission wartet danach.</p>`;
     }
 
     refs.workStep.classList.toggle('done',!!ds.work); refs.homeStep.classList.toggle('done',!!ds.home);

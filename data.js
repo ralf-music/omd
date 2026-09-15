@@ -1,6 +1,6 @@
 window.OMD_DATA = {
-  version: "0.2.0",
-  // Temporary local geo payload for v0.2.0. No street addresses are stored in the public frontend.
+  version: "0.2.1",
+  // Temporary local geo payload for v0.2.1. No street addresses are stored in the public frontend.
   // These values will move completely to the protected Cloudflare backend in the cloud phase.
   geo: {
     zones: {
