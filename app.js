@@ -4,6 +4,7 @@
   const SCHEMA_VERSION = 4;
   const DAILY_CENTS = 50;
   const PERFECT_WEEK_CENTS = 200;
+  const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
   const state = loadState();
   const $ = id => document.getElementById(id);
 
@@ -83,17 +84,17 @@
   function fmtTime(iso){ return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); }
   function dayState(key){ return state.days[key] ||= {work:false,home:false,rewardOpened:false}; }
   function isWorkday(d){ const wd=d.getDay(); return wd>=1&&wd<=5; }
-  function decodeZone(code){ const z=DATA.geo.zones[code], sc=DATA.geo.scale; return {name:code==='w'?'ARBEIT':'ZUHAUSE',lat:z[0]/sc[0],lon:z[1]/sc[1],radius:z[2]}; }
   function euro(cents){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(cents/100); }
   function isPaused(key){ return state.pauses.find(p => key>=p.from && key<=p.to) || null; }
   function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return Math.abs(h>>>0); }
   function imageUrl(file){ return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(file) + '?width=1200'; }
 
-  function distanceMeters(lat1,lon1,lat2,lon2){
-    const R=6371000, r=Math.PI/180, dLat=(lat2-lat1)*r, dLon=(lon2-lon1)*r;
-    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
-    return 2*R*Math.asin(Math.sqrt(a));
+  function setGeoMessage(type,text){
+    refs.locationHint.classList.remove('geo-neutral','geo-success','geo-error');
+    refs.locationHint.classList.add(type==='success'?'geo-success':type==='error'?'geo-error':'geo-neutral');
+    refs.locationHint.textContent=text;
   }
+
 
   function render(){
     const now=new Date(), key=dateKey(now), ds=dayState(key), pause=isPaused(key), workday=isWorkday(now);
@@ -125,29 +126,47 @@
 
   function checkLocation(){
     const now=new Date(), key=dateKey(now), ds=dayState(key);
-    if(!isWorkday(now)){ refs.locationHint.textContent='Heute ist keine Arbeitsmission aktiv.'; render(); return; }
-    if(isPaused(key)){ refs.locationHint.textContent='Dieser Tag ist pausiert.'; render(); return; }
-    if(!navigator.geolocation){ refs.locationHint.textContent='Dieses Gerät unterstützt keine Standortabfrage.'; return; }
+    if(!isWorkday(now)){ setGeoMessage('error','Heute ist keine Arbeitsmission aktiv.'); render(); return; }
+    if(isPaused(key)){ setGeoMessage('error','Dieser Tag ist pausiert.'); render(); return; }
+    if(!navigator.geolocation){ setGeoMessage('error','Dieses Gerät unterstützt keine Standortabfrage.'); return; }
     const before13=now.getHours()<13;
-    if(!before13 && !ds.work){ refs.locationHint.textContent='ZUHAUSE ist erst möglich, wenn ARBEIT heute erfolgreich bestätigt wurde.'; render(); return; }
-    refs.locationBtn.disabled=true; refs.locationBtn.textContent='STANDORT WIRD GEPRÜFT…'; refs.locationHint.textContent='GPS/Standort wird einmalig abgefragt.';
-    navigator.geolocation.getCurrentPosition(pos=>{
+    if(!before13 && !ds.work){ setGeoMessage('error','ZUHAUSE ist erst möglich, wenn ARBEIT heute erfolgreich bestätigt wurde.'); render(); return; }
+    const target=before13?'work':'home', label=before13?'ARBEIT':'ZUHAUSE';
+    refs.locationBtn.disabled=true; refs.locationBtn.textContent='STANDORT WIRD GEPRÜFT…'; setGeoMessage('neutral','Standort wird geprüft …');
+    navigator.geolocation.getCurrentPosition(async pos=>{
       const {latitude,longitude,accuracy}=pos.coords;
-      const target=decodeZone(before13?'w':'h');
-      const dist=Math.round(distanceMeters(latitude,longitude,target.lat,target.lon));
-      if(accuracy>2000){ refs.locationHint.textContent=`Standort zu ungenau (±${Math.round(accuracy)} m). Bitte erneut versuchen.`; render(); return; }
-      if(dist<=target.radius){
-        if(before13){ ds.work=true; ds.workAt=new Date().toISOString(); ds.workSource='geo-local'; refs.locationHint.textContent=`ARBEIT bestätigt · ca. ${dist} m vom Zielpunkt.`; }
-        else { ds.home=true; ds.homeAt=new Date().toISOString(); ds.homeSource='geo-local'; refs.locationHint.textContent=`ZUHAUSE bestätigt · ca. ${dist} m vom Zielpunkt.`; }
-        saveState(); render();
-      } else {
-        refs.locationHint.textContent=`Nicht in der ${target.name}-Zone · ca. ${(dist/1000).toFixed(1)} km entfernt.`; render();
+      try{
+        const response=await fetch(`${API_BASE}/geo/${target}`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({latitude,longitude,accuracy})
+        });
+        let result=null;
+        try{ result=await response.json(); }catch{}
+        if(!response.ok || !result || result.ok!==true) throw new Error('API');
+        if(result.accepted===true){
+          const nowIso=new Date().toISOString();
+          if(before13){ ds.work=true; ds.workAt=nowIso; ds.workSource='geo-api'; }
+          else { ds.home=true; ds.homeAt=nowIso; ds.homeSource='geo-api'; }
+          saveState();
+          setGeoMessage('success',`✓ Standort erfolgreich bestätigt – ${label} · ca. ${Number(result.distance)||0} m vom Zielpunkt.`);
+          render();
+          return;
+        }
+        if(result.reason==='accuracy') setGeoMessage('error',`✕ Standort nicht bestätigt – GPS zu ungenau (±${Math.round(Number(result.accuracy)||accuracy)} m). Bitte erneut versuchen.`);
+        else setGeoMessage('error',`✕ Standort nicht bestätigt – du befindest dich außerhalb des erlaubten Bereichs${Number.isFinite(Number(result.distance)) ? ` · ca. ${(Number(result.distance)/1000).toFixed(1)} km entfernt.` : '.'}`);
+        render();
+      }catch(err){
+        console.warn('Geo API:',err);
+        setGeoMessage('error','✕ Standort nicht bestätigt – Serverprüfung momentan nicht erreichbar. Bitte erneut versuchen.');
+        render();
       }
     },err=>{
       const msg={1:'Standortberechtigung wurde verweigert.',2:'Standort ist momentan nicht verfügbar.',3:'Standortabfrage hat zu lange gedauert.'}[err.code]||'Standort konnte nicht geprüft werden.';
-      refs.locationHint.textContent=msg; render();
+      setGeoMessage('error',`✕ Standort nicht bestätigt – ${msg}`); render();
     },{enableHighAccuracy:true,maximumAge:0,timeout:15000});
   }
+
 
   function assignReward(key,ds){
     if(ds.pictureIndex==null) ds.pictureIndex=hash(key+'pic')%DATA.pictures.length;

@@ -1,14 +1,6 @@
 window.OMD_DATA = {
-  version: "0.2.4",
-  // Temporary local geo payload for v0.2.4. No street addresses are stored in the public frontend.
-  // These values will move completely to the protected Cloudflare backend in the cloud phase.
-  geo: {
-    zones: {
-      w: [49467044469454, 84875296442787, 1500],
-      h: [49434810225834, 85244412574986, 1500]
-    },
-    scale: [1000000000000, 10000000000000]
-  },
+  version: "0.3.0",
+  // Target coordinates are stored only as Cloudflare Worker secrets.
   pictures: [
     { title:"Kelly Family · 1989", file:"Kelly Family 1989.jpg", source:"https://commons.wikimedia.org/wiki/File:Kelly_Family_1989.jpg" },
     { title:"The Kelly Family · München", file:"The Kelly Family, München.jpg", source:"https://commons.wikimedia.org/wiki/File:The_Kelly_Family,_M%C3%BCnchen.jpg" },
