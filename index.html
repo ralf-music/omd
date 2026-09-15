@@ -68,6 +68,7 @@
         <div id="rewardContent" class="reward-content hidden">
           <div class="picture-wrap">
             <img id="dailyPicture" alt="Bild des Tages" />
+            <p id="pictureInfo" class="picture-info hidden"></p>
             <div class="picture-caption">
               <span>BILD DES TAGES</span>
               <a id="pictureSource" target="_blank" rel="noopener">Quelle</a>
@@ -144,7 +145,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.2.1</button>
+      <button id="versionBtn" class="version-btn">v0.2.2</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -185,14 +186,15 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.2.1</h2>
+      <h2>One More Day v0.2.2</h2>
       <ul>
-        <li>14.09.2026 und 15.09.2026 werden als vollständig erfolgreiche Starttage übernommen.</li>
-        <li>Beide Tagesbelohnungen sind rückwirkend freigeschaltet.</li>
-        <li>Das Arbeitsguthaben startet dadurch mit 1,00 €.</li>
-        <li>Ab 16.09.2026 gelten die regulären WORK- und HOME-Geo-Regeln.</li>
-        <li>Die zentralen Bereichsüberschriften wurden auf Deutsch umgestellt.</li>
-        <li>Der bisherige einzelne Testtag-Patch vom 14.09.2026 wurde durch eine saubere Startmigration ersetzt.</li>
+        <li>Songpool deutlich auf 37 direkt verlinkte Spotify-Tracks erweitert.</li>
+        <li>Spotify-Suchlinks aus dem produktiven Songpool entfernt: der Button öffnet jetzt immer einen konkreten Track.</li>
+        <li>Spotify-Cover werden für jeden Song über den direkten Track geladen.</li>
+        <li>Ein Song wird nach Verwendung 10 Tage lang nicht erneut ausgewählt.</li>
+        <li>Derselbe Interpret darf höchstens drei Tage hintereinander erscheinen.</li>
+        <li>Die Songs der Start-Rewards vom 14.09. und 15.09. werden rückwirkend auf das neue System migriert.</li>
+        <li>Bildinformationen werden angezeigt, wenn Anlass, Ort oder Datum zuverlässig hinterlegt sind.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>

@@ -1,7 +1,7 @@
 (() => {
   const DATA = window.OMD_DATA;
   const STORE_KEY = 'omd-state-v1';
-  const SCHEMA_VERSION = 2;
+  const SCHEMA_VERSION = 3;
   const DAILY_CENTS = 50;
   const PERFECT_WEEK_CENTS = 200;
   const state = loadState();
@@ -10,13 +10,14 @@
   // Start migration: 14.09.2026 and 15.09.2026 count as fully completed launch days.
   // Regular WORK -> HOME geo rules start on 16.09.2026.
   seedLaunchDays();
+  migrateRewards022();
 
   const refs = {
     todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
     workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
     locationBtn:$('locationBtn'), locationHint:$('locationHint'), rewardCard:$('rewardCard'), rewardLock:$('rewardLock'),
     rewardTitle:$('rewardTitle'), rewardSubtitle:$('rewardSubtitle'), openRewardBtn:$('openRewardBtn'), rewardContent:$('rewardContent'),
-    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'), spotifyCoverWrap:$('spotifyCoverWrap'), spotifyCover:$('spotifyCover'), spotifyCoverFallback:$('spotifyCoverFallback'),
+    dailyPicture:$('dailyPicture'), pictureSource:$('pictureSource'), pictureInfo:$('pictureInfo'), songTitle:$('songTitle'), songArtist:$('songArtist'), spotifyBtn:$('spotifyBtn'), spotifyCoverWrap:$('spotifyCoverWrap'), spotifyCover:$('spotifyCover'), spotifyCoverFallback:$('spotifyCoverFallback'),
     weekDays:$('weekDays'), weekBadge:$('weekBadge'), weeklyRewardBox:$('weeklyRewardBox'), weeklyRewardStatus:$('weeklyRewardStatus'), weeklyRewardBtn:$('weeklyRewardBtn'),
     dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
@@ -54,6 +55,25 @@
     state.pauses=(state.pauses||[]).filter(p=>!launchDays.some(d=>d.key>=p.from&&d.key<=p.to));
     state.migrations.launchDays021=true;
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }
+
+  function migrateRewards022(){
+    state.migrations ||= {};
+    if(state.migrations.rewards022) return;
+    // The launch rewards are intentionally re-selected from the new direct-track pool.
+    for(const key of ['2026-09-14','2026-09-15']){
+      const ds=state.days[key];
+      if(!ds) continue;
+      delete ds.songIndex;
+      delete ds.songId;
+    }
+    // Assign chronologically so cooldown and artist-run rules also apply to the two launch days.
+    for(const key of ['2026-09-14','2026-09-15']){
+      const ds=state.days[key];
+      if(ds&&ds.rewardOpened) assignReward(key,ds);
+    }
+    state.migrations.rewards022=true;
+    saveState();
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
   function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
@@ -130,12 +150,31 @@
 
   function assignReward(key,ds){
     if(ds.pictureIndex==null) ds.pictureIndex=hash(key+'pic')%DATA.pictures.length;
-    if(ds.songIndex==null) ds.songIndex=hash(key+'song')%DATA.songs.length;
+    if(ds.songId && DATA.songs.some(s=>s.id===ds.songId)) return;
+
+    const usedSongIds=new Set();
+    const priorArtists=[];
+    const d=localDate(key);
+    for(let back=1;back<=10;back++){
+      const p=new Date(d); p.setDate(d.getDate()-back);
+      const pk=dateKey(p), pd=state.days[pk];
+      if(!pd) continue;
+      const ps=pd.songId ? DATA.songs.find(s=>s.id===pd.songId) : DATA.songs[pd.songIndex];
+      if(ps){ usedSongIds.add(ps.id); if(back<=3) priorArtists.push({back,artist:ps.artist}); }
+    }
+    const last3=[1,2,3].map(back=>priorArtists.find(x=>x.back===back)?.artist).filter(Boolean);
+    const blockedArtist=last3.length===3 && last3.every(a=>a===last3[0]) ? last3[0] : null;
+    let candidates=DATA.songs.filter(s=>!usedSongIds.has(s.id) && s.artist!==blockedArtist);
+    if(!candidates.length) candidates=DATA.songs.filter(s=>s.artist!==blockedArtist);
+    if(!candidates.length) candidates=DATA.songs;
+    const song=candidates[hash(key+'song-v022')%candidates.length];
+    ds.songId=song.id;
+    ds.songIndex=DATA.songs.findIndex(s=>s.id===song.id); // compatibility with older local state/history
   }
   function showDailyReward(key,ds){
     assignReward(key,ds); saveState();
-    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs[ds.songIndex];
-    refs.dailyPicture.src=imageUrl(pic.file); refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source;
+    const pic=DATA.pictures[ds.pictureIndex], song=DATA.songs.find(s=>s.id===ds.songId) || DATA.songs[ds.songIndex];
+    refs.dailyPicture.src=imageUrl(pic.file); refs.dailyPicture.alt=pic.title; refs.pictureSource.href=pic.source; refs.pictureInfo.textContent=pic.info||''; refs.pictureInfo.classList.toggle('hidden',!pic.info);
     refs.songTitle.textContent=song.title; refs.songArtist.textContent=song.artist; refs.spotifyBtn.href=song.url;
     loadSpotifyCover(song);
     refs.rewardContent.classList.remove('hidden'); refs.rewardTitle.textContent=pic.title;
@@ -230,7 +269,7 @@
   function renderHistory(){
     const items=Object.entries(state.days).filter(([,d])=>d.rewardOpened).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,5);
     if(!items.length){ refs.historyList.innerHTML='<p class="muted">Noch nichts freigeschaltet.</p>'; return; }
-    refs.historyList.innerHTML=items.map(([key,d])=>{assignReward(key,d); const s=DATA.songs[d.songIndex]; return `<div class="history-item"><div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small></div>`}).join('');
+    refs.historyList.innerHTML=items.map(([key,d])=>{assignReward(key,d); const s=DATA.songs.find(s=>s.id===d.songId) || DATA.songs[d.songIndex]; return `<div class="history-item"><div><strong>${s.title}</strong><br><small>${s.artist}</small></div><small>${new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'}).format(localDate(key))}</small></div>`}).join('');
   }
   function renderNextMission(){
     let d=new Date(); for(let i=0;i<370;i++){ const key=dateKey(d), weekday=d.getDay(); if(weekday>=1&&weekday<=5&&!isPaused(key)){ refs.nextMissionText.textContent=`Nächste aktive Mission: ${fmtDate(d)}`; return;} d.setDate(d.getDate()+1); }
