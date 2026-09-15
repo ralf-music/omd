@@ -14,7 +14,9 @@
 <body>
   <div class="app-shell">
     <header class="hero">
-      <img class="brand-icon" src="assets/icons/icon-512.png" alt="One More Day Logo" />
+      <button id="joeyMotivationBtn" class="brand-icon-button" type="button" aria-label="Joey Kelly Motivation im Vollbild öffnen">
+        <img class="brand-icon" src="assets/icons/icon-512.png" alt="One More Day – Joey Kelly Motivation" />
+      </button>
       <div class="hero-copy">
         <h1>ONE MORE DAY</h1>
         <p class="hero-claim">KELLY ME TO WORK</p>
@@ -23,16 +25,6 @@
     </header>
 
     <main>
-      <button id="joeyMotivationBtn" class="joey-motivation-card" type="button" aria-label="Joey Kelly Motivation im Vollbild öffnen">
-        <img src="assets/joey-motivation.png" alt="Joey Kelly Comic-Motiv mit One More Day Motivation" />
-        <span class="joey-motivation-copy">
-          <span class="eyebrow">JOEY KELLY · MOTIVATION</span>
-          <strong>ONE MORE DAY.</strong>
-          <small>Antippen für Vollbild</small>
-        </span>
-        <span class="joey-motivation-open" aria-hidden="true">↗</span>
-      </button>
-
       <section id="pauseBanner" class="card pause-banner hidden"></section>
 
       <section class="card mission-card">
@@ -155,7 +147,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.3.2</button>
+      <button id="versionBtn" class="version-btn">v0.3.3</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -228,9 +220,11 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.3.2</h2>
+      <h2>One More Day v0.3.3</h2>
       <ul>
-        <li>Testweise ersetzt das vorhandene Joey-Kelly-Motiv das bisherige OMD-App-Icon und Header-Logo.</li>
+        <li>Das Joey-Kelly-Motiv im Header ist jetzt direkt antippbar und öffnet die bestehende Vollbildansicht.</li>
+        <li>Die separate Joey-Motivationskarte unter dem Datum wurde entfernt, damit die Tagesmission auf dem Handy wieder weiter nach oben rückt.</li>
+        <li>Testweise ersetzt das vorhandene Joey-Kelly-Motiv weiterhin das bisherige OMD-App-Icon und Header-Logo.</li>
         <li>Neue kompakte Joey-Kelly-Motivationskarte auf der Startseite.</li>
         <li>Das Motiv lässt sich antippen und groß als Vollbild-Overlay öffnen.</li>
         <li>Die kompakte Darstellung hält die eigentliche Tagesmission auf dem Handy im Blick.</li>

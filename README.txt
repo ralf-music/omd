@@ -1,4 +1,4 @@
-ONE MORE DAY v0.3.0
+ONE MORE DAY v0.3.3
 
 Erste Cloud-Geo-Version.
 
@@ -39,3 +39,10 @@ CHANGELOG v0.3.0
 - Grüne Erfolgsmeldung und rote Fehlermeldung für Geo-Prüfungen ergänzt.
 - Aktuelles Datum im Header vergrößert und mit pinkem Glow hervorgehoben.
 - Service-Worker-Cache auf omd-v0.3.0 aktualisiert.
+
+
+CHANGELOG v0.3.3
+- Separate Joey-Motivationskarte unter dem Datum entfernt.
+- Joey-Kelly-Motiv im Header direkt antippbar gemacht.
+- Antippen öffnet weiterhin die bestehende Vollbildansicht.
+- Service-Worker-Cache auf omd-v0.3.3 aktualisiert.
