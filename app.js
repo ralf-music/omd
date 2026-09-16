@@ -1,5 +1,6 @@
 (() => {
   const DATA = window.OMD_DATA;
+  const CONTENT = window.OMD_CONTENT || {items:[]};
   const STORE_KEY = 'omd-state-v1';
   const SCHEMA_VERSION = 6;
   const DAILY_CENTS = 50;
@@ -94,9 +95,51 @@
       extras:key==='2026-09-16' ? [
         {type:'wednesday-joke',label:'MITTWOCHSWITZ',text:'Ein Mann kommt zum Arzt und sagt: „Herr Doktor, überall wo ich hinfasse, tut es weh.“ Er tippt auf Knie, Schulter und Stirn und schreit jedes Mal auf. Der Arzt untersucht ihn kurz: „Ihr Finger ist gebrochen.“'},
         {type:'useless-knowledge',label:'UNNÜTZES WISSEN DER MENSCHHEIT',text:'Wombats sind die einzigen bekannten Tiere, die würfelförmigen Kot produzieren. Die Würfelform entsteht bereits im Darm: unterschiedlich steife Bereiche des letzten Darmabschnitts formen beim Zusammenziehen flache Seiten und Kanten.',source:'https://cos.gatech.edu/news/studying-wombats-cubic-poop'}
-      ] : []
+      ] : selectRewardExtras(key)
     };
   }
+  function contentToRewardExtra(item){
+    return {
+      type:'content-library',
+      contentId:item.id||'',
+      category:item.category||'',
+      label:(item.category||'EXTRA').toUpperCase(),
+      title:item.title||'',
+      text:item.title ? `${item.title}\n\n${item.text||''}` : (item.text||''),
+      source:item.sourceUrl||''
+    };
+  }
+  function selectFromPool(pool,key,salt,excludeIds=new Set()){
+    const candidates=pool.filter(item=>item && item.verified!==false && !excludeIds.has(item.id));
+    if(!candidates.length) return null;
+    return candidates[hash(`${key}|${salt}|content-v050`)%candidates.length];
+  }
+  function selectRewardExtras(key){
+    const date=localDate(key), weekday=date.getDay();
+    if(weekday<1 || weekday>5) return [];
+    const all=Array.isArray(CONTENT.items)?CONTENT.items:[];
+    if(!all.length) return [];
+
+    const count=(weekday===1 || weekday===3 || weekday===5) ? 2 : 1;
+    const selected=[], used=new Set();
+
+    // Wednesday keeps its own character: one joke plus one knowledge/history surprise.
+    if(weekday===3){
+      const jokes=all.filter(x=>x.category==='Witz');
+      const knowledge=all.filter(x=>x.category!=='Witz' && x.category!=='Motivation');
+      const joke=selectFromPool(jokes,key,'wed-joke',used);
+      if(joke){ selected.push(joke); used.add(joke.id); }
+      const fact=selectFromPool(knowledge,key,'wed-knowledge',used);
+      if(fact){ selected.push(fact); used.add(fact.id); }
+    } else {
+      for(let i=0;i<count;i++){
+        const item=selectFromPool(all,key,`general-${i}`,used);
+        if(item){ selected.push(item); used.add(item.id); }
+      }
+    }
+    return selected.slice(0,count).map(contentToRewardExtra);
+  }
+
   function lockReward(key,ds){
     if(ds.rewardSnapshot) return ds.rewardSnapshot;
     ds.rewardSnapshot=makeRewardSnapshot(key,ds);

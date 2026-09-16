@@ -150,7 +150,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.4.4</button>
+      <button id="versionBtn" class="version-btn">v0.5.0</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -274,20 +274,23 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.4.4</h2>
+      <h2>One More Day v0.5.0</h2>
       <ul>
-        <li>Neue Buchungshistorie im Bereich ARBEITSGUTHABEN.</li>
-        <li>Cloud-Buchungen aus D1 werden mit Datum, Bezeichnung und Betrag angezeigt.</li>
-        <li>Positive und negative Buchungen sind getrennt erkennbar; zukünftige Boni, Auszahlungen und Admin-Korrekturen sind bereits als Buchungstypen vorbereitet.</li>
-        <li>Falls die Cloud vorübergehend nicht erreichbar ist, kann die vorhandene lokale Buchungsliste als Fallback angezeigt werden.</li>
-        <li>Guthabenanforderung bleibt weiterhin eine reine Vorschau; es wird noch nichts reserviert oder abgezogen.</li>
-        <li>Reward-, Songpool- und Mittwochsinhalte aus v0.4.3 bleiben unverändert.</li>
+        <li>Neues Zusatzcontent-System mit recherchierter Content-Bibliothek integriert.</li>
+        <li>Montag, Mittwoch und Freitag erhalten zusätzlich zu Bild + Song jeweils 2 Inhalte.</li>
+        <li>Dienstag und Donnerstag erhalten zusätzlich zu Bild + Song jeweils 1 Inhalt.</li>
+        <li>Mittwoch bleibt speziell: ein Witz plus ein Wissens-/Geschichtsinhalt.</li>
+        <li>Ausgewählter Zusatzcontent wird vollständig im unveränderlichen Reward-Snapshot gespeichert.</li>
+        <li>Donnerstag, 17.09.2026, funktioniert bereits ohne Änderungen an Cloudflare/D1.</li>
+        <li>Die serverseitige 365-Tage-Wiederholungssperre folgt separat; heute wurde bewusst keine provisorische lokale Sperre eingebaut.</li>
+        <li>Buchungshistorie und Guthabenanforderung aus v0.4.4 bleiben unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>
   </dialog>
 
   <script src="data.js"></script>
+  <script src="content.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

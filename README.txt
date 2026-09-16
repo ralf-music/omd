@@ -87,3 +87,19 @@ CHANGELOG v0.4.4
 - Lokale Ledger-Daten dienen als Fallback, falls die Cloud nicht geladen werden kann.
 - Vorbereitete Labels für Tagesbelohnung, Wochenbonus, Überraschungsbonus, Bonus Challenge, Auszahlung und Admin-Korrektur.
 - Guthabenanforderung bleibt unverändert reine Vorschau.
+
+CHANGELOG v0.5.0
+- Recherchierte Zusatzcontent-Bibliothek als content.js integriert.
+- Montag/Mittwoch/Freitag: Bild + Song + 2 Zusatzinhalte.
+- Dienstag/Donnerstag: Bild + Song + 1 Zusatzinhalt.
+- Mittwoch: ein Witz plus ein Wissens-/Geschichtsinhalt.
+- Zusatzcontent wird beim Öffnen vollständig in den unveränderlichen Reward-Snapshot kopiert.
+- Der bestehende Sonderreward vom 16.09.2026 bleibt unverändert.
+- Keine Cloudflare-/D1-Änderung für dieses Update erforderlich.
+- Die geplante 365-Tage-Wiederholungssperre wird in der nächsten Cloud-Stufe serverseitig ergänzt.
+- v0.4.4 Buchungshistorie und Guthaben-UI bleiben erhalten.
+
+DATEIEN v0.5.0
+GEÄNDERT: index.html, app.js, data.js, sw.js, README.txt
+NEU: content.js
+GELÖSCHT: Keine
