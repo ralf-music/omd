@@ -1,4 +1,4 @@
-ONE MORE DAY v0.4.3
+ONE MORE DAY v0.4.4
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -79,3 +79,11 @@ CHANGELOG v0.4.3
 
 
 v0.4.3: Einmaliger Mittwoch-Sonderreward für 16.09.2026 mit Witz + verifiziertem Unnützes-Wissen-Eintrag; Auszahlung-Placeholder angepasst.
+
+
+CHANGELOG v0.4.4
+- Buchungshistorie im Arbeitsguthaben ergänzt.
+- D1-Wallet-Transaktionen werden mit Datum, Typ und Betrag angezeigt.
+- Lokale Ledger-Daten dienen als Fallback, falls die Cloud nicht geladen werden kann.
+- Vorbereitete Labels für Tagesbelohnung, Wochenbonus, Überraschungsbonus, Bonus Challenge, Auszahlung und Admin-Korrektur.
+- Guthabenanforderung bleibt unverändert reine Vorschau.

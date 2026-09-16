@@ -118,6 +118,7 @@
         <div class="stat-row"><span>Diese Woche</span><strong id="weekEarned">0,00 €</strong></div>
         <p class="microcopy">+0,50 € nach erfolgreicher ARBEIT + ZUHAUSE. +2,00 € nur für eine vollständige erfolgreiche Mo–Fr-Woche.</p>
         <button id="requestPayoutBtn" class="secondary-btn wallet-request-btn" type="button">GUTHABEN ANFORDERN</button>
+        <button id="bookingHistoryBtn" class="ghost-btn booking-history-btn" type="button">BUCHUNGEN ANZEIGEN</button>
       </section>
 
       <section class="grid-two">
@@ -149,11 +150,22 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.4.3</button>
+      <button id="versionBtn" class="version-btn">v0.4.4</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
 
+
+  <dialog id="bookingHistoryDialog">
+    <div class="dialog-card booking-history-dialog-card">
+      <p class="eyebrow">ARBEITSGUTHABEN</p>
+      <h2>Buchungen</h2>
+      <div class="booking-history-head"><span>Aktueller Kontostand</span><strong id="bookingHistoryBalance">0,00 €</strong></div>
+      <div id="bookingHistoryList" class="booking-history-list"></div>
+      <p id="bookingHistoryHint" class="microcopy">Die Buchungen werden aus dem Cloud-Konto geladen.</p>
+      <button id="closeBookingHistoryBtn" class="ghost-btn payout-close-btn" type="button">SCHLIESSEN</button>
+    </div>
+  </dialog>
 
   <dialog id="payoutDialog">
     <div class="dialog-card payout-dialog-card">
@@ -262,14 +274,14 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.4.3</h2>
+      <h2>One More Day v0.4.4</h2>
       <ul>
-        <li>Ersten Mittwoch 16.09.2026 als Sonderreward vorbereitet: garantierter Mittwochswitz plus „Unnützes Wissen der Menschheit“.</li>
-        <li>Der Mittwochszusatz wird erst mit dem normalen Tagesreward freigeschaltet und anschließend im Reward-Snapshot festgeschrieben.</li>
-        <li>Erster Wissenseintrag: die wissenschaftlich untersuchte Würfelform von Wombat-Kot.</li>
-        <li>Beispiel im optionalen Auszahlungsfeld auf „Amazon, Google Play, ChatGPT Plus“ angepasst.</li>
-        <li>Auszahlungsfunktion bleibt weiterhin reine Vorschau; D1-/Admin-Anbindung folgt später.</li>
-        <li>Songpool mit 103 Titeln und bestehende Rewards vom 14./15.09. bleiben unverändert.</li>
+        <li>Neue Buchungshistorie im Bereich ARBEITSGUTHABEN.</li>
+        <li>Cloud-Buchungen aus D1 werden mit Datum, Bezeichnung und Betrag angezeigt.</li>
+        <li>Positive und negative Buchungen sind getrennt erkennbar; zukünftige Boni, Auszahlungen und Admin-Korrekturen sind bereits als Buchungstypen vorbereitet.</li>
+        <li>Falls die Cloud vorübergehend nicht erreichbar ist, kann die vorhandene lokale Buchungsliste als Fallback angezeigt werden.</li>
+        <li>Guthabenanforderung bleibt weiterhin eine reine Vorschau; es wird noch nichts reserviert oder abgezogen.</li>
+        <li>Reward-, Songpool- und Mittwochsinhalte aus v0.4.3 bleiben unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>

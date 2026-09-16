@@ -46,3 +46,7 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 
 /* v0.4.3 Wednesday reward extras */
 .reward-extras{display:grid;gap:12px;margin-top:16px}.reward-extra{position:relative;padding:15px;border-radius:16px;background:linear-gradient(145deg,rgba(255,47,146,.08),rgba(255,255,255,.02));border:1px solid #353540}.reward-extra .eyebrow{margin-bottom:8px}.reward-extra-text{margin:0;color:#e7e3e9;line-height:1.55;font-size:14px;white-space:pre-line}.reward-extra-source{display:inline-block;margin-top:10px;color:#ffc0df;font-size:11px;font-weight:850;letter-spacing:.08em}
+
+
+/* v0.4.4 booking history */
+.booking-history-btn{margin-top:9px}.booking-history-dialog-card{max-height:88vh;overflow:auto}.booking-history-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;margin:14px 0;border-radius:14px;background:#1d1d25;border:1px solid #30303a}.booking-history-head strong{color:var(--pink2);font-size:18px}.booking-history-list{display:grid;margin-top:8px}.booking-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid #292932}.booking-row:first-child{border-top:0}.booking-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.booking-copy strong{font-size:14px}.booking-copy small{font-size:11px;color:var(--muted)}.booking-amount{white-space:nowrap;font-size:14px}.booking-amount.positive{color:#bfffd4}.booking-amount.negative{color:#ffc1cc}.booking-empty{padding:12px 0}

@@ -26,7 +26,7 @@
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
     walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
-    requestPayoutBtn:$('requestPayoutBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
+    requestPayoutBtn:$('requestPayoutBtn'), bookingHistoryBtn:$('bookingHistoryBtn'), bookingHistoryDialog:$('bookingHistoryDialog'), bookingHistoryBalance:$('bookingHistoryBalance'), bookingHistoryList:$('bookingHistoryList'), bookingHistoryHint:$('bookingHistoryHint'), closeBookingHistoryBtn:$('closeBookingHistoryBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen')
@@ -491,6 +491,45 @@
 
 
 
+
+  function bookingLabel(t){
+    const type=String(t?.type||'').toUpperCase();
+    if(type==='DAILY_REWARD') return 'Tagesbelohnung';
+    if(type==='PERFECT_WEEK'||type==='WEEKLY_BONUS') return 'Wochenbonus';
+    if(type==='SURPRISE_BONUS'||type==='RANDOM_BONUS') return 'Überraschungsbonus';
+    if(type==='CHALLENGE_BONUS') return 'Bonus Challenge';
+    if(type==='PAYOUT'||type==='PAYOUT_COMPLETED') return 'Auszahlung';
+    if(type==='ADMIN_ADJUSTMENT'||type==='ADMIN_CORRECTION') return 'Admin-Korrektur';
+    return t?.note || 'Buchung';
+  }
+  function bookingDate(t){
+    const raw=t?.day_date || t?.date || '';
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(localDate(raw));
+    const created=t?.created_at || t?.createdAt;
+    if(created){ const d=new Date(created); if(!Number.isNaN(d.getTime())) return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d); }
+    return '–';
+  }
+  function normalizedBookings(){
+    if(Array.isArray(state.cloudWallet?.transactions) && state.cloudWallet.transactions.length){
+      return state.cloudWallet.transactions.map(t=>({...t,_cents:Number(t.amount_cents||0)}));
+    }
+    return (state.ledger||[]).map(t=>({...t,_cents:Number(t.cents||0)})).sort((a,b)=>String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));
+  }
+  function renderBookingHistory(){
+    if(!refs.bookingHistoryList) return;
+    refs.bookingHistoryBalance.textContent=euro(currentWalletCents());
+    const items=normalizedBookings(); refs.bookingHistoryList.innerHTML='';
+    if(!items.length){ refs.bookingHistoryList.innerHTML='<p class="muted booking-empty">Noch keine Buchungen vorhanden.</p>'; return; }
+    for(const t of items){
+      const row=document.createElement('div'); row.className='booking-row';
+      const cents=Number(t._cents||0), sign=cents>0?'+':'';
+      row.innerHTML=`<div class="booking-copy"><strong>${bookingLabel(t)}</strong><small>${bookingDate(t)}</small></div><strong class="booking-amount ${cents<0?'negative':'positive'}">${sign}${euro(cents)}</strong>`;
+      refs.bookingHistoryList.appendChild(row);
+    }
+    refs.bookingHistoryHint.textContent=Array.isArray(state.cloudWallet?.transactions)?'Cloud-Buchungen · automatisch synchronisiert':'Lokale Buchungen · Cloud derzeit nicht geladen';
+  }
+  function openBookingHistory(){ renderBookingHistory(); refs.bookingHistoryDialog.showModal(); refreshCloudWallet().then(()=>renderBookingHistory()); }
+
   function currentWalletCents(){
     const localTotal=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
     return Number.isFinite(state.cloudWallet?.balanceCents) ? state.cloudWallet.balanceCents : localTotal;
@@ -514,6 +553,9 @@
     payoutSelectedCents=0; refs.customPayoutWrap.classList.add('hidden'); refs.customPayoutAmount.value=''; refs.payoutWish.value=''; refs.payoutMessage.classList.add('hidden'); refs.payoutMessage.textContent=''; updatePayoutPreview(); refs.payoutDialog.showModal();
   }
   refs.requestPayoutBtn.addEventListener('click',openPayoutPreview);
+  refs.bookingHistoryBtn.addEventListener('click',openBookingHistory);
+  refs.closeBookingHistoryBtn.addEventListener('click',()=>refs.bookingHistoryDialog.close());
+  refs.bookingHistoryDialog.addEventListener('click',e=>{if(e.target===refs.bookingHistoryDialog) refs.bookingHistoryDialog.close();});
   document.querySelectorAll('.payout-chip').forEach(btn=>btn.addEventListener('click',()=>{ payoutSelectedCents=Number(btn.dataset.cents||0); refs.customPayoutWrap.classList.add('hidden'); refs.customPayoutAmount.value=''; updatePayoutPreview(); }));
   refs.customPayoutBtn.addEventListener('click',()=>{ refs.customPayoutWrap.classList.remove('hidden'); payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); refs.customPayoutAmount.focus(); });
   refs.customPayoutAmount.addEventListener('input',()=>{ payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); });
