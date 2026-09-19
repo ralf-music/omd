@@ -103,3 +103,16 @@ DATEIEN v0.5.0
 GEÄNDERT: index.html, app.js, data.js, sw.js, README.txt
 NEU: content.js
 GELÖSCHT: Keine
+
+
+CHANGELOG v0.5.1
+- Aktuelle Woche (Mo-Fr) wird beim Start aus der bestehenden D1 Day-API nachgeladen.
+- Cloud-Rewards werden für die aktuelle Woche nachgeladen und lokal gespiegelt.
+- Frische Browser erkennen damit abgeschlossene Tage, die auf einem anderen Gerät gebucht wurden.
+- 'Diese Woche' nutzt bei verfügbarer Cloud die Cloud-Buchungen inklusive Perfect-Week-Bonus.
+- Keine Cloudflare-/D1-Änderung erforderlich.
+
+DATEIEN v0.5.1
+GEÄNDERT: app.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine

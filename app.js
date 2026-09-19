@@ -228,8 +228,43 @@
       saveState(); renderWallet(new Date());
     }catch(err){ console.warn('D1 wallet:',err); }
   }
+  async function syncCurrentWeekFromCloud(referenceDate=new Date()){
+    const start=getWeekStart(referenceDate);
+    let changed=false;
+    for(let i=0;i<5;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=dateKey(d), ds=dayState(key);
+      try{
+        const existing=await apiJson(`/day?date=${encodeURIComponent(key)}`);
+        if(existing.day){
+          const before=JSON.stringify({work:ds.work,home:ds.home,workAt:ds.workAt,homeAt:ds.homeAt});
+          ds.work=!!existing.day.work_confirmed || !!ds.work;
+          ds.home=!!existing.day.home_confirmed || !!ds.home;
+          ds.workAt ||= existing.day.work_confirmed_at || null;
+          ds.homeAt ||= existing.day.home_confirmed_at || null;
+          if(JSON.stringify({work:ds.work,home:ds.home,workAt:ds.workAt,homeAt:ds.homeAt})!==before) changed=true;
+        }
+      }catch(err){ console.warn('D1 week day load:',key,err); }
+
+      // A reward stored in D1 is the authoritative signal that this day's reward was opened.
+      try{
+        const rewardResult=await apiJson(`/reward?date=${encodeURIComponent(key)}`);
+        const serverSnapshot=snapshotFromCloudReward(rewardResult.reward);
+        if(serverSnapshot){
+          ds.rewardSnapshot=serverSnapshot;
+          ds.rewardOpened=true;
+          ds.rewardOpenedAt ||= serverSnapshot.lockedAt || ds.homeAt || new Date().toISOString();
+          changed=true;
+        }
+      }catch(err){ console.warn('D1 week reward load:',key,err); }
+    }
+    if(changed) saveState();
+  }
+
   async function migrateAndSyncCloud(){
-    // First merge known day state, then lock/upload existing local rewards.
+    // Discover the whole current Mon-Fri week first. Fresh browsers otherwise only know locally seeded days.
+    await syncCurrentWeekFromCloud(new Date());
+    // Then merge known day state and lock/upload existing local rewards.
     for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds);
     for(const [key,ds] of Object.entries(state.days||{})){
       if(!ds?.rewardOpened) continue;
@@ -464,9 +499,22 @@
     const localTotal=state.ledger.reduce((sum,t)=>sum+Number(t.cents||0),0);
     const total=Number.isFinite(state.cloudWallet?.balanceCents) ? state.cloudWallet.balanceCents : localTotal;
     const today=dateKey(now), week=dateKey(getWeekStart(now));
-    const todayTotal=state.ledger.filter(t=>t.date===today).reduce((s,t)=>s+t.cents,0);
     const weekEnd=new Date(getWeekStart(now)); weekEnd.setDate(weekEnd.getDate()+4); const weekEndKey=dateKey(weekEnd);
-    const weekTotal=state.ledger.filter(t=>(t.date&&t.date>=week&&t.date<=weekEndKey)||t.week===week).reduce((s,t)=>s+t.cents,0);
+
+    let todayTotal=state.ledger.filter(t=>t.date===today).reduce((s,t)=>s+t.cents,0);
+    let weekTotal=state.ledger.filter(t=>(t.date&&t.date>=week&&t.date<=weekEndKey)||t.week===week).reduce((s,t)=>s+t.cents,0);
+
+    // Prefer cloud ledger when available so a fresh browser shows the same daily/weekly money as the phone.
+    if(Array.isArray(state.cloudWallet?.transactions)){
+      const cloud=state.cloudWallet.transactions;
+      todayTotal=cloud.filter(t=>t.day_date===today).reduce((s,t)=>s+Number(t.amount_cents||0),0);
+      weekTotal=cloud.filter(t=>{
+        const day=String(t.day_date||'');
+        const id=String(t.id||'');
+        return (day>=week&&day<=weekEndKey) || id===`week-${week}`;
+      }).reduce((s,t)=>s+Number(t.amount_cents||0),0);
+    }
+
     refs.walletBalance.textContent=euro(total); refs.todayEarned.textContent=euro(todayTotal); refs.weekEarned.textContent=euro(weekTotal);
     if(refs.requestPayoutBtn) refs.requestPayoutBtn.disabled=total<=0;
   }

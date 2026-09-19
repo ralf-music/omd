@@ -150,7 +150,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.5.0</button>
+      <button id="versionBtn" class="version-btn">v0.5.1</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -274,16 +274,14 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.5.0</h2>
+      <h2>One More Day v0.5.1</h2>
       <ul>
-        <li>Neues Zusatzcontent-System mit recherchierter Content-Bibliothek integriert.</li>
-        <li>Montag, Mittwoch und Freitag erhalten zusätzlich zu Bild + Song jeweils 2 Inhalte.</li>
-        <li>Dienstag und Donnerstag erhalten zusätzlich zu Bild + Song jeweils 1 Inhalt.</li>
-        <li>Mittwoch bleibt speziell: ein Witz plus ein Wissens-/Geschichtsinhalt.</li>
-        <li>Ausgewählter Zusatzcontent wird vollständig im unveränderlichen Reward-Snapshot gespeichert.</li>
-        <li>Donnerstag, 17.09.2026, funktioniert bereits ohne Änderungen an Cloudflare/D1.</li>
-        <li>Die serverseitige 365-Tage-Wiederholungssperre folgt separat; heute wurde bewusst keine provisorische lokale Sperre eingebaut.</li>
-        <li>Buchungshistorie und Guthabenanforderung aus v0.4.4 bleiben unverändert.</li>
+        <li>Geräteübergreifender Wochen-Sync korrigiert: Beim Start werden Montag bis Freitag der aktuellen Woche aus der bestehenden Cloud-Day-API geladen.</li>
+        <li>Cloud-Rewards der aktuellen Woche werden nachgeladen, damit abgeschlossene Tage auch in einem frischen Browser wieder anklickbar sind.</li>
+        <li>„Diese Woche“ verwendet bei verfügbarer Cloud jetzt die Cloud-Buchungen statt nur das lokale Browser-Ledger.</li>
+        <li>Gesamtguthaben, Wochenfortschritt und Wochenverdienst bleiben dadurch auch nach Browserwechsel oder gelöschten Websitedaten konsistent.</li>
+        <li>Keine Änderung an Cloudflare Worker oder D1 erforderlich.</li>
+        <li>Content-System aus v0.5.0 bleibt unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>
