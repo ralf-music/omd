@@ -116,3 +116,17 @@ DATEIEN v0.5.1
 GEÄNDERT: app.js, index.html, sw.js, README.txt
 NEU: Keine
 GELÖSCHT: Keine
+
+
+CHANGELOG v0.5.2
+- Qualitätsbereinigung Witz-Pool: 188 -> 80 redaktionell geprüfte, klar erkennbare Witze.
+- 108 kurze Sprüche, Pseudo-Witze und schwache Platzhalter entfernt.
+- Entfernte joke-* Inhalte werden auch beim Rendern alter Reward-Ansichten ausgeblendet.
+- Bildauswahl schließt bereits verwendete Bilddateien aus, solange noch unbenutzte Bilder im Pool vorhanden sind.
+- Bestehende D1-Snapshots bleiben unverändert.
+- Kein Cloudflare-/D1-Update erforderlich.
+
+DATEIEN v0.5.2
+GEÄNDERT: app.js, content.js, data.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine

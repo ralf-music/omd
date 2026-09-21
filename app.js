@@ -1,6 +1,7 @@
 (() => {
   const DATA = window.OMD_DATA;
   const CONTENT = window.OMD_CONTENT || {items:[]};
+  const ACTIVE_CONTENT_IDS = new Set((CONTENT.items||[]).map(x=>x.id).filter(Boolean));
   const STORE_KEY = 'omd-state-v1';
   const SCHEMA_VERSION = 6;
   const DAILY_CENTS = 50;
@@ -375,7 +376,24 @@
 
 
   function assignReward(key,ds){
-    if(ds.pictureIndex==null) ds.pictureIndex=hash(key+'pic')%DATA.pictures.length;
+    if(ds.pictureIndex==null){
+      const usedPictureFiles=new Set();
+      for(const [otherKey,other] of Object.entries(state.days||{})){
+        if(otherKey===key || !other) continue;
+        const lockedFile=other.rewardSnapshot?.picture?.file;
+        if(lockedFile) usedPictureFiles.add(lockedFile);
+        else if(Number.isInteger(other.pictureIndex) && DATA.pictures[other.pictureIndex]?.file) usedPictureFiles.add(DATA.pictures[other.pictureIndex].file);
+      }
+      let pictureCandidates=DATA.pictures.map((picture,index)=>({picture,index})).filter(x=>!usedPictureFiles.has(x.picture.file));
+      if(!pictureCandidates.length){
+        // Safety fallback only: the curated picture pool must be expanded before all images are exhausted.
+        pictureCandidates=DATA.pictures.map((picture,index)=>({picture,index}));
+        ds.picturePoolExhausted=true;
+      }else{
+        ds.picturePoolExhausted=false;
+      }
+      ds.pictureIndex=pictureCandidates[hash(key+'pic-v052')%pictureCandidates.length].index;
+    }
     if(ds.songId && DATA.songs.some(s=>s.id===ds.songId)) return;
 
     const usedSongIds=new Set();
@@ -400,7 +418,11 @@
   function renderRewardExtras(container,reward){
     if(!container) return;
     container.innerHTML='';
-    const extras=Array.isArray(reward?.extras)?reward.extras:[];
+    const extras=(Array.isArray(reward?.extras)?reward.extras:[]).filter(extra=>{
+      // Quality correction: joke entries removed from the curated pool are no longer rendered.
+      if(extra?.type==='content-library' && String(extra?.contentId||'').startsWith('joke-') && !ACTIVE_CONTENT_IDS.has(extra.contentId)) return false;
+      return true;
+    });
     container.classList.toggle('hidden',extras.length===0);
     for(const extra of extras){
       const box=document.createElement('div'); box.className='reward-extra';

@@ -1,5 +1,5 @@
 window.OMD_DATA = {
-  version: "0.5.0",
+  version: "0.5.2",
   // Target coordinates are stored only as Cloudflare Worker secrets.
   pictures: [
     { title:"Kelly Family · 1989", file:"Kelly Family 1989.jpg", source:"https://commons.wikimedia.org/wiki/File:Kelly_Family_1989.jpg" },
