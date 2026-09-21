@@ -141,6 +141,47 @@
     return selected.slice(0,count).map(contentToRewardExtra);
   }
 
+  const REWARD_CORRECTIONS={
+    '2026-09-21':{
+      pictureFile:'Kelly Family 1989.jpg',
+      jokeId:'joke-001'
+    }
+  };
+
+  function applyRewardCorrection(key,reward){
+    const correction=REWARD_CORRECTIONS[key];
+    if(!correction || !reward) return reward;
+
+    // Display correction only. The original D1 snapshot is intentionally left untouched.
+    const fixed=JSON.parse(JSON.stringify(reward));
+
+    if(correction.pictureFile){
+      const picture=DATA.pictures.find(p=>p.file===correction.pictureFile);
+      if(picture){
+        fixed.picture={
+          title:picture.title||'',
+          info:picture.info||'',
+          file:picture.file||'',
+          source:picture.source||'',
+          url:imageUrl(picture.file)
+        };
+      }
+    }
+
+    if(correction.jokeId){
+      const joke=(CONTENT.items||[]).find(x=>x.id===correction.jokeId && x.category==='Witz');
+      if(joke){
+        fixed.extras=(Array.isArray(fixed.extras)?fixed.extras:[]).filter(extra=>{
+          const id=String(extra?.contentId||'');
+          const label=String(extra?.label||'').toUpperCase();
+          return !(id.startsWith('joke-') || label==='WITZ' || label.includes('MITTWOCHSWITZ'));
+        });
+        fixed.extras.unshift(contentToRewardExtra(joke));
+      }
+    }
+    return fixed;
+  }
+
   function lockReward(key,ds){
     if(ds.rewardSnapshot) return ds.rewardSnapshot;
     ds.rewardSnapshot=makeRewardSnapshot(key,ds);
@@ -156,8 +197,8 @@
     saveState();
   }
   function rewardFor(key,ds){
-    if(ds.rewardOpened) return lockReward(key,ds);
-    return makeRewardSnapshot(key,ds);
+    const reward=ds.rewardOpened ? lockReward(key,ds) : makeRewardSnapshot(key,ds);
+    return applyRewardCorrection(key,reward);
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 

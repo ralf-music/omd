@@ -130,3 +130,17 @@ DATEIEN v0.5.2
 GEÄNDERT: app.js, content.js, data.js, index.html, sw.js, README.txt
 NEU: Keine
 GELÖSCHT: Keine
+
+
+CHANGELOG v0.5.3
+- Gezielte redaktionelle Korrektur für 21.09.2026.
+- Bild des Tages: doppelt verwendetes „The Kelly Family · München“ wird nur für diesen Tag durch „Kelly Family · 1989“ ersetzt.
+- Witz: fehlerhafter Pseudo-Witz wird nur für diesen Tag durch joke-001 („Britisch trocken“) ersetzt.
+- Andere Zusatzinhalte, Song, Guthaben, Tagesstatus und alle anderen Rewards bleiben unverändert.
+- Die Korrektur erfolgt clientseitig; der bestehende D1-Snapshot wird nicht verändert.
+- Keine Cloudflare-/D1-Änderung erforderlich.
+
+DATEIEN v0.5.3
+GEÄNDERT: app.js, data.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine
