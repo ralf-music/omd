@@ -133,7 +133,7 @@
 
         <section class="card compact-card">
           <p class="eyebrow">ABWESENHEIT</p>
-          <h2>Frei / Urlaub / Krank</h2>
+          <h2>Frei / Krank</h2>
           <button id="absenceRequestBtn" class="secondary-btn" type="button">ABWESENHEIT BEANTRAGEN</button>
           <p class="microcopy">Der Antrag wird erst nach Admin-Freigabe wirksam.</p>
           <p id="nextMissionText" class="microcopy"></p>
@@ -152,7 +152,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.7.3</button>
+      <button id="versionBtn" class="version-btn">v0.7.4</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -226,11 +226,10 @@
   <dialog id="absenceRequestDialog">
     <form id="absenceRequestForm" class="dialog-card">
       <p class="eyebrow">ABWESENHEIT</p>
-      <h2>Frei / Urlaub / Krank beantragen</h2>
+      <h2>Frei / Krank beantragen</h2>
       <label>Art
         <select id="absenceRequestType" required>
           <option value="frei">Frei</option>
-          <option value="urlaub">Urlaub</option>
           <option value="krank">Krank</option>
         </select>
       </label>
@@ -306,7 +305,7 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.7.3</h2>
+      <h2>One More Day v0.7.4</h2>
       <ul>
         <li>FREI / URLAUB / KRANK wird jetzt vollständig aus der Cloud in die User-PWA übernommen.</li>
         <li>An pausierten Tagen verschwinden Mission und Tagesbelohnung vollständig; sichtbar bleibt der Pausenhinweis.</li>

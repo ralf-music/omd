@@ -231,3 +231,19 @@ GELOESCHT: Keine
 UPLOAD
 HOCHLADEN: normale PWA-Dateien und Asset-Ordner.
 NICHT HOCHLADEN: cloudflare/
+
+
+CHANGELOG v0.7.4
+- User-Auswahl für Abwesenheiten vereinfacht: nur noch FREI und KRANK.
+- URLAUB aus der sichtbaren PWA-Auswahl entfernt.
+- Bestehende/alte 'urlaub'-Daten bleiben intern kompatibel und werden weiterhin korrekt angezeigt.
+- Keine Worker- oder D1-Änderung erforderlich.
+
+DATEIEN v0.7.4
+GEÄNDERT: app.js, data.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine
+
+UPLOAD
+HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
+NICHT HOCHLADEN: cloudflare/

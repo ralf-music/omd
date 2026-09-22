@@ -446,7 +446,7 @@
     const type=String(refs.absenceRequestType.value||'').toLowerCase();
     const note=(refs.absenceRequestNote.value||'').trim();
 
-    if(!date || !['frei','urlaub','krank'].includes(type)){
+    if(!date || !['frei','krank'].includes(type)){
       refs.absenceRequestMessage.textContent='Bitte Datum und Art der Abwesenheit auswählen.';
       refs.absenceRequestMessage.className='geo-error';
       return;
