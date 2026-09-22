@@ -214,3 +214,20 @@ GELÖSCHT: Keine
 UPLOAD
 HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
 NICHT HOCHLADEN: cloudflare/ (nur Dokumentation/Backend-Hilfsmaterial).
+
+
+CHANGELOG v0.7.3
+- Kritischer Startfehler aus v0.7.2 behoben.
+- Verwaiste Event-Handler des entfernten lokalen Pause-Dialogs konnten die Initialisierung abbrechen.
+- Cloud-Synchronisierung startet wieder zuverlässig, dadurch wird das vorhandene D1-Guthaben (5,00 EUR) wieder geladen.
+- ARBEIT/ZUHAUSE-Logik wurde nicht verändert.
+- Keine Worker- oder D1-Aenderung notwendig.
+
+DATEIEN v0.7.3
+GEAENDERT: app.js, data.js, index.html, sw.js, README.txt
+NEU: Keine
+GELOESCHT: Keine
+
+UPLOAD
+HOCHLADEN: normale PWA-Dateien und Asset-Ordner.
+NICHT HOCHLADEN: cloudflare/

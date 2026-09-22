@@ -1039,8 +1039,14 @@
   if(refs.absenceRequestForm) refs.absenceRequestForm.addEventListener('submit',e=>{e.preventDefault();submitAbsenceRequest();});
 
 
-  if(refs.pauseBtn && !refs.pauseBtn.disabled) refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
-  refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
+  // Legacy local pause UI was removed in v0.7.2. Abwesenheiten now run through the server-side request workflow.
+  if(refs.pauseBtn && !refs.pauseBtn.disabled && refs.pauseDialog){
+    refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
+  }
+  if(refs.pauseForm) refs.pauseForm.addEventListener('submit',savePause);
+  const cancelPauseBtn=$('cancelPauseBtn');
+  if(cancelPauseBtn && refs.pauseDialog) cancelPauseBtn.addEventListener('click',()=>refs.pauseDialog.close());
+  refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
   if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   render(); migrateAndSyncCloud(); setInterval(render,60000);
 })();
