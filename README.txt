@@ -195,3 +195,22 @@ DATEIEN v0.7.1
 GEÄNDERT: app.js, data.js, index.html, sw.js, README.txt
 NEU: Keine
 GELÖSCHT: Keine
+
+
+CHANGELOG v0.7.2
+- User kann FREI / URLAUB / KRANK für ein einzelnes Datum beantragen.
+- Antrag wird über POST /api/v1/absence-request als pending gespeichert.
+- Adminbereich lädt offene Anträge über GET /api/v1/admin/absence-requests.
+- Admin kann Anträge direkt GENEHMIGEN oder ABLEHNEN.
+- Genehmigte Anträge übernehmen den serverseitigen Tagesstatus automatisch.
+- Wochenfortschritt zeigt FREI / URLAUB / KRANK ausgeschrieben statt F / U / K.
+- Keine Worker- oder D1-Änderung für dieses PWA-Update erforderlich; die zuvor getesteten Routen werden genutzt.
+
+DATEIEN v0.7.2
+GEÄNDERT: app.js, data.js, index.html, styles.css, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine
+
+UPLOAD
+HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
+NICHT HOCHLADEN: cloudflare/ (nur Dokumentation/Backend-Hilfsmaterial).

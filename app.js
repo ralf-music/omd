@@ -33,7 +33,8 @@
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
-    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), closeAdminBtn:$('closeAdminBtn')
+    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
+    absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn')
   };
 
   function loadState(){
@@ -433,6 +434,138 @@
     }
   }
 
+
+  function localTomorrowKey(){
+    const d=new Date();
+    d.setDate(d.getDate()+1);
+    return dateKey(d);
+  }
+
+  async function submitAbsenceRequest(){
+    const date=refs.absenceRequestDate.value;
+    const type=String(refs.absenceRequestType.value||'').toLowerCase();
+    const note=(refs.absenceRequestNote.value||'').trim();
+
+    if(!date || !['frei','urlaub','krank'].includes(type)){
+      refs.absenceRequestMessage.textContent='Bitte Datum und Art der Abwesenheit auswählen.';
+      refs.absenceRequestMessage.className='geo-error';
+      return;
+    }
+
+    refs.absenceRequestMessage.textContent='Antrag wird gesendet …';
+    refs.absenceRequestMessage.className='geo-neutral';
+
+    try{
+      const result=await apiJson('/absence-request',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({date,type,note})
+      });
+
+      if(result.duplicate){
+        refs.absenceRequestMessage.textContent='Für diesen Tag und diese Art gibt es bereits einen offenen Antrag.';
+      }else{
+        refs.absenceRequestMessage.textContent='Antrag gesendet. Er wartet jetzt auf Admin-Freigabe.';
+      }
+      refs.absenceRequestMessage.className='geo-success';
+      localStorage.setItem('omd-last-absence-request',JSON.stringify({
+        id:result.request?.id||null,
+        date,
+        type,
+        status:'pending',
+        createdAt:result.request?.created_at||new Date().toISOString()
+      }));
+    }catch(err){
+      refs.absenceRequestMessage.textContent='Antrag konnte nicht gesendet werden.';
+      refs.absenceRequestMessage.className='geo-error';
+    }
+  }
+
+  async function loadAdminAbsenceRequests(){
+    if(!refs.adminAbsenceList) return;
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+
+    if(!adminKey){
+      refs.adminAbsenceList.innerHTML='<p class="microcopy">Admin-Schlüssel eingeben, um offene Anträge zu laden.</p>';
+      return;
+    }
+
+    localStorage.setItem('omd-admin-key',adminKey);
+    refs.adminAbsenceList.innerHTML='<p class="microcopy">Offene Anträge werden geladen …</p>';
+
+    try{
+      const result=await apiJson('/admin/absence-requests',{
+        headers:{'X-Admin-Key':adminKey}
+      });
+
+      const requests=Array.isArray(result.requests)?result.requests:[];
+      if(!requests.length){
+        refs.adminAbsenceList.innerHTML='<p class="microcopy">Keine offenen Anträge.</p>';
+        return;
+      }
+
+      refs.adminAbsenceList.innerHTML=requests.map(r=>{
+        const typeLabel=DAY_STATUS_LABELS[normalizeDayStatus(r.type)]||String(r.type||'').toUpperCase();
+        const note=r.note?`<p class="admin-request-note">${escapeHtml(r.note)}</p>`:'';
+        return `<div class="admin-request-card" data-request-id="${r.id}">
+          <div class="admin-request-head">
+            <div><strong>${typeLabel}</strong><span>${r.day_date}</span></div>
+            <span class="admin-request-status">OFFEN</span>
+          </div>
+          ${note}
+          <div class="admin-request-actions">
+            <button type="button" class="admin-approve-btn" data-request-id="${r.id}" data-decision="approved">GENEHMIGEN</button>
+            <button type="button" class="admin-reject-btn" data-request-id="${r.id}" data-decision="rejected">ABLEHNEN</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      refs.adminAbsenceList.querySelectorAll('[data-request-id][data-decision]').forEach(btn=>{
+        btn.addEventListener('click',()=>decideAdminAbsenceRequest(Number(btn.dataset.requestId),btn.dataset.decision));
+      });
+    }catch(err){
+      refs.adminAbsenceList.innerHTML='<p class="geo-error">Anträge konnten nicht geladen werden. Admin-Schlüssel prüfen.</p>';
+    }
+  }
+
+  async function decideAdminAbsenceRequest(id,decision){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey) return;
+
+    refs.adminMessage.textContent=decision==='approved'?'Antrag wird genehmigt …':'Antrag wird abgelehnt …';
+    refs.adminMessage.className='geo-neutral';
+
+    try{
+      const result=await apiJson('/admin/absence-request/decision',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({id,decision})
+      });
+
+      if(result.day_status){
+        setCachedDayStatus(result.day_status.day_date,result.day_status.status,{
+          source:'cloud',
+          updatedAt:result.day_status.updated_at||new Date().toISOString()
+        });
+      }
+
+      refs.adminMessage.textContent=decision==='approved'?'Antrag genehmigt.':'Antrag abgelehnt.';
+      refs.adminMessage.className='geo-success';
+      await loadAdminAbsenceRequests();
+      renderAdminWeek();
+      render();
+    }catch(err){
+      refs.adminMessage.textContent='Entscheidung konnte nicht gespeichert werden.';
+      refs.adminMessage.className='geo-error';
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[ch]));
+  }
+
   function renderAdminWeek(){
     if(!refs.adminWeek) return;
     const start=getWeekStart(new Date());
@@ -667,7 +800,7 @@
       const key=dateKey(d), status=getDayStatus(key), ds=state.days[key];
       const done=!!(ds&&ds.work&&ds.home);
       const paused=status!=='normal';
-      const symbol=status==='frei'?'F':status==='urlaub'?'U':status==='krank'?'K':done?'✓':'○';
+      const symbol=status==='frei'?'FREI':status==='urlaub'?'URLAUB':status==='krank'?'KRANK':done?'✓':'○';
       const el=document.createElement('div');
       el.className='week-day'+(done?' done':'')+(paused?' paused':'')+(done&&ds.rewardOpened?' clickable':'');
       el.title=paused?DAY_STATUS_LABELS[status]:(done&&ds.rewardOpened?'Tagesbelohnung erneut ansehen':'');
@@ -885,9 +1018,26 @@
       refs.adminMessage.textContent='';
       renderAdminWeek();
       refs.adminDialog.showModal();
+      loadAdminAbsenceRequests();
     });
   }
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
+  if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
+  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests();});
+
+  if(refs.absenceRequestBtn){
+    refs.absenceRequestBtn.addEventListener('click',()=>{
+      refs.absenceRequestDate.value=localTomorrowKey();
+      refs.absenceRequestType.value='frei';
+      refs.absenceRequestNote.value='';
+      refs.absenceRequestMessage.textContent='';
+      refs.absenceRequestMessage.className='microcopy';
+      refs.absenceRequestDialog.showModal();
+    });
+  }
+  if(refs.closeAbsenceRequestBtn) refs.closeAbsenceRequestBtn.addEventListener('click',()=>refs.absenceRequestDialog.close());
+  if(refs.absenceRequestForm) refs.absenceRequestForm.addEventListener('submit',e=>{e.preventDefault();submitAbsenceRequest();});
+
 
   if(refs.pauseBtn && !refs.pauseBtn.disabled) refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
   refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());

@@ -60,3 +60,21 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 .admin-status-btn{border:1px solid rgba(255,255,255,.14);background:#17171d;color:#fff;border-radius:10px;padding:9px 6px;font-size:.72rem;font-weight:800}
 .admin-status-btn.active{box-shadow:0 0 0 1px #ff3fa4 inset}
 @media(max-width:560px){.admin-status-buttons{grid-template-columns:1fr 1fr}}
+
+.week-day.paused strong{font-size:.68rem;letter-spacing:.04em}
+.admin-request-section{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.10)}
+.admin-request-section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:12px}
+.admin-request-section-head h3{margin:2px 0 0}
+.admin-refresh-btn{width:auto;padding:9px 12px}
+.admin-absence-list{display:grid;gap:10px}
+.admin-request-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;background:rgba(255,255,255,.025)}
+.admin-request-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.admin-request-head div{display:grid;gap:3px}
+.admin-request-head span{font-size:.82rem;opacity:.72}
+.admin-request-status{font-size:.7rem!important;font-weight:900;letter-spacing:.08em;color:#ff66b6;opacity:1!important}
+.admin-request-note{margin:10px 0 0;font-size:.88rem;opacity:.82;white-space:pre-wrap}
+.admin-request-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.admin-approve-btn,.admin-reject-btn{border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,.14);font-weight:900}
+.admin-approve-btn{background:#24242b;color:#fff}
+.admin-reject-btn{background:#17171d;color:#fff}
+@media(max-width:560px){.admin-request-section-head{align-items:stretch;flex-direction:column}.admin-refresh-btn{width:100%}}
