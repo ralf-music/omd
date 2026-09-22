@@ -144,3 +144,54 @@ DATEIEN v0.5.3
 GEÄNDERT: app.js, data.js, index.html, sw.js, README.txt
 NEU: Keine
 GELÖSCHT: Keine
+
+
+CHANGELOG v0.6.0
+- Content-Master direkt in das Projekt integriert.
+- 1009 geprüfte Content-Einträge.
+- 108 alte Pseudo-Witze bleiben entfernt; 80 redaktionell geprüfte Witze enthalten.
+- Neue Themen u. a.: Tier im Fokus, Wer ist eigentlich …?, Wie entstand eigentlich …?,
+  Wusstest du eigentlich …?, Kurze Geschichte, Geografie & Länder.
+- Sergei Krikalev als Kurzgeschichte aufgenommen:
+  Start 18.05.1991 mit Sojus TM-12; Rückkehr 25.03.1992.
+- content-master.json ist ab jetzt die kanonische Bibliothek im Projekt.
+- content.js enthält denselben Stand in browserfertiger Form.
+- Bestehende Funktionen aus v0.5.3 bleiben erhalten.
+- Keine Cloudflare-/D1-Änderung erforderlich.
+
+DATEIEN v0.6.0
+GEÄNDERT: content.js, data.js, index.html, sw.js, README.txt
+NEU: content-master.json
+GELÖSCHT: Keine
+
+
+CHANGELOG v0.7.0
+- Admin-Grundsystem für Tagesstatus NORMAL / FREI / URLAUB / KRANK.
+- Wochenbonus: 5 Arbeitstage = 2,00 €, 4 = 1,00 €, 3 oder weniger = 0 €.
+- KRANK = kein Wochenbonus in dieser Woche.
+- FREI / URLAUB = kein Tagesgeld, aber genehmigter neutraler Nicht-Arbeitstag.
+- Wochenbonus wird erst gebucht, wenn alle fünf Tage entweder erledigt oder genehmigt geklärt sind.
+- Cloud-Status-Synchronisation vorbereitet.
+- Cloudflare-Migration und Worker-Integrationsdatei liegen im Projekt unter /cloudflare.
+- Testtag 22.09.2026 ist in der SQL-Migration als FREI vorgesehen.
+- 1009er Content-Master bleibt integriert.
+
+DATEIEN v0.7.0
+GEÄNDERT: app.js, data.js, index.html, styles.css, sw.js, README.txt
+NEU: cloudflare/migration-v0.7.0.sql, cloudflare/worker-v0.7.0-integration.js, cloudflare/README-v0.7.0.txt
+GELÖSCHT: Keine
+- Alte lokale Pause-Eingabe in der User-PWA deaktiviert; Abwesenheiten sind ab v0.7.0 Admin-Sache.
+
+
+CHANGELOG v0.7.1
+- Cloud-Tagesstatus wird in der User-PWA vollständig dargestellt.
+- FREI / URLAUB / KRANK: Mission und Tagesbelohnung werden ausgeblendet.
+- Pausenbanner zeigt den jeweiligen Status.
+- Tagesreward kann an pausierten Tagen auch bei alten lokalen Daten nicht versehentlich freigeschaltet werden.
+- Adminbereich und neue Wochenbonuslogik aus v0.7.0 bleiben erhalten.
+- Keine weitere Worker-/D1-Änderung erforderlich.
+
+DATEIEN v0.7.1
+GEÄNDERT: app.js, data.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine

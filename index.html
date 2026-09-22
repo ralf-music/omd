@@ -27,7 +27,7 @@
     <main>
       <section id="pauseBanner" class="card pause-banner hidden"></section>
 
-      <section class="card mission-card">
+      <section id="missionCard" class="card mission-card">
         <div class="section-heading">
           <div>
             <p class="eyebrow">HEUTIGE MISSION</p>
@@ -116,9 +116,10 @@
         </div>
         <div class="stat-row"><span>Heute verdient</span><strong id="todayEarned">0,00 €</strong></div>
         <div class="stat-row"><span>Diese Woche</span><strong id="weekEarned">0,00 €</strong></div>
-        <p class="microcopy">+0,50 € nach erfolgreicher ARBEIT + ZUHAUSE. +2,00 € nur für eine vollständige erfolgreiche Mo–Fr-Woche.</p>
+        <p class="microcopy">+0,50 € je echtem Arbeitstag. Wochenbonus: 5 Arbeitstage = 2,00 €, 4 Arbeitstage = 1,00 €, 3 oder weniger = 0 €. KRANK sperrt den Wochenbonus; FREI/URLAUB schützt vor einem normalen Fehltag.</p>
         <button id="requestPayoutBtn" class="secondary-btn wallet-request-btn" type="button">GUTHABEN ANFORDERN</button>
         <button id="bookingHistoryBtn" class="ghost-btn booking-history-btn" type="button">BUCHUNGEN ANZEIGEN</button>
+        <button id="adminBtn" class="ghost-btn booking-history-btn hidden" type="button">ADMIN</button>
       </section>
 
       <section class="grid-two">
@@ -131,9 +132,10 @@
         </section>
 
         <section class="card compact-card">
-          <p class="eyebrow">PAUSE</p>
+          <p class="eyebrow">ABWESENHEIT</p>
           <h2>Frei / Urlaub / Krank</h2>
-          <button id="pauseBtn" class="secondary-btn">PAUSE EINTRAGEN</button>
+          <button id="pauseBtn" class="secondary-btn hidden" type="button" disabled>ÜBER ADMIN VERWALTEN</button>
+          <p class="microcopy">Abwesenheiten werden nur über den Adminbereich freigegeben.</p>
           <p id="nextMissionText" class="microcopy"></p>
         </section>
       </section>
@@ -150,11 +152,26 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.5.3</button>
+      <button id="versionBtn" class="version-btn">v0.7.1</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
 
+
+
+  <dialog id="adminDialog">
+    <div class="dialog-card admin-dialog-card">
+      <p class="eyebrow">ADMIN</p>
+      <h2>Wochenstatus</h2>
+      <p class="microcopy">Status wird erst nach bestätigter Cloud-Antwort übernommen.</p>
+      <label>Admin-Schlüssel
+        <input id="adminKey" type="password" autocomplete="off" placeholder="Cloudflare ADMIN_KEY" />
+      </label>
+      <div id="adminWeek" class="admin-week"></div>
+      <p id="adminMessage" class="microcopy"></p>
+      <button id="closeAdminBtn" class="ghost-btn" type="button">SCHLIESSEN</button>
+    </div>
+  </dialog>
 
   <dialog id="bookingHistoryDialog">
     <div class="dialog-card booking-history-dialog-card">
@@ -209,7 +226,7 @@
         <label>Von<input id="pauseFrom" type="date" required /></label>
         <label>Bis<input id="pauseTo" type="date" required /></label>
       </div>
-      <p class="microcopy">Lokale Übergangsfunktion. In der Cloud-Version werden Frei / Urlaub / Krank als Anfrage an die Admin-PWA gesendet und erst nach Freigabe wirksam.</p>
+      <p class="microcopy">Legacy-Dialog. Neue Abwesenheiten werden ausschließlich über den Adminbereich verwaltet.</p>
       <div class="dialog-actions">
         <button type="button" id="cancelPauseBtn" class="ghost-btn">ABBRECHEN</button>
         <button id="savePauseBtn" value="default" class="primary-btn">SPEICHERN</button>
@@ -274,14 +291,21 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.5.3</h2>
+      <h2>One More Day v0.7.1</h2>
       <ul>
-        <li>Geräteübergreifender Wochen-Sync korrigiert: Beim Start werden Montag bis Freitag der aktuellen Woche aus der bestehenden Cloud-Day-API geladen.</li>
-        <li>Cloud-Rewards der aktuellen Woche werden nachgeladen, damit abgeschlossene Tage auch in einem frischen Browser wieder anklickbar sind.</li>
-        <li>„Diese Woche“ verwendet bei verfügbarer Cloud jetzt die Cloud-Buchungen statt nur das lokale Browser-Ledger.</li>
-        <li>Gesamtguthaben, Wochenfortschritt und Wochenverdienst bleiben dadurch auch nach Browserwechsel oder gelöschten Websitedaten konsistent.</li>
+        <li>FREI / URLAUB / KRANK wird jetzt vollständig aus der Cloud in die User-PWA übernommen.</li>
+        <li>An pausierten Tagen verschwinden Mission und Tagesbelohnung vollständig; sichtbar bleibt der Pausenhinweis.</li>
+        <li>Admin-Grundsystem für Tagesstatus NORMAL / FREI / URLAUB / KRANK bleibt erhalten.</li>
+        <li>Neue Wochenbonuslogik: 5 Arbeitstage = 2,00 €, 4 Arbeitstage = 1,00 €, 3 oder weniger = 0 €.</li>
+        <li>KRANK sperrt den Wochenbonus vollständig; FREI/URLAUB sind neutrale genehmigte Nicht-Arbeitstage.</li>
+        <li>Cloud-Status wird für die aktuelle Woche geladen; ohne bestätigte Cloud-Antwort wird nichts als gespeichert ausgegeben.</li>
+        <li>Content-Master mit 1009 Einträgen bleibt unverändert integriert.</li>
+        <li>Die 108 zuvor aussortierten Pseudo-Witze bleiben entfernt; enthalten sind nur 80 redaktionell geprüfte Witze.</li>
+        <li>Neue Inhalte aus Tieren, Personen, Technik, Naturwissen, Geschichte und kurzen Erzählungen ergänzt.</li>
+        <li>Sergei Krikalev: Kurzgeschichte mit Start am 18.05.1991 und Rückkehr am 25.03.1992 aufgenommen.</li>
+        <li>Neue Datei content-master.json ist die dauerhafte Master-Bibliothek innerhalb des Projekts; content.js wird daraus abgeleitet.</li>
+        <li>Wochen-Sync, Bild-Wiederholschutz und die Korrektur vom 21.09.2026 aus v0.5.3 bleiben erhalten.</li>
         <li>Keine Änderung an Cloudflare Worker oder D1 erforderlich.</li>
-        <li>Content-System aus v0.5.0 bleibt unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>

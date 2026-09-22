@@ -3,9 +3,10 @@
   const CONTENT = window.OMD_CONTENT || {items:[]};
   const ACTIVE_CONTENT_IDS = new Set((CONTENT.items||[]).map(x=>x.id).filter(Boolean));
   const STORE_KEY = 'omd-state-v1';
-  const SCHEMA_VERSION = 6;
+  const SCHEMA_VERSION = 7;
   const DAILY_CENTS = 50;
-  const PERFECT_WEEK_CENTS = 200;
+  const FULL_WEEK_CENTS = 200;
+  const FOUR_DAY_WEEK_CENTS = 100;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
   const state = loadState();
   let payoutSelectedCents=0;
@@ -18,7 +19,7 @@
   migrateRewardSnapshots034();
 
   const refs = {
-    todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), dayBadge:$('dayBadge'),
+    todayLabel:$('todayLabel'), pauseBanner:$('pauseBanner'), missionCard:$('missionCard'), dayBadge:$('dayBadge'),
     workStep:$('workStep'), homeStep:$('homeStep'), workStatus:$('workStatus'), homeStatus:$('homeStatus'),
     locationBtn:$('locationBtn'), locationHint:$('locationHint'), rewardCard:$('rewardCard'), rewardLock:$('rewardLock'),
     rewardTitle:$('rewardTitle'), rewardSubtitle:$('rewardSubtitle'), openRewardBtn:$('openRewardBtn'), rewardContent:$('rewardContent'),
@@ -31,14 +32,15 @@
     requestPayoutBtn:$('requestPayoutBtn'), bookingHistoryBtn:$('bookingHistoryBtn'), bookingHistoryDialog:$('bookingHistoryDialog'), bookingHistoryBalance:$('bookingHistoryBalance'), bookingHistoryList:$('bookingHistoryList'), bookingHistoryHint:$('bookingHistoryHint'), closeBookingHistoryBtn:$('closeBookingHistoryBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
-    pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen')
+    pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
+    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), closeAdminBtn:$('closeAdminBtn')
   };
 
   function loadState(){
-    const base={schemaVersion:SCHEMA_VERSION,days:{},pauses:[],weeklyOpened:{},ledger:[]};
+    const base={schemaVersion:SCHEMA_VERSION,days:{},pauses:[],dayStatuses:{},weeklyOpened:{},ledger:[]};
     try {
       const loaded=Object.assign(base,JSON.parse(localStorage.getItem(STORE_KEY)||'{}'));
-      loaded.days ||= {}; loaded.pauses ||= []; loaded.weeklyOpened ||= {}; loaded.ledger ||= [];
+      loaded.days ||= {}; loaded.pauses ||= []; loaded.dayStatuses ||= {}; loaded.weeklyOpened ||= {}; loaded.ledger ||= [];
       loaded.schemaVersion=SCHEMA_VERSION;
       return loaded;
     } catch { return base; }
@@ -306,6 +308,7 @@
   async function migrateAndSyncCloud(){
     // Discover the whole current Mon-Fri week first. Fresh browsers otherwise only know locally seeded days.
     await syncCurrentWeekFromCloud(new Date());
+    await syncCurrentWeekStatusesFromCloud(new Date());
     // Then merge known day state and lock/upload existing local rewards.
     for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds);
     for(const [key,ds] of Object.entries(state.days||{})){
@@ -322,6 +325,135 @@
     await refreshCloudWallet();
     state.migrations ||= {}; state.migrations.cloud040=true; saveState(); render();
   }
+
+  const DAY_STATUS_LABELS={normal:'ARBEITSTAG',frei:'FREIER TAG',urlaub:'URLAUB',krank:'KRANK'};
+
+  function normalizeDayStatus(value){
+    const s=String(value||'normal').toLowerCase();
+    return ['normal','frei','urlaub','krank'].includes(s)?s:'normal';
+  }
+
+  function legacyPauseFor(key){
+    return (state.pauses||[]).find(p=>key>=p.from && key<=p.to) || null;
+  }
+
+  function getDayStatus(key){
+    const cloud=state.dayStatuses?.[key];
+    if(cloud?.status) return normalizeDayStatus(cloud.status);
+    const legacy=legacyPauseFor(key);
+    if(legacy){
+      const r=String(legacy.reason||'').toLowerCase();
+      if(r.includes('urlaub')) return 'urlaub';
+      if(r.includes('krank')) return 'krank';
+      return 'frei';
+    }
+    return 'normal';
+  }
+
+  function setCachedDayStatus(key,status,meta={}){
+    state.dayStatuses ||= {};
+    state.dayStatuses[key]={status:normalizeDayStatus(status),...meta};
+    saveState();
+  }
+
+  async function syncCurrentWeekStatusesFromCloud(referenceDate=new Date()){
+    const start=getWeekStart(referenceDate);
+    let changed=false;
+    for(let i=0;i<5;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=dateKey(d);
+      try{
+        const result=await apiJson(`/day-status?date=${encodeURIComponent(key)}`);
+        if(result.day_status){
+          const status=normalizeDayStatus(result.day_status.status);
+          if(getDayStatus(key)!==status || state.dayStatuses?.[key]?.source!=='cloud'){
+            state.dayStatuses ||= {};
+            state.dayStatuses[key]={status,source:'cloud',updatedAt:result.day_status.updated_at||null};
+            changed=true;
+          }
+        }
+      }catch(err){
+        if(String(err?.message||'').includes('/day-status')) console.warn('Day status endpoint noch nicht verfügbar:',key);
+        else console.warn('D1 day status load:',key,err);
+      }
+    }
+    if(changed) saveState();
+  }
+
+  function evaluateWeek(start){
+    let worked=0, unresolved=0, sick=false, free=0, vacation=0;
+    for(let i=0;i<5;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=dateKey(d), status=getDayStatus(key), ds=state.days[key];
+      const done=!!(ds&&ds.work&&ds.home);
+      if(status==='krank'){ sick=true; continue; }
+      if(status==='frei'){ free++; continue; }
+      if(status==='urlaub'){ vacation++; continue; }
+      if(done) worked++; else unresolved++;
+    }
+    let bonus=0;
+    if(!sick && unresolved===0){
+      if(worked===5) bonus=FULL_WEEK_CENTS;
+      else if(worked===4) bonus=FOUR_DAY_WEEK_CENTS;
+    }
+    return {worked,unresolved,sick,free,vacation,bonus,resolved:!sick&&unresolved===0};
+  }
+
+  function adminUiEnabled(){
+    const q=new URLSearchParams(location.search);
+    if(q.get('admin')==='1') localStorage.setItem('omd-admin-ui','1');
+    return localStorage.getItem('omd-admin-ui')==='1';
+  }
+
+  async function setAdminDayStatus(key,status){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey){
+      refs.adminMessage.textContent='Admin-Schlüssel fehlt.';
+      refs.adminMessage.className='geo-error';
+      return;
+    }
+    localStorage.setItem('omd-admin-key',adminKey);
+    refs.adminMessage.textContent='Cloud wird aktualisiert …';
+    refs.adminMessage.className='geo-neutral';
+    try{
+      const result=await apiJson('/admin/day-status',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({date:key,status:normalizeDayStatus(status)})
+      });
+      const saved=result.day_status||{status};
+      setCachedDayStatus(key,saved.status,{source:'cloud',updatedAt:saved.updated_at||new Date().toISOString()});
+      refs.adminMessage.textContent=`${key}: ${DAY_STATUS_LABELS[normalizeDayStatus(saved.status)]} gespeichert.`;
+      refs.adminMessage.className='geo-success';
+      renderAdminWeek();
+      render();
+    }catch(err){
+      refs.adminMessage.textContent='Nicht gespeichert. Worker-/Admin-Endpunkt ist noch nicht aktiv oder der Schlüssel ist falsch.';
+      refs.adminMessage.className='geo-error';
+    }
+  }
+
+  function renderAdminWeek(){
+    if(!refs.adminWeek) return;
+    const start=getWeekStart(new Date());
+    refs.adminWeek.innerHTML='';
+    const labels=['MO','DI','MI','DO','FR'];
+    for(let i=0;i<5;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=dateKey(d), status=getDayStatus(key), ds=state.days[key], done=!!(ds&&ds.work&&ds.home);
+      const row=document.createElement('div');
+      row.className='admin-day-row';
+      row.innerHTML=`<div class="admin-day-info"><strong>${labels[i]} · ${key}</strong><span>${DAY_STATUS_LABELS[status]}${done?' · Arbeit erledigt':''}</span></div>
+        <div class="admin-status-buttons">
+          ${['normal','frei','urlaub','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
+        </div>`;
+      refs.adminWeek.appendChild(row);
+    }
+    refs.adminWeek.querySelectorAll('[data-date][data-status]').forEach(btn=>{
+      btn.addEventListener('click',()=>setAdminDayStatus(btn.dataset.date,btn.dataset.status));
+    });
+  }
+
   function dateKey(d=new Date()){ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
   function localDate(key){ const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d); }
   function fmtDate(d){ return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long'}).format(d); }
@@ -329,7 +461,11 @@
   function dayState(key){ return state.days[key] ||= {work:false,home:false,rewardOpened:false}; }
   function isWorkday(d){ const wd=d.getDay(); return wd>=1&&wd<=5; }
   function euro(cents){ return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(cents/100); }
-  function isPaused(key){ return state.pauses.find(p => key>=p.from && key<=p.to) || null; }
+  function isPaused(key){
+    const status=getDayStatus(key);
+    if(status!=='normal') return {reason:DAY_STATUS_LABELS[status],status};
+    return null;
+  }
   function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return Math.abs(h>>>0); }
   function imageUrl(file){ return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(file) + '?width=1200'; }
 
@@ -345,8 +481,10 @@
     refs.todayLabel.textContent=fmtDate(now);
     refs.pauseBanner.classList.toggle('hidden',!pause);
     if(pause){
-      refs.pauseBanner.innerHTML=`<p class="eyebrow">MISSION PAUSIERT</p><h2>${pause.reason}</h2><p class="muted">Heute ist kein Check-in nötig. Deine nächste Mission wartet danach.</p>`;
+      refs.pauseBanner.innerHTML=`<p class="eyebrow">MISSION PAUSIERT</p><h2>${pause.reason}</h2><p class="muted">Heute ist kein Check-in nötig. Für diesen Tag gibt es keine Tagesbelohnung.</p>`;
     }
+    if(refs.missionCard) refs.missionCard.classList.toggle('hidden',!!pause || !workday);
+    refs.rewardCard.classList.toggle('hidden',!!pause || !workday);
 
     refs.workStep.classList.toggle('done',!!ds.work); refs.homeStep.classList.toggle('done',!!ds.home);
     refs.workStatus.textContent=ds.work ? `Bestätigt · ${fmtTime(ds.workAt)}` : (!workday ? 'Heute keine Arbeitsmission' : 'Vor 13:00 Uhr am Arbeitsort bestätigen');
@@ -358,12 +496,12 @@
     else if(ds.work && ds.home){ refs.locationBtn.disabled=true; refs.locationBtn.textContent='MISSION ERLEDIGT'; }
     else { refs.locationBtn.disabled=false; refs.locationBtn.textContent='STANDORT PRÜFEN'; }
 
-    const unlocked=!!(ds.work&&ds.home);
+    const unlocked=!!(workday && !pause && ds.work && ds.home);
     refs.rewardCard.classList.toggle('unlocked',unlocked); refs.rewardCard.classList.toggle('locked',!unlocked);
     refs.rewardLock.textContent=unlocked?'★':'🔒'; refs.rewardTitle.textContent=unlocked?'Reward bereit':'Noch gesperrt';
     refs.rewardSubtitle.textContent=unlocked?'One More Day geschafft.':'Erst ARBEIT + ZUHAUSE abschließen.';
     refs.openRewardBtn.disabled=!unlocked; refs.openRewardBtn.textContent=ds.rewardOpened?'REWARD ANZEIGEN':'TÜRCHEN ÖFFNEN';
-    if(ds.rewardOpened) showDailyReward(key,ds); else refs.rewardContent.classList.add('hidden');
+    if(!pause && workday && ds.rewardOpened) showDailyReward(key,ds); else refs.rewardContent.classList.add('hidden');
 
     reconcileLedger(); renderWeek(now); renderWallet(now); renderStats(); renderHistory(); renderNextMission();
   }
@@ -521,17 +659,35 @@
 
   function getWeekStart(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
   function renderWeek(now){
-    const start=getWeekStart(now), labels=['MO','DI','MI','DO','FR']; let completed=0;
+    const start=getWeekStart(now), labels=['MO','DI','MI','DO','FR'];
+    const evaluation=evaluateWeek(start);
     refs.weekDays.innerHTML='';
     for(let i=0;i<5;i++){
-      const d=new Date(start); d.setDate(start.getDate()+i); const key=dateKey(d), pause=isPaused(key), ds=state.days[key];
-      const done=!!(ds&&ds.work&&ds.home); if(done) completed++;
-      const el=document.createElement('div'); el.className='week-day'+(done?' done':'')+(pause?' paused':'')+(done&&ds.rewardOpened?' clickable':''); el.innerHTML=`${labels[i]}<strong>${pause?'–':done?'✓':'○'}</strong>`; if(done&&ds.rewardOpened){ el.title='Tagesbelohnung erneut ansehen'; el.tabIndex=0; el.setAttribute('role','button'); el.addEventListener('click',()=>openHistoricalReward(key)); el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openHistoricalReward(key);}}); } refs.weekDays.appendChild(el);
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=dateKey(d), status=getDayStatus(key), ds=state.days[key];
+      const done=!!(ds&&ds.work&&ds.home);
+      const paused=status!=='normal';
+      const symbol=status==='frei'?'F':status==='urlaub'?'U':status==='krank'?'K':done?'✓':'○';
+      const el=document.createElement('div');
+      el.className='week-day'+(done?' done':'')+(paused?' paused':'')+(done&&ds.rewardOpened?' clickable':'');
+      el.title=paused?DAY_STATUS_LABELS[status]:(done&&ds.rewardOpened?'Tagesbelohnung erneut ansehen':'');
+      el.innerHTML=`${labels[i]}<strong>${symbol}</strong>`;
+      if(done&&ds.rewardOpened){
+        el.tabIndex=0; el.setAttribute('role','button');
+        el.addEventListener('click',()=>openHistoricalReward(key));
+        el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openHistoricalReward(key);}});
+      }
+      refs.weekDays.appendChild(el);
     }
-    refs.weekBadge.textContent=`${completed}/5`;
-    const weekKey=dateKey(start), canUnlock=completed===5;
-    refs.weeklyRewardBox.classList.toggle('ready',canUnlock); refs.weeklyRewardBtn.disabled=!canUnlock;
-    refs.weeklyRewardStatus.textContent=canUnlock?(state.weeklyOpened[weekKey]?'Freigeschaltet':'Bereit zum Öffnen'):'Montag bis Freitag vollständig abschließen';
+    refs.weekBadge.textContent=`${evaluation.worked}/5`;
+    const weekKey=dateKey(start), canUnlock=evaluation.bonus>0;
+    refs.weeklyRewardBox.classList.toggle('ready',canUnlock);
+    refs.weeklyRewardBtn.disabled=!canUnlock;
+    if(evaluation.sick) refs.weeklyRewardStatus.textContent='KRANK in dieser Woche · kein Wochenbonus';
+    else if(evaluation.unresolved>0) refs.weeklyRewardStatus.textContent='Woche noch nicht vollständig geklärt';
+    else if(evaluation.bonus===200) refs.weeklyRewardStatus.textContent=state.weeklyOpened[weekKey]?'2,00 € freigeschaltet':'5 Arbeitstage · 2,00 € bereit';
+    else if(evaluation.bonus===100) refs.weeklyRewardStatus.textContent=state.weeklyOpened[weekKey]?'1,00 € freigeschaltet':'4 Arbeitstage · 1,00 € bereit';
+    else refs.weeklyRewardStatus.textContent='3 oder weniger Arbeitstage · kein Wochenbonus';
     refs.weeklyRewardBtn.onclick=()=>openWeekly(weekKey);
   }
   function openWeekly(weekKey){
@@ -548,13 +704,16 @@
     let changed=false;
     for(const [key,d] of Object.entries(state.days)){
       const date=localDate(key);
-      if(isWorkday(date) && d.work && d.home && !isPaused(key)) changed=transaction(`daily:${key}`,'DAILY_REWARD',DAILY_CENTS,{date:key})||changed;
+      if(isWorkday(date) && d.work && d.home && getDayStatus(key)==='normal'){
+        changed=transaction(`daily:${key}`,'DAILY_REWARD',DAILY_CENTS,{date:key})||changed;
+      }
     }
     const starts=new Set(Object.keys(state.days).map(k=>dateKey(getWeekStart(localDate(k)))));
     for(const wk of starts){
-      const start=localDate(wk); let perfect=true;
-      for(let i=0;i<5;i++){ const d=new Date(start); d.setDate(start.getDate()+i); const k=dateKey(d), ds=state.days[k]; if(!(ds&&ds.work&&ds.home) || isPaused(k)){ perfect=false; break; } }
-      if(perfect) changed=transaction(`week:${wk}`,'PERFECT_WEEK',PERFECT_WEEK_CENTS,{week:wk})||changed;
+      const evaluation=evaluateWeek(localDate(wk));
+      if(evaluation.bonus>0){
+        changed=transaction(`week:${wk}`,'PERFECT_WEEK',evaluation.bonus,{week:wk})||changed;
+      }
     }
     if(changed) saveState();
   }
@@ -718,7 +877,19 @@
   refs.payoutDialog.addEventListener('click',e=>{if(e.target===refs.payoutDialog) refs.payoutDialog.close();});
 
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
-  refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
+
+  if(refs.adminBtn){
+    refs.adminBtn.classList.toggle('hidden',!adminUiEnabled());
+    refs.adminBtn.addEventListener('click',()=>{
+      refs.adminKey.value=localStorage.getItem('omd-admin-key')||'';
+      refs.adminMessage.textContent='';
+      renderAdminWeek();
+      refs.adminDialog.showModal();
+    });
+  }
+  if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
+
+  if(refs.pauseBtn && !refs.pauseBtn.disabled) refs.pauseBtn.addEventListener('click',()=>{ const k=dateKey(); refs.pauseFrom.value=k; refs.pauseTo.value=k; refs.pauseDialog.showModal(); });
   refs.pauseForm.addEventListener('submit',savePause); $('cancelPauseBtn').addEventListener('click',()=>refs.pauseDialog.close()); refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
   if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   render(); migrateAndSyncCloud(); setInterval(render,60000);

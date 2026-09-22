@@ -50,3 +50,13 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 
 /* v0.4.4 booking history */
 .booking-history-btn{margin-top:9px}.booking-history-dialog-card{max-height:88vh;overflow:auto}.booking-history-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;margin:14px 0;border-radius:14px;background:#1d1d25;border:1px solid #30303a}.booking-history-head strong{color:var(--pink2);font-size:18px}.booking-history-list{display:grid;margin-top:8px}.booking-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid #292932}.booking-row:first-child{border-top:0}.booking-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.booking-copy strong{font-size:14px}.booking-copy small{font-size:11px;color:var(--muted)}.booking-amount{white-space:nowrap;font-size:14px}.booking-amount.positive{color:#bfffd4}.booking-amount.negative{color:#ffc1cc}.booking-empty{padding:12px 0}
+
+.admin-dialog-card{max-width:760px}
+.admin-week{display:grid;gap:12px;margin:16px 0}
+.admin-day-row{border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;display:grid;gap:10px}
+.admin-day-info{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.admin-day-info span{font-size:.85rem;opacity:.75}
+.admin-status-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.admin-status-btn{border:1px solid rgba(255,255,255,.14);background:#17171d;color:#fff;border-radius:10px;padding:9px 6px;font-size:.72rem;font-weight:800}
+.admin-status-btn.active{box-shadow:0 0 0 1px #ff3fa4 inset}
+@media(max-width:560px){.admin-status-buttons{grid-template-columns:1fr 1fr}}
