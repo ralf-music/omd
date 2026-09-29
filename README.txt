@@ -289,3 +289,25 @@ GELÖSCHT: Keine
 
 UPDATE VON v0.8.0
 Die vorhandene Datei assets/audio/puppy_adventure_theme.mp3 unverändert behalten.
+
+
+CHANGELOG v0.8.2
+- Snikkers Run vorübergehend als Admin-Testfunktion ausgeblendet.
+- Die Start-Kachel ist nur sichtbar, wenn die bestehende Admin-Oberfläche auf dem Gerät aktiviert ist.
+- openSnikkersRun() besitzt zusätzlich eine Admin-Sichtbarkeitsprüfung, damit das Spiel nicht versehentlich über die normale Oberfläche gestartet werden kann.
+- Spielcode, Sprites, Bestscore und Theme bleiben vollständig eingebaut; für die spätere Freigabe muss nur die temporäre Admin-Sichtbarkeitsbedingung entfernt werden.
+- Keine Änderung an Guthaben, Geo-Check-ins, Boni, Worker, D1 oder serverseitiger Admin-Authentifizierung.
+
+DATEIEN v0.8.2
+GEÄNDERT: app.js, index.html, sw.js, README.txt
+NEU: Keine
+GELÖSCHT: Keine
+
+UPDATE VON v0.8.1
+Die vorhandene Datei assets/audio/puppy_adventure_theme.mp3 unverändert behalten.
+
+
+Update v0.8.3
+- Neuer Admin-only Bereich „Minigames“ als Sammelansicht für künftige Spiele.
+- Snikkers Run startet dort über ein quadratisches Game-Cover statt über einen direkten Startbutton.
+- Cover-Datei integriert unter assets/games/snikkers-runner/cover.png.

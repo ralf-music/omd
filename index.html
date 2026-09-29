@@ -141,17 +141,17 @@
         </section>
       </section>
 
-      <section class="card snikkers-launch-card">
+      <section id="miniGamesLaunchCard" class="card mini-games-launch-card hidden">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">MINI-GAME</p>
-            <h2>Snikkers Run</h2>
+            <p class="eyebrow">MINIGAMES</p>
+            <h2>Spielesammlung</h2>
           </div>
-          <div class="snikkers-launch-badge" aria-hidden="true">🐾</div>
+          <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Eine kleine Runde zwischendurch: mit Snikkers über Hindernisse springen und den persönlichen Bestscore knacken.</p>
-        <button id="openSnikkersRunBtn" class="secondary-btn" type="button">SNIKKERS RUN STARTEN</button>
-        <p class="microcopy">Reines Minispiel. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
+        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell ist Snikkers Run im Admin-Testmodus verfügbar.</p>
+        <button id="openMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
+        <p class="microcopy">Reine Minigames. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
       </section>
 
       <section class="card history-card">
@@ -166,10 +166,34 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.8.1</button>
+      <button id="versionBtn" class="version-btn">v0.8.3</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
+
+
+  <dialog id="miniGamesDialog" class="mini-games-dialog">
+    <div class="dialog-card mini-games-dialog-card">
+      <div class="mini-games-dialog-head">
+        <div>
+          <p class="eyebrow">MINIGAMES</p>
+          <h2>Spielesammlung</h2>
+          <p class="microcopy">Aktuell im Admin-Testmodus. Tippe auf ein Cover, um das Spiel direkt zu starten.</p>
+        </div>
+        <button id="closeMiniGamesBtn" class="snikkers-game-close" type="button" aria-label="Minigames schließen">×</button>
+      </div>
+      <div class="mini-games-grid">
+        <button id="snikkersRunCoverBtn" class="mini-game-cover-btn" type="button" aria-label="Snikkers Run starten">
+          <img src="assets/games/snikkers-runner/cover.png" alt="Game Cover von Snikkers Run" />
+          <div class="mini-game-cover-meta">
+            <strong>Snikkers Run</strong>
+            <span>Jump &amp; Run Minigame</span>
+          </div>
+        </button>
+      </div>
+      <p class="microcopy">Reines Minigame. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
+    </div>
+  </dialog>
 
 
   <dialog id="snikkersRunDialog" class="snikkers-game-dialog">
@@ -334,21 +358,15 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.8.1</h2>
+      <h2>One More Day v0.8.3</h2>
       <ul>
-        <li>Snikkers Run im Handy-Querformat auf eine echte bildschirmfüllende Spielansicht optimiert.</li>
-        <li>Touch-Steuerung reagiert jetzt direkt auf <code>pointerdown</code>; Tap-Highlight, Textauswahl und Touch-Verzögerung auf dem Spielfeld wurden entfernt.</li>
-        <li>Musik und Spiel pausieren zuverlässig, sobald die PWA in den Hintergrund wechselt; die Musik setzt erst nach aktiver Rückkehr ins Spiel fort.</li>
-        <li>Optionaler Vollbild-Button ergänzt, sofern das Gerät die Fullscreen API unterstützt.</li>
-        <li>Hindernisse deutlich detailreicher gezeichnet und um Baumstumpf sowie Ast erweitert.</li>
-        <li>Snikkers Run als eigenes Minispiel in die gemeinsame PWA integriert.</li>
-        <li>Start über eine eigene Kachel; das Spiel öffnet innerhalb der bestehenden Dialog-/View-Struktur ohne Seitenreload.</li>
-        <li>Mobile-first: Tippen als Hauptsteuerung, Leertaste zusätzlich auf PC und Surface.</li>
-        <li>Vier Lauf-, zwei Sprung-, eine Lande- und eine Game-Over-Pose mit transparenten Snikkers-Sprites.</li>
-        <li>Persönlicher Bestscore wird ausschließlich lokal unter <code>omd_snikkers_run_best_v1</code> gespeichert.</li>
-        <li>Das Minispiel ist vollständig vom Arbeitsguthaben, Geo-Check-in, Tagesstatus und Bonus-System getrennt.</li>
-        <li>Theme-Pfad vorbereitet: <code>assets/audio/puppy_adventure_theme.mp3</code>.</li>
-        <li>Beim Schließen wird der Runner vollständig zerstört; Animation, Audio und Event-Listener werden sauber beendet.</li>
+        <li>Neue Minigames-Sammlung ergänzt: Statt des direkten Spielstarts gibt es jetzt eine eigene <strong>Minigames</strong>-Ansicht innerhalb der PWA.</li>
+        <li>Snikkers Run verwendet dort jetzt ein eigenes quadratisches Retro-Game-Cover als klickbare Startfläche.</li>
+        <li>Die bisherige einzelne Spiel-Kachel wurde dadurch auf eine zukünftige Mehrspielesammlung vorbereitet.</li>
+        <li>Der komplette Minigames-Bereich bleibt vorerst im Admin-Testmodus und ist nur auf Geräten mit aktivierter Admin-Oberfläche sichtbar.</li>
+        <li>Normale User sehen aktuell weder die Minigames-Kachel noch die Snikkers-Run-Coveransicht.</li>
+        <li>Snikkers Run bleibt vollständig vom Arbeitsguthaben, Geo-Check-in, Tagesstatus und Bonus-System getrennt.</li>
+        <li>Theme-Pfad bleibt: <code>assets/audio/puppy_adventure_theme.mp3</code>.</li>
         <li>Bestehende Funktionen und Cloudflare-/D1-Logik aus v0.7.4 bleiben unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>

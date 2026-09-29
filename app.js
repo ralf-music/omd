@@ -36,7 +36,7 @@
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
-    openSnikkersRunBtn:$('openSnikkersRunBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
+    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
   };
 
   function loadState(){
@@ -1011,6 +1011,18 @@
   refs.closePayoutBtn.addEventListener('click',()=>refs.payoutDialog.close());
   refs.payoutDialog.addEventListener('click',e=>{if(e.target===refs.payoutDialog) refs.payoutDialog.close();});
 
+
+
+  function openMiniGames(){
+    if(!adminUiEnabled()) return;
+    if(!refs.miniGamesDialog) return;
+    refs.miniGamesDialog.showModal();
+  }
+
+  function closeMiniGames(){
+    if(refs.miniGamesDialog?.open) refs.miniGamesDialog.close();
+  }
+
   function destroySnikkersRun(){
     if(snikkersGame){
       try{ snikkersGame.destroy(); }catch(err){ console.warn('Snikkers Run destroy:',err); }
@@ -1042,7 +1054,10 @@
   }
 
   function openSnikkersRun(){
+    // Temporary v0.8.2 test gate: Snikkers Run is visible/launchable only on admin-enabled devices.
+    if(!adminUiEnabled()) return;
     if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRunner) return;
+    closeMiniGames();
     destroySnikkersRun();
     refs.snikkersRunDialog.showModal();
     updateSnikkersFullscreenButton();
@@ -1068,10 +1083,16 @@
     }else finish();
   }
 
-  if(refs.openSnikkersRunBtn) refs.openSnikkersRunBtn.addEventListener('click',openSnikkersRun);
+  if(refs.openMiniGamesBtn) refs.openMiniGamesBtn.addEventListener('click',openMiniGames);
+  if(refs.closeMiniGamesBtn) refs.closeMiniGamesBtn.addEventListener('click',closeMiniGames);
+  if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
   document.addEventListener('fullscreenchange',updateSnikkersFullscreenButton);
+  if(refs.miniGamesDialog){
+    refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
+  }
+
   if(refs.snikkersRunDialog){
     refs.snikkersRunDialog.addEventListener('cancel',()=>{ destroySnikkersRun(); });
     refs.snikkersRunDialog.addEventListener('close',()=>{ destroySnikkersRun(); updateSnikkersFullscreenButton(); });
@@ -1080,8 +1101,11 @@
 
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
 
+  const adminEnabled=adminUiEnabled();
+  if(refs.miniGamesLaunchCard) refs.miniGamesLaunchCard.classList.toggle('hidden',!adminEnabled);
+
   if(refs.adminBtn){
-    refs.adminBtn.classList.toggle('hidden',!adminUiEnabled());
+    refs.adminBtn.classList.toggle('hidden',!adminEnabled);
     refs.adminBtn.addEventListener('click',()=>{
       refs.adminKey.value=localStorage.getItem('omd-admin-key')||'';
       refs.adminMessage.textContent='';
