@@ -1030,26 +1030,64 @@
     }
   }
 
+  function isSnikkersFullscreenActive(){
+    return !!(refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen') || document.fullscreenElement);
+  }
+
+  function setSnikkersPseudoFullscreen(active){
+    if(!refs.snikkersRunDialog) return;
+    refs.snikkersRunDialog.classList.toggle('snikkers-force-fullscreen',!!active);
+    document.documentElement.classList.toggle('snikkers-fullscreen-lock',!!active);
+    document.body.classList.toggle('snikkers-fullscreen-lock',!!active);
+  }
+
   function updateSnikkersFullscreenButton(){
     if(!refs.snikkersFullscreenBtn || !refs.snikkersRunDialog) return;
-    const supported=typeof refs.snikkersRunDialog.requestFullscreen==='function' && typeof document.exitFullscreen==='function';
-    refs.snikkersFullscreenBtn.hidden=!supported;
-    if(!supported) return;
-    const active=document.fullscreenElement===refs.snikkersRunDialog;
+    // Der Button bleibt absichtlich immer sichtbar: CSS-Vollbild ist unser zuverlässiger Fallback.
+    refs.snikkersFullscreenBtn.hidden=false;
+    const active=isSnikkersFullscreenActive();
     refs.snikkersFullscreenBtn.textContent=active?'⤢':'⛶';
     refs.snikkersFullscreenBtn.setAttribute('aria-label',active?'Vollbild verlassen':'Snikkers Run im Vollbild anzeigen');
     refs.snikkersFullscreenBtn.title=active?'Vollbild verlassen':'Vollbild';
   }
 
+  async function tryLockLandscape(){
+    try{
+      if(screen.orientation && typeof screen.orientation.lock==='function') await screen.orientation.lock('landscape');
+    }catch{}
+  }
+
+  function unlockOrientation(){
+    try{ if(screen.orientation && typeof screen.orientation.unlock==='function') screen.orientation.unlock(); }catch{}
+  }
+
   async function toggleSnikkersFullscreen(){
     if(!refs.snikkersRunDialog) return;
-    try{
-      if(document.fullscreenElement===refs.snikkersRunDialog){
-        await document.exitFullscreen();
-      }else if(!document.fullscreenElement && typeof refs.snikkersRunDialog.requestFullscreen==='function'){
-        await refs.snikkersRunDialog.requestFullscreen({navigationUI:'hide'});
+    const active=isSnikkersFullscreenActive();
+    if(active){
+      setSnikkersPseudoFullscreen(false);
+      unlockOrientation();
+      if(document.fullscreenElement && typeof document.exitFullscreen==='function'){
+        try{ await document.exitFullscreen(); }catch{}
       }
-    }catch(err){ console.warn('Snikkers Run Vollbild:',err); }
+      updateSnikkersFullscreenButton();
+      return;
+    }
+
+    // Sofort sichtbares PWA-Vollbild, unabhängig von Browser-/WebView-Launen.
+    setSnikkersPseudoFullscreen(true);
+    updateSnikkersFullscreenButton();
+
+    // Zusätzlich echtes System-Vollbild versuchen. Scheitert das, bleibt der CSS-Fallback aktiv.
+    try{
+      const target=document.documentElement;
+      if(!document.fullscreenElement && typeof target.requestFullscreen==='function'){
+        await target.requestFullscreen({navigationUI:'hide'});
+      }else if(!document.fullscreenElement && typeof target.webkitRequestFullscreen==='function'){
+        target.webkitRequestFullscreen();
+      }
+    }catch(err){ console.warn('Snikkers Run System-Vollbild nicht verfügbar, CSS-Fallback aktiv:',err); }
+    await tryLockLandscape();
     updateSnikkersFullscreenButton();
   }
 
@@ -1077,8 +1115,10 @@
 
   function closeSnikkersRun(){
     destroySnikkersRun();
-    const finish=()=>{ if(refs.snikkersRunDialog?.open) refs.snikkersRunDialog.close(); };
-    if(document.fullscreenElement===refs.snikkersRunDialog && typeof document.exitFullscreen==='function'){
+    setSnikkersPseudoFullscreen(false);
+    unlockOrientation();
+    const finish=()=>{ if(refs.snikkersRunDialog?.open) refs.snikkersRunDialog.close(); updateSnikkersFullscreenButton(); };
+    if(document.fullscreenElement && typeof document.exitFullscreen==='function'){
       document.exitFullscreen().catch(()=>{}).finally(finish);
     }else finish();
   }
@@ -1088,14 +1128,14 @@
   if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
-  document.addEventListener('fullscreenchange',updateSnikkersFullscreenButton);
+  document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen')){ /* CSS-Fallback bleibt aktiv */ } updateSnikkersFullscreenButton(); });
   if(refs.miniGamesDialog){
     refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
   }
 
   if(refs.snikkersRunDialog){
-    refs.snikkersRunDialog.addEventListener('cancel',()=>{ destroySnikkersRun(); });
-    refs.snikkersRunDialog.addEventListener('close',()=>{ destroySnikkersRun(); updateSnikkersFullscreenButton(); });
+    refs.snikkersRunDialog.addEventListener('cancel',()=>{ destroySnikkersRun(); setSnikkersPseudoFullscreen(false); unlockOrientation(); });
+    refs.snikkersRunDialog.addEventListener('close',()=>{ destroySnikkersRun(); setSnikkersPseudoFullscreen(false); unlockOrientation(); updateSnikkersFullscreenButton(); });
     refs.snikkersRunDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersRunDialog) closeSnikkersRun(); });
   }
 

@@ -1,4 +1,4 @@
-ONE MORE DAY v0.8.1
+ONE MORE DAY v0.8.4
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -311,3 +311,9 @@ Update v0.8.3
 - Neuer Admin-only Bereich „Minigames“ als Sammelansicht für künftige Spiele.
 - Snikkers Run startet dort über ein quadratisches Game-Cover statt über einen direkten Startbutton.
 - Cover-Datei integriert unter assets/games/snikkers-runner/cover.png.
+
+
+CHANGELOG v0.8.4
+- Snikkers Run Vollbild robust neu aufgebaut: CSS-Vollbild als zuverlässiger PWA-Fallback, zusätzlich System-Fullscreen und Querformatversuch.
+- Dünnen Ast durch deutlich sichtbare blaue Wasserpfütze ersetzt.
+- Minigames bleiben im Admin-Testmodus.

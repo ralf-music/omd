@@ -242,13 +242,13 @@
     }
 
     function makeObstacle(type) {
-      const defs = {log:[68,36],rock:[48,42],crate:[50,52],bush:[60,40],stump:[52,48],branch:[76,30]};
+      const defs = {log:[68,36],rock:[48,42],crate:[50,52],bush:[60,40],stump:[52,48],puddle:[86,24]};
       const [w,h] = defs[type];
       return {type,x:W+20,y:GROUND-h+6,w,h,passed:false};
     }
 
     function spawnObstacle() {
-      const types = ['log','rock','crate','bush','stump','branch'];
+      const types = ['log','rock','crate','bush','stump','puddle'];
       obstacles.push(makeObstacle(types[Math.floor(Math.random()*types.length)]));
     }
 
@@ -305,18 +305,31 @@
         ctx.strokeStyle='rgba(54,30,16,.6)'; ctx.lineWidth=2; for(let i=10;i<o.w-6;i+=11){ctx.beginPath();ctx.moveTo(o.x+i,o.y+16);ctx.lineTo(o.x+i-2,o.y+o.h-9);ctx.stroke();}
         ctx.fillStyle='#4d7838'; ctx.beginPath(); ctx.ellipse(o.x+9,o.y+o.h-5,12,4,-.2,0,Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(o.x+o.w-8,o.y+o.h-5,10,4,.25,0,Math.PI*2); ctx.fill();
-      } else if (o.type==='branch') {
-        ctx.lineCap='round'; ctx.lineJoin='round';
-        const branch=ctx.createLinearGradient(o.x,o.y,o.x+o.w,o.y+o.h);
-        branch.addColorStop(0,'#81502d'); branch.addColorStop(1,'#4d2c18');
-        ctx.strokeStyle=branch; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(o.x+5,o.y+o.h-7); ctx.quadraticCurveTo(o.x+35,o.y+12,o.x+o.w-6,o.y+o.h-10); ctx.stroke();
-        ctx.strokeStyle='#56301a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(o.x+28,o.y+18); ctx.lineTo(o.x+20,o.y+4); ctx.moveTo(o.x+51,o.y+17); ctx.lineTo(o.x+60,o.y+5); ctx.stroke();
-        ctx.fillStyle='#4f7e39';
-        for(const [lx,ly,rot] of [[17,4,-.5],[22,8,.2],[59,5,.35],[64,9,-.3]]){ctx.beginPath();ctx.ellipse(o.x+lx,o.y+ly,7,3,rot,0,Math.PI*2);ctx.fill();}
-        ctx.fillStyle='rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(o.x+11,o.y+o.h-12); ctx.quadraticCurveTo(o.x+37,o.y+14,o.x+o.w-13,o.y+o.h-15); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=2; ctx.stroke();
+      } else if (o.type==='puddle') {
+        // Deutlich sichtbare Wasserpfütze statt des dünnen Asts.
+        // Sie sitzt flach auf dem Weg, bleibt aber als echtes Sprunghindernis spielbar.
+        const water=ctx.createRadialGradient(o.x+o.w*.46,o.y+o.h*.55,3,o.x+o.w*.5,o.y+o.h*.55,o.w*.5);
+        water.addColorStop(0,'#7ddcff');
+        water.addColorStop(.42,'#3599dc');
+        water.addColorStop(.78,'#1768a9');
+        water.addColorStop(1,'#0d426f');
+        ctx.fillStyle='rgba(72,47,31,.32)';
+        ctx.beginPath();ctx.ellipse(o.x+o.w/2,o.y+o.h*.72,o.w*.5,o.h*.54,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=water;
+        ctx.beginPath();ctx.ellipse(o.x+o.w/2,o.y+o.h*.60,o.w*.46,o.h*.47,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='rgba(190,238,255,.86)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.ellipse(o.x+o.w*.39,o.y+o.h*.56,o.w*.19,o.h*.18,-.08,0,Math.PI*1.45);ctx.stroke();
+        ctx.strokeStyle='rgba(108,194,238,.72)';ctx.lineWidth=1.4;
+        ctx.beginPath();ctx.ellipse(o.x+o.w*.64,o.y+o.h*.65,o.w*.16,o.h*.13,.08,Math.PI*.15,Math.PI*1.45);ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,.72)';
+        for(const [px,py,r] of [[.23,.46,2.2],[.69,.43,1.7],[.78,.65,1.3]]){ctx.beginPath();ctx.arc(o.x+o.w*px,o.y+o.h*py,r,0,Math.PI*2);ctx.fill();}
+        ctx.fillStyle='#7b674e';
+        for(const [px,py,rx,ry,rot] of [[.08,.72,7,3,-.15],[.92,.70,6,2.6,.2]]){ctx.beginPath();ctx.ellipse(o.x+o.w*px,o.y+o.h*py,rx,ry,rot,0,Math.PI*2);ctx.fill();}
       }
       ctx.restore();
-      ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(o.x+o.w/2,GROUND+4,Math.max(14,o.w*.38),5,0,0,Math.PI*2); ctx.fill();
+      if(o.type!=='puddle'){
+        ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(o.x+o.w/2,GROUND+4,Math.max(14,o.w*.38),5,0,0,Math.PI*2); ctx.fill();
+      }
     }
 
     function hit(o) {
