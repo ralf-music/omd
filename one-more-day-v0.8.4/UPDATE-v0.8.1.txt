@@ -1,0 +1,17 @@
+ONE MORE DAY v0.8.1 – Snikkers Run Mobile-Fix
+
+ÄNDERUNGEN
+- Querformat nutzt die komplette verfügbare PWA-Fläche.
+- Optionaler Vollbild-Button bei unterstützter Fullscreen API.
+- Touch reagiert direkt auf pointerdown statt verzögertem click.
+- Kein Tap-Highlight, keine Textauswahl, kein Touch-Callout auf dem Spielfeld.
+- Spiel und Theme-Musik pausieren beim Wechsel in den Hintergrund.
+- Musik läuft erst nach aktiver Fortsetzung des Spiels wieder an.
+- Hindernisse detailreicher: Baumstamm, Felsen, Kiste, Busch plus Baumstumpf und Ast.
+
+WICHTIG
+Die vorhandene Datei
+assets/audio/puppy_adventure_theme.mp3
+NICHT löschen oder ersetzen.
+
+Keine Änderungen an Guthaben, Geo-Check-ins, Boni, Worker oder D1.
