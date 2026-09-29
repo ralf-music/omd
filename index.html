@@ -166,7 +166,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.8.0</button>
+      <button id="versionBtn" class="version-btn">v0.8.1</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -179,7 +179,10 @@
           <p class="eyebrow">MINI-GAME</p>
           <h2>Snikkers Run</h2>
         </div>
-        <button id="closeSnikkersRunBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Run schließen">×</button>
+        <div class="snikkers-game-actions">
+          <button id="snikkersFullscreenBtn" class="snikkers-game-fullscreen" type="button" aria-label="Snikkers Run im Vollbild anzeigen" title="Vollbild">⛶</button>
+          <button id="closeSnikkersRunBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Run schließen">×</button>
+        </div>
       </div>
       <div id="snikkersRunMount"></div>
     </div>
@@ -331,8 +334,13 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.8.0</h2>
+      <h2>One More Day v0.8.1</h2>
       <ul>
+        <li>Snikkers Run im Handy-Querformat auf eine echte bildschirmfüllende Spielansicht optimiert.</li>
+        <li>Touch-Steuerung reagiert jetzt direkt auf <code>pointerdown</code>; Tap-Highlight, Textauswahl und Touch-Verzögerung auf dem Spielfeld wurden entfernt.</li>
+        <li>Musik und Spiel pausieren zuverlässig, sobald die PWA in den Hintergrund wechselt; die Musik setzt erst nach aktiver Rückkehr ins Spiel fort.</li>
+        <li>Optionaler Vollbild-Button ergänzt, sofern das Gerät die Fullscreen API unterstützt.</li>
+        <li>Hindernisse deutlich detailreicher gezeichnet und um Baumstumpf sowie Ast erweitert.</li>
         <li>Snikkers Run als eigenes Minispiel in die gemeinsame PWA integriert.</li>
         <li>Start über eine eigene Kachel; das Spiel öffnet innerhalb der bestehenden Dialog-/View-Struktur ohne Seitenreload.</li>
         <li>Mobile-first: Tippen als Hauptsteuerung, Leertaste zusätzlich auf PC und Surface.</li>

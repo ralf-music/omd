@@ -242,29 +242,81 @@
     }
 
     function makeObstacle(type) {
-      const defs = {log:[66,34],rock:[46,40],crate:[48,50],bush:[58,38]};
+      const defs = {log:[68,36],rock:[48,42],crate:[50,52],bush:[60,40],stump:[52,48],branch:[76,30]};
       const [w,h] = defs[type];
       return {type,x:W+20,y:GROUND-h+6,w,h,passed:false};
     }
 
     function spawnObstacle() {
-      const types = ['log','rock','crate','bush'];
+      const types = ['log','rock','crate','bush','stump','branch'];
       obstacles.push(makeObstacle(types[Math.floor(Math.random()*types.length)]));
     }
 
     function drawObstacle(o) {
+      ctx.save();
       if (o.type==='log') {
-        ctx.fillStyle='#734222'; rr(o.x,o.y+7,o.w,o.h-7,12); ctx.fill();
-        ctx.strokeStyle='#47291b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(o.x+o.w-10,o.y+o.h/2+3,11,0,Math.PI*2);ctx.stroke();
-        ctx.fillStyle='#4b7a31';ctx.beginPath();ctx.arc(o.x+12,o.y+4,7,0,Math.PI*2);ctx.fill();
+        const body=ctx.createLinearGradient(o.x,o.y,o.x,o.y+o.h);
+        body.addColorStop(0,'#9a6339'); body.addColorStop(.48,'#754522'); body.addColorStop(1,'#4d2c18');
+        ctx.fillStyle=body; rr(o.x,o.y+7,o.w,o.h-7,11); ctx.fill();
+        ctx.strokeStyle='rgba(54,29,15,.72)'; ctx.lineWidth=2;
+        for(let i=10;i<o.w-18;i+=13){ ctx.beginPath(); ctx.moveTo(o.x+i,o.y+11); ctx.quadraticCurveTo(o.x+i+4,o.y+18,o.x+i+1,o.y+o.h-5); ctx.stroke(); }
+        const endG=ctx.createRadialGradient(o.x+o.w-12,o.y+o.h/2+3,2,o.x+o.w-12,o.y+o.h/2+3,13);
+        endG.addColorStop(0,'#d2a06d'); endG.addColorStop(.55,'#a96f3e'); endG.addColorStop(1,'#6f4024');
+        ctx.fillStyle=endG; ctx.beginPath(); ctx.arc(o.x+o.w-12,o.y+o.h/2+3,12,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='rgba(91,50,25,.65)'; ctx.lineWidth=1.5;
+        for(const r of [5,8]){ ctx.beginPath(); ctx.arc(o.x+o.w-12,o.y+o.h/2+3,r,0,Math.PI*2); ctx.stroke(); }
+        ctx.strokeStyle='#5a321b'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(o.x+16,o.y+13); ctx.lineTo(o.x+9,o.y+2); ctx.stroke();
+        ctx.fillStyle='#4d7a34';
+        ctx.beginPath(); ctx.ellipse(o.x+12,o.y+5,10,5,-.25,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#74a74c'; ctx.beginPath(); ctx.ellipse(o.x+22,o.y+7,6,3,.2,0,Math.PI*2); ctx.fill();
       } else if (o.type==='rock') {
-        ctx.fillStyle='#74727a';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h);ctx.lineTo(o.x+5,o.y+16);ctx.lineTo(o.x+19,o.y+2);ctx.lineTo(o.x+37,o.y+8);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.closePath();ctx.fill();
+        const rock=ctx.createLinearGradient(o.x,o.y,o.x+o.w,o.y+o.h);
+        rock.addColorStop(0,'#9a9aa1'); rock.addColorStop(.5,'#6e6d75'); rock.addColorStop(1,'#4a4850');
+        ctx.fillStyle=rock; ctx.beginPath();
+        ctx.moveTo(o.x,o.y+o.h); ctx.lineTo(o.x+4,o.y+19); ctx.lineTo(o.x+16,o.y+5); ctx.lineTo(o.x+31,o.y+2); ctx.lineTo(o.x+44,o.y+14); ctx.lineTo(o.x+o.w,o.y+o.h); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,.17)'; ctx.beginPath(); ctx.moveTo(o.x+12,o.y+18); ctx.lineTo(o.x+20,o.y+7); ctx.lineTo(o.x+31,o.y+5); ctx.lineTo(o.x+25,o.y+18); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle='rgba(38,37,43,.65)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(o.x+30,o.y+13); ctx.lineTo(o.x+25,o.y+22); ctx.lineTo(o.x+31,o.y+27); ctx.lineTo(o.x+27,o.y+34); ctx.stroke();
+        ctx.fillStyle='#4d713d'; ctx.beginPath(); ctx.ellipse(o.x+10,o.y+o.h-6,10,4,-.1,0,Math.PI*2); ctx.fill();
       } else if (o.type==='crate') {
-        ctx.fillStyle='#93592d';rr(o.x,o.y,o.w,o.h,4);ctx.fill();ctx.strokeStyle='#482d1a';ctx.lineWidth=3;ctx.strokeRect(o.x+4,o.y+4,o.w-8,o.h-8);ctx.beginPath();ctx.moveTo(o.x+6,o.y+7);ctx.lineTo(o.x+o.w-6,o.y+o.h-7);ctx.moveTo(o.x+o.w-6,o.y+7);ctx.lineTo(o.x+6,o.y+o.h-7);ctx.stroke();
-      } else {
-        ctx.fillStyle='#315c2c';for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(o.x+10+i*10,o.y+18+(i%2)*7,15,0,Math.PI*2);ctx.fill();}
+        const wood=ctx.createLinearGradient(o.x,o.y,o.x+o.w,o.y+o.h);
+        wood.addColorStop(0,'#b77a42'); wood.addColorStop(.55,'#915629'); wood.addColorStop(1,'#673817');
+        ctx.fillStyle=wood; rr(o.x,o.y,o.w,o.h,4); ctx.fill();
+        ctx.strokeStyle='#4a2b17'; ctx.lineWidth=3; ctx.strokeRect(o.x+3,o.y+3,o.w-6,o.h-6);
+        ctx.strokeStyle='rgba(61,34,17,.55)'; ctx.lineWidth=1.4;
+        for(let yy=o.y+14; yy<o.y+o.h-8; yy+=11){ ctx.beginPath(); ctx.moveTo(o.x+5,yy); ctx.lineTo(o.x+o.w-5,yy+1); ctx.stroke(); }
+        ctx.strokeStyle='#563019'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(o.x+7,o.y+8); ctx.lineTo(o.x+o.w-7,o.y+o.h-8); ctx.moveTo(o.x+o.w-7,o.y+8); ctx.lineTo(o.x+7,o.y+o.h-8); ctx.stroke();
+        ctx.fillStyle='#c8a67b';
+        for(const [nx,ny] of [[8,8],[o.w-8,8],[8,o.h-8],[o.w-8,o.h-8]]){ ctx.beginPath(); ctx.arc(o.x+nx,o.y+ny,1.8,0,Math.PI*2); ctx.fill(); }
+        ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(o.x+6,o.y+6,o.w-12,4);
+      } else if (o.type==='bush') {
+        ctx.strokeStyle='#31502c'; ctx.lineWidth=3;
+        for(let i=0;i<5;i++){ ctx.beginPath(); ctx.moveTo(o.x+o.w/2,o.y+o.h); ctx.lineTo(o.x+8+i*11,o.y+11+(i%2)*6); ctx.stroke(); }
+        const blobs=[[13,23,15,'#355f31'],[27,14,17,'#42733a'],[42,23,16,'#2f592d'],[51,15,13,'#4d7d42'],[30,29,15,'#396a34']];
+        for(const [bx,by,br,c] of blobs){ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(o.x+bx,o.y+by,br,0,Math.PI*2); ctx.fill(); }
+        ctx.fillStyle='#77a95b';
+        for(let i=0;i<8;i++){ const lx=o.x+8+(i*7)%48, ly=o.y+8+((i*13)%22); ctx.beginPath(); ctx.ellipse(lx,ly,4.5,2.3,(i%3)*.5,0,Math.PI*2); ctx.fill(); }
+        ctx.fillStyle='#eab0c7'; for(const [fx,fy] of [[18,14],[39,10],[48,26]]){ ctx.beginPath(); ctx.arc(o.x+fx,o.y+fy,2.5,0,Math.PI*2); ctx.fill(); }
+      } else if (o.type==='stump') {
+        const bark=ctx.createLinearGradient(o.x,o.y,o.x+o.w,o.y+o.h);
+        bark.addColorStop(0,'#8b562f'); bark.addColorStop(.6,'#69401f'); bark.addColorStop(1,'#452714');
+        ctx.fillStyle=bark; ctx.beginPath(); ctx.moveTo(o.x+8,o.y+8); ctx.lineTo(o.x+o.w-8,o.y+8); ctx.lineTo(o.x+o.w-4,o.y+o.h-5); ctx.lineTo(o.x+4,o.y+o.h-5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#c58d58'; ctx.beginPath(); ctx.ellipse(o.x+o.w/2,o.y+8,o.w*.38,8,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#84532e'; ctx.lineWidth=1.5; for(const r of [7,13]){ctx.beginPath();ctx.ellipse(o.x+o.w/2,o.y+8,r,r*.42,0,0,Math.PI*2);ctx.stroke();}
+        ctx.strokeStyle='rgba(54,30,16,.6)'; ctx.lineWidth=2; for(let i=10;i<o.w-6;i+=11){ctx.beginPath();ctx.moveTo(o.x+i,o.y+16);ctx.lineTo(o.x+i-2,o.y+o.h-9);ctx.stroke();}
+        ctx.fillStyle='#4d7838'; ctx.beginPath(); ctx.ellipse(o.x+9,o.y+o.h-5,12,4,-.2,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(o.x+o.w-8,o.y+o.h-5,10,4,.25,0,Math.PI*2); ctx.fill();
+      } else if (o.type==='branch') {
+        ctx.lineCap='round'; ctx.lineJoin='round';
+        const branch=ctx.createLinearGradient(o.x,o.y,o.x+o.w,o.y+o.h);
+        branch.addColorStop(0,'#81502d'); branch.addColorStop(1,'#4d2c18');
+        ctx.strokeStyle=branch; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(o.x+5,o.y+o.h-7); ctx.quadraticCurveTo(o.x+35,o.y+12,o.x+o.w-6,o.y+o.h-10); ctx.stroke();
+        ctx.strokeStyle='#56301a'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(o.x+28,o.y+18); ctx.lineTo(o.x+20,o.y+4); ctx.moveTo(o.x+51,o.y+17); ctx.lineTo(o.x+60,o.y+5); ctx.stroke();
+        ctx.fillStyle='#4f7e39';
+        for(const [lx,ly,rot] of [[17,4,-.5],[22,8,.2],[59,5,.35],[64,9,-.3]]){ctx.beginPath();ctx.ellipse(o.x+lx,o.y+ly,7,3,rot,0,Math.PI*2);ctx.fill();}
+        ctx.fillStyle='rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(o.x+11,o.y+o.h-12); ctx.quadraticCurveTo(o.x+37,o.y+14,o.x+o.w-13,o.y+o.h-15); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=2; ctx.stroke();
       }
-      ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(o.x+o.w/2,GROUND+4,Math.max(14,o.w*.38),5,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+      ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(o.x+o.w/2,GROUND+4,Math.max(14,o.w*.38),5,0,0,Math.PI*2); ctx.fill();
     }
 
     function hit(o) {
@@ -303,7 +355,7 @@
       running=true;over=false;paused=false;score=0;milestone=0;distance=0;spawn=920;obstacles=[];particles=[];
       dog.x=120;dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;dog.animTime=0;dog.landTimer=0;
       last=performance.now();
-      if (wantMusic && audio) audio.play().catch(()=>{});
+      if (wantMusic && audio && !document.hidden) audio.play().catch(()=>{});
       rafId=requestAnimationFrame(loop);
     }
 
@@ -361,50 +413,65 @@
       drawWorld();drawDog();drawHud();overlay('Snikkers Run',message || (assetsReady ? opts.startText : 'Snikkers lädt…'));
     }
 
-    function onStageClick() { stage.focus({preventScroll:true}); jumpOrStart(); }
     function onKeyDown(e) {
       if (e.code!=='Space') return;
       if (!root.contains(document.activeElement)) return;
       e.preventDefault();jumpOrStart();
     }
-    function onVisibility() {
-      if (document.hidden && running && !over) {
+    function pauseForBackground() {
+      if (audio && !audio.paused) audio.pause();
+      if (running && !over && !paused) {
         paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');
       }
     }
+    function onVisibility() {
+      if (document.hidden) pauseForBackground();
+    }
+    function onPageHide() { pauseForBackground(); }
     function resumeIfPaused() {
       if (!paused || destroyed) return false;
-      paused=false;running=true;last=performance.now();rafId=requestAnimationFrame(loop);return true;
+      paused=false;running=true;last=performance.now();
+      if (wantMusic && audio && !document.hidden) audio.play().catch(()=>{});
+      rafId=requestAnimationFrame(loop);return true;
     }
-    function stageAction() {
+    function stageAction(e) {
+      if (e) {
+        if (typeof e.button==='number' && e.pointerType==='mouse' && e.button!==0) return;
+        e.preventDefault();
+      }
       stage.focus({preventScroll:true});
       if (!resumeIfPaused()) jumpOrStart();
     }
+    function preventStageContext(e) { e.preventDefault(); }
     function toggleMusic() {
       if (!audio) return;
       wantMusic=!wantMusic;updateMusicButton();
-      if (wantMusic && running) audio.play().catch(()=>{}); else audio.pause();
+      if (wantMusic && running && !paused && !document.hidden) audio.play().catch(()=>{}); else audio.pause();
     }
 
-    stage.addEventListener('click',stageAction);
+    stage.addEventListener('pointerdown',stageAction,{passive:false});
+    stage.addEventListener('contextmenu',preventStageContext);
     root.addEventListener('keydown',onKeyDown);
     musicBtn.addEventListener('click',toggleMusic);
     document.addEventListener('visibilitychange',onVisibility);
+    window.addEventListener('pagehide',onPageHide);
 
     renderStatic();
 
     return {
       start,
-      reset() { running=false;over=false;cancelAnimationFrame(rafId);score=0;distance=0;obstacles=[];particles=[];dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;renderStatic(); },
-      pause() { if (running&&!over&&!paused){paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');} },
+      reset() { running=false;over=false;paused=false;cancelAnimationFrame(rafId);if(audio) audio.pause();score=0;distance=0;obstacles=[];particles=[];dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;renderStatic(); },
+      pause() { if(audio) audio.pause(); if (running&&!over&&!paused){paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');} },
       getState() { return {running,over,paused,score,best}; },
       destroy() {
         if (destroyed) return;
         destroyed=true;cancelAnimationFrame(rafId);
-        stage.removeEventListener('click',stageAction);
+        stage.removeEventListener('pointerdown',stageAction);
+        stage.removeEventListener('contextmenu',preventStageContext);
         root.removeEventListener('keydown',onKeyDown);
         musicBtn.removeEventListener('click',toggleMusic);
         document.removeEventListener('visibilitychange',onVisibility);
+        window.removeEventListener('pagehide',onPageHide);
         if (audio) { audio.pause();audio.src=''; }
         container.replaceChildren();
       }

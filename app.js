@@ -36,7 +36,7 @@
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
-    openSnikkersRunBtn:$('openSnikkersRunBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
+    openSnikkersRunBtn:$('openSnikkersRunBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
   };
 
   function loadState(){
@@ -1018,10 +1018,34 @@
     }
   }
 
+  function updateSnikkersFullscreenButton(){
+    if(!refs.snikkersFullscreenBtn || !refs.snikkersRunDialog) return;
+    const supported=typeof refs.snikkersRunDialog.requestFullscreen==='function' && typeof document.exitFullscreen==='function';
+    refs.snikkersFullscreenBtn.hidden=!supported;
+    if(!supported) return;
+    const active=document.fullscreenElement===refs.snikkersRunDialog;
+    refs.snikkersFullscreenBtn.textContent=active?'⤢':'⛶';
+    refs.snikkersFullscreenBtn.setAttribute('aria-label',active?'Vollbild verlassen':'Snikkers Run im Vollbild anzeigen');
+    refs.snikkersFullscreenBtn.title=active?'Vollbild verlassen':'Vollbild';
+  }
+
+  async function toggleSnikkersFullscreen(){
+    if(!refs.snikkersRunDialog) return;
+    try{
+      if(document.fullscreenElement===refs.snikkersRunDialog){
+        await document.exitFullscreen();
+      }else if(!document.fullscreenElement && typeof refs.snikkersRunDialog.requestFullscreen==='function'){
+        await refs.snikkersRunDialog.requestFullscreen({navigationUI:'hide'});
+      }
+    }catch(err){ console.warn('Snikkers Run Vollbild:',err); }
+    updateSnikkersFullscreenButton();
+  }
+
   function openSnikkersRun(){
     if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRunner) return;
     destroySnikkersRun();
     refs.snikkersRunDialog.showModal();
+    updateSnikkersFullscreenButton();
     snikkersGame=window.SnikkersRunner.mount(refs.snikkersRunMount,{
       assetBase:'./assets/games/snikkers-runner',
       audioSrc:'./assets/audio/puppy_adventure_theme.mp3',
@@ -1038,14 +1062,19 @@
 
   function closeSnikkersRun(){
     destroySnikkersRun();
-    if(refs.snikkersRunDialog?.open) refs.snikkersRunDialog.close();
+    const finish=()=>{ if(refs.snikkersRunDialog?.open) refs.snikkersRunDialog.close(); };
+    if(document.fullscreenElement===refs.snikkersRunDialog && typeof document.exitFullscreen==='function'){
+      document.exitFullscreen().catch(()=>{}).finally(finish);
+    }else finish();
   }
 
   if(refs.openSnikkersRunBtn) refs.openSnikkersRunBtn.addEventListener('click',openSnikkersRun);
+  if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
+  document.addEventListener('fullscreenchange',updateSnikkersFullscreenButton);
   if(refs.snikkersRunDialog){
     refs.snikkersRunDialog.addEventListener('cancel',()=>{ destroySnikkersRun(); });
-    refs.snikkersRunDialog.addEventListener('close',destroySnikkersRun);
+    refs.snikkersRunDialog.addEventListener('close',()=>{ destroySnikkersRun(); updateSnikkersFullscreenButton(); });
     refs.snikkersRunDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersRunDialog) closeSnikkersRun(); });
   }
 

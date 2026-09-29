@@ -1,4 +1,4 @@
-ONE MORE DAY v0.8.0
+ONE MORE DAY v0.8.1
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -270,3 +270,22 @@ UPLOAD
 HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
 VORHER ERGÄNZEN: assets/audio/puppy_adventure_theme.mp3
 NICHT HOCHLADEN: cloudflare/
+
+
+CHANGELOG v0.8.1
+- Snikkers Run im Handy-Querformat bildschirmfüllend optimiert; Dialog nutzt die komplette verfügbare PWA-Fläche.
+- Optionaler Vollbild-Button ergänzt, wenn die Fullscreen API des Geräts verfügbar ist.
+- Touch-Steuerung von click auf unmittelbares pointerdown umgestellt.
+- Tap-Highlight, Textauswahl, Touch-Callout und Browser-Touch-Gesten auf dem Spielfeld deaktiviert.
+- Spiel und Theme-Musik pausieren bei visibilitychange/pagehide; Musik läuft nicht mehr weiter, wenn die PWA im Hintergrund liegt.
+- Musik startet nach Rückkehr erst wieder bei aktiver Fortsetzung des Spiels.
+- Hindernisse grafisch deutlich überarbeitet und um Baumstumpf sowie Ast ergänzt.
+- Keine Änderung an Guthaben, Geo-Check-ins, Boni, Admin-Logik, Worker oder D1.
+
+DATEIEN v0.8.1
+GEÄNDERT: app.js, data.js, index.html, styles.css, sw.js, README.txt, games/snikkers-runner/snikkers-runner.js, games/snikkers-runner/snikkers-runner.css
+NEU: Keine
+GELÖSCHT: Keine
+
+UPDATE VON v0.8.0
+Die vorhandene Datei assets/audio/puppy_adventure_theme.mp3 unverändert behalten.

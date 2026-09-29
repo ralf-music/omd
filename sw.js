@@ -1,4 +1,4 @@
-const CACHE='omd-v0.8.0';
+const CACHE='omd-v0.8.1';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./data.js','./content.js','./manifest.webmanifest','./games/snikkers-runner/snikkers-runner.css','./games/snikkers-runner/snikkers-runner.js','./assets/joey-motivation.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/games/snikkers-runner/run1.png','./assets/games/snikkers-runner/run2.png','./assets/games/snikkers-runner/run3.png','./assets/games/snikkers-runner/run4.png','./assets/games/snikkers-runner/jump1.png','./assets/games/snikkers-runner/jump2.png','./assets/games/snikkers-runner/land.png','./assets/games/snikkers-runner/gameover.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
