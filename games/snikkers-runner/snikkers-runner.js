@@ -1,0 +1,415 @@
+(function (global) {
+  'use strict';
+
+  const DEFAULTS = {
+    assetBase: './assets/snikkers-runner',
+    audioSrc: null,
+    bestScoreKey: 'omd_snikkers_run_best_v1',
+    accent: '#ea580c',
+    accentHover: '#f97316',
+    title: 'Snikkers Run',
+    subtitle: 'Tippen oder Leertaste: springen',
+    startText: 'Tippen oder Leertaste zum Starten',
+    musicDefaultOn: false,
+    musicVolume: 0.25,
+    storage: null,
+    onScore: null,
+    onGameOver: null,
+    onBestScore: null
+  };
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function createStorageAdapter(customStorage) {
+    if (customStorage && typeof customStorage.get === 'function' && typeof customStorage.set === 'function') {
+      return customStorage;
+    }
+    return {
+      get(key) {
+        try { return localStorage.getItem(key); } catch (_) { return null; }
+      },
+      set(key, value) {
+        try { localStorage.setItem(key, String(value)); } catch (_) {}
+      }
+    };
+  }
+
+  function createMarkup(container, opts) {
+    const root = document.createElement('section');
+    root.className = 'snikkers-runner';
+    root.style.setProperty('--sr-accent', opts.accent);
+    root.style.setProperty('--sr-accent-hover', opts.accentHover);
+    root.innerHTML = `
+      <div class="snikkers-runner__panel">
+        <div class="snikkers-runner__head">
+          <div class="snikkers-runner__copy">
+            <h2 class="snikkers-runner__title"></h2>
+            <p class="snikkers-runner__hint"></p>
+          </div>
+          <button class="snikkers-runner__music" type="button" aria-pressed="false">🔊 Musik an</button>
+        </div>
+        <button class="snikkers-runner__stage" type="button" aria-label="Snikkers Run starten oder springen">
+          <canvas class="snikkers-runner__canvas" width="960" height="360"></canvas>
+        </button>
+        <div class="snikkers-runner__footer">Tippen = Springen · Leertaste funktioniert, solange das Spiel fokussiert ist</div>
+      </div>`;
+    root.querySelector('.snikkers-runner__title').textContent = opts.title;
+    root.querySelector('.snikkers-runner__hint').textContent = opts.subtitle;
+    container.replaceChildren(root);
+    return root;
+  }
+
+  function mount(target, userOptions = {}) {
+    const container = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!container) throw new Error('SnikkersRunner: Zielcontainer nicht gefunden.');
+
+    const opts = Object.assign({}, DEFAULTS, userOptions);
+    const storage = createStorageAdapter(opts.storage);
+    const root = createMarkup(container, opts);
+    const stage = root.querySelector('.snikkers-runner__stage');
+    const canvas = root.querySelector('.snikkers-runner__canvas');
+    const musicBtn = root.querySelector('.snikkers-runner__music');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const GROUND = 290;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const spriteNames = ['run1','run2','run3','run4','jump1','jump2','land','gameover'];
+    const sprites = {};
+    const runFrames = ['run1','run2','run3','run4'];
+    let assetsReady = false;
+    let destroyed = false;
+    let rafId = 0;
+    let running = false;
+    let over = false;
+    let paused = false;
+    let last = 0;
+    let spawn = 950;
+    let score = 0;
+    let milestone = 0;
+    let distance = 0;
+    let obstacles = [];
+    let particles = [];
+    let best = Math.max(0, Number(storage.get(opts.bestScoreKey) || 0) || 0);
+
+    const dog = { x:120, y:GROUND-56, w:84, h:56, vy:0, onGround:true, animTime:0, landTimer:0 };
+
+    let audio = null;
+    let wantMusic = Boolean(opts.musicDefaultOn);
+    if (opts.audioSrc) {
+      audio = new Audio(opts.audioSrc);
+      audio.loop = true;
+      audio.preload = 'auto';
+      audio.volume = clamp(Number(opts.musicVolume) || 0.25, 0, 1);
+      audio.addEventListener('error', () => {
+        wantMusic = false;
+        musicBtn.hidden = true;
+      }, { once:true });
+    } else {
+      musicBtn.hidden = true;
+    }
+
+    function updateMusicButton() {
+      if (!audio) return;
+      musicBtn.textContent = wantMusic ? '🔈 Musik aus' : '🔊 Musik an';
+      musicBtn.setAttribute('aria-pressed', wantMusic ? 'true' : 'false');
+    }
+    updateMusicButton();
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function spritePath(name) {
+      return `${String(opts.assetBase).replace(/\/$/, '')}/${name}.png`;
+    }
+
+    Promise.all(spriteNames.map(async name => { sprites[name] = await loadImage(spritePath(name)); }))
+      .then(() => { if (!destroyed) { assetsReady = true; renderStatic(); } })
+      .catch(err => {
+        console.error('SnikkersRunner: Sprite konnte nicht geladen werden.', err);
+        if (!destroyed) { assetsReady = false; renderStatic('Spielgrafik konnte nicht geladen werden'); }
+      });
+
+    function rr(x,y,w,h,r) {
+      const radius = Math.min(r,w/2,h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+radius,y);
+      ctx.arcTo(x+w,y,x+w,y+h,radius);
+      ctx.arcTo(x+w,y+h,x,y+h,radius);
+      ctx.arcTo(x,y+h,x,y,radius);
+      ctx.arcTo(x,y,x+w,y,radius);
+      ctx.closePath();
+    }
+
+    function drawWorld() {
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#1a1a3b');
+      g.addColorStop(.42,'#56365d');
+      g.addColorStop(.72,'#bb694e');
+      g.addColorStop(1,'#e8b172');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      ctx.fillStyle = 'rgba(255,209,110,.95)';
+      ctx.beginPath(); ctx.arc(805,92,31,0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = '#43425a';
+      ctx.beginPath(); ctx.moveTo(0,185);
+      for (let x=0;x<=W+120;x+=120) ctx.lineTo(x,160+Math.sin((x+distance*.045)/115)*20);
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+
+      ctx.fillStyle = '#21352f';
+      ctx.beginPath(); ctx.moveTo(0,220);
+      for (let x=0;x<=W+80;x+=80) ctx.lineTo(x,202+Math.sin((x+distance*.12)/57)*14);
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+
+      ctx.fillStyle = 'rgba(255,193,114,.18)';
+      ctx.fillRect(0,233,W,12);
+
+      ctx.strokeStyle = '#6a412d'; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(0,GROUND-38); ctx.lineTo(W,GROUND-38); ctx.stroke();
+      ctx.lineWidth = 7;
+      for (let x=-(distance*.35%122);x<W+122;x+=122) {
+        ctx.beginPath(); ctx.moveTo(x,GROUND-61); ctx.lineTo(x,GROUND-8); ctx.stroke();
+      }
+
+      ctx.fillStyle = '#45652f'; ctx.fillRect(0,GROUND-28,W,35);
+      ctx.fillStyle = '#edf3dc';
+      for (let x=-(distance*.5%86);x<W+60;x+=86) {
+        ctx.beginPath(); ctx.arc(x+14,GROUND-18,4,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+20,GROUND-12,3,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+8,GROUND-12,3,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#f5bfcc'; ctx.beginPath(); ctx.arc(x+36,GROUND-14,3,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#edf3dc';
+      }
+
+      const pathGradient = ctx.createLinearGradient(0,GROUND,0,H);
+      pathGradient.addColorStop(0,'#b57e4c');
+      pathGradient.addColorStop(1,'#6c462f');
+      ctx.fillStyle = pathGradient; ctx.fillRect(0,GROUND,W,H-GROUND);
+      ctx.fillStyle = 'rgba(255,223,182,.14)';
+      for (let x=-(distance%84);x<W+84;x+=84) {
+        ctx.beginPath(); ctx.ellipse(x+18,GROUND+37,18,4,0,0,Math.PI*2); ctx.fill();
+      }
+
+      ctx.fillStyle = '#233924';
+      for (let x=-(distance*1.1%48);x<W+50;x+=48) {
+        ctx.beginPath();
+        ctx.moveTo(x,H); ctx.lineTo(x+9,H-22); ctx.lineTo(x+18,H); ctx.lineTo(x+31,H-19); ctx.lineTo(x+40,H); ctx.fill();
+      }
+    }
+
+    function drawShadow() {
+      const lift = Math.max(0,GROUND-(dog.y+dog.h));
+      const scale = Math.max(.5,1-lift/110);
+      ctx.fillStyle = `rgba(0,0,0,${0.24*scale})`;
+      ctx.beginPath(); ctx.ellipse(dog.x+dog.w/2+6,GROUND+3,24*scale,7.5*scale,0,0,Math.PI*2); ctx.fill();
+    }
+
+    function currentSprite() {
+      if (over) return 'gameover';
+      if (!running) return 'land';
+      if (!dog.onGround) return dog.vy < -1.9 ? 'jump1' : 'jump2';
+      if (dog.landTimer > 0) return 'land';
+      return runFrames[Math.floor(dog.animTime/90)%runFrames.length];
+    }
+
+    function drawDog() {
+      if (!assetsReady) return;
+      const key = currentSprite();
+      const img = sprites[key];
+      if (!img) return;
+      drawShadow();
+      let drawW=126,drawH=82,ox=-18,oy=-16;
+      if (key==='jump1'||key==='jump2') { drawW=128; drawH=84; ox=-17; oy=-20; }
+      if (key==='land') { drawW=124; drawH=80; ox=-18; oy=-13; }
+      if (key==='gameover') { drawW=132; drawH=76; ox=-24; oy=-8; }
+      ctx.drawImage(img,dog.x+ox,dog.y+oy,drawW,drawH);
+      if (running && dog.onGround && !over && dog.landTimer<=0 && Math.random()<.25) {
+        particles.push({x:dog.x+14,y:GROUND-4,vx:-1-Math.random()*1.5,vy:-Math.random()*1.2,a:.44,r:2+Math.random()*4});
+      }
+    }
+
+    function makeObstacle(type) {
+      const defs = {log:[66,34],rock:[46,40],crate:[48,50],bush:[58,38]};
+      const [w,h] = defs[type];
+      return {type,x:W+20,y:GROUND-h+6,w,h,passed:false};
+    }
+
+    function spawnObstacle() {
+      const types = ['log','rock','crate','bush'];
+      obstacles.push(makeObstacle(types[Math.floor(Math.random()*types.length)]));
+    }
+
+    function drawObstacle(o) {
+      if (o.type==='log') {
+        ctx.fillStyle='#734222'; rr(o.x,o.y+7,o.w,o.h-7,12); ctx.fill();
+        ctx.strokeStyle='#47291b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(o.x+o.w-10,o.y+o.h/2+3,11,0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle='#4b7a31';ctx.beginPath();ctx.arc(o.x+12,o.y+4,7,0,Math.PI*2);ctx.fill();
+      } else if (o.type==='rock') {
+        ctx.fillStyle='#74727a';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h);ctx.lineTo(o.x+5,o.y+16);ctx.lineTo(o.x+19,o.y+2);ctx.lineTo(o.x+37,o.y+8);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.closePath();ctx.fill();
+      } else if (o.type==='crate') {
+        ctx.fillStyle='#93592d';rr(o.x,o.y,o.w,o.h,4);ctx.fill();ctx.strokeStyle='#482d1a';ctx.lineWidth=3;ctx.strokeRect(o.x+4,o.y+4,o.w-8,o.h-8);ctx.beginPath();ctx.moveTo(o.x+6,o.y+7);ctx.lineTo(o.x+o.w-6,o.y+o.h-7);ctx.moveTo(o.x+o.w-6,o.y+7);ctx.lineTo(o.x+6,o.y+o.h-7);ctx.stroke();
+      } else {
+        ctx.fillStyle='#315c2c';for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(o.x+10+i*10,o.y+18+(i%2)*7,15,0,Math.PI*2);ctx.fill();}
+      }
+      ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(o.x+o.w/2,GROUND+4,Math.max(14,o.w*.38),5,0,0,Math.PI*2);ctx.fill();
+    }
+
+    function hit(o) {
+      const ax=dog.x+19, ay=dog.y+10, aw=dog.w-36, ah=dog.h-16;
+      return ax<o.x+o.w-5 && ax+aw>o.x+5 && ay<o.y+o.h && ay+ah>o.y+5;
+    }
+
+    function dust(count, strength) {
+      for (let i=0;i<count;i++) particles.push({x:dog.x+28,y:GROUND-3,vx:-.8-Math.random()*strength,vy:-Math.random()*1.6,a:.42,r:2+Math.random()*3});
+    }
+
+    function drawHud() {
+      ctx.fillStyle='rgba(10,12,18,.68)';rr(18,17,246,56,16);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='700 22px system-ui';ctx.fillText('Score: '+score,34,51);
+      ctx.fillStyle='#f59e0b';ctx.fillText('Best: '+best,158,51);
+    }
+
+    function overlay(title, sub) {
+      ctx.fillStyle='rgba(6,7,11,.50)';ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(17,18,24,.92)';rr(W/2-220,H/2-68,440,136,22);ctx.fill();
+      ctx.strokeStyle=opts.accent;ctx.lineWidth=2;ctx.stroke();
+      ctx.textAlign='center';ctx.fillStyle=opts.accentHover;ctx.font='800 30px system-ui';ctx.fillText(title,W/2,H/2-10);
+      ctx.fillStyle='#e5e7eb';ctx.font='16px system-ui';ctx.fillText(sub,W/2,H/2+26);ctx.textAlign='start';
+    }
+
+    function setBest(nextBest) {
+      if (nextBest <= best) return;
+      best = nextBest;
+      storage.set(opts.bestScoreKey,best);
+      if (typeof opts.onBestScore === 'function') opts.onBestScore(best);
+    }
+
+    function start() {
+      if (!assetsReady || destroyed) return;
+      cancelAnimationFrame(rafId);
+      running=true;over=false;paused=false;score=0;milestone=0;distance=0;spawn=920;obstacles=[];particles=[];
+      dog.x=120;dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;dog.animTime=0;dog.landTimer=0;
+      last=performance.now();
+      if (wantMusic && audio) audio.play().catch(()=>{});
+      rafId=requestAnimationFrame(loop);
+    }
+
+    function jumpOrStart() {
+      if (destroyed || !assetsReady) return;
+      if (!running || over) { start(); return; }
+      if (paused) return;
+      if (dog.onGround) { dog.vy=-13.2;dog.onGround=false;dog.landTimer=0;dust(7,2.1); }
+    }
+
+    function endGame() {
+      running=false;over=true;setBest(score);
+      drawDog();drawHud();overlay('Lauf beendet',`Score ${score} · Best ${best} · Tippen zum Neustart`);
+      if (typeof opts.onGameOver === 'function') opts.onGameOver({score,best});
+    }
+
+    function updateParticles(f) {
+      for (const p of particles) {
+        p.x+=p.vx*f;p.y+=p.vy*f;p.a-=.018*f;
+        ctx.fillStyle=`rgba(234,210,172,${Math.max(0,p.a)})`;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+      }
+      particles=particles.filter(p=>p.a>0);
+    }
+
+    function loop(t) {
+      if (!running || destroyed || paused) return;
+      const dt=Math.min(34,t-last);last=t;const f=dt/16.667;const speed=5.1+Math.min(3.0,score*.075);
+      distance+=speed*f;dog.animTime+=dt;dog.vy+=.54*f;dog.y+=dog.vy*f;
+      if (dog.y+dog.h>=GROUND) {
+        const wasAir=!dog.onGround;dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;
+        if (wasAir) { dog.landTimer=130;dust(4,1.6); }
+      }
+      if (dog.landTimer>0) dog.landTimer-=dt;
+      spawn-=dt;
+      if (spawn<=0) { spawnObstacle();spawn=1020+Math.random()*720-Math.min(210,score*4); }
+      for(const o of obstacles) o.x-=speed*f;
+      obstacles=obstacles.filter(o=>o.x+o.w>-24);
+
+      drawWorld();
+      for (const o of obstacles) {
+        drawObstacle(o);
+        if (!o.passed && o.x+o.w<dog.x) {
+          o.passed=true;score++;setBest(score);
+          if (typeof opts.onScore === 'function') opts.onScore({score,best});
+          if (score%10===0) milestone=82;
+        }
+        if (hit(o)) { endGame(); return; }
+      }
+      updateParticles(f);drawDog();drawHud();
+      if (milestone>0) { milestone-=f;ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.94)';ctx.font='800 22px system-ui';ctx.fillText(score+' geschafft!',W/2,92);ctx.textAlign='start'; }
+      rafId=requestAnimationFrame(loop);
+    }
+
+    function renderStatic(message) {
+      drawWorld();drawDog();drawHud();overlay('Snikkers Run',message || (assetsReady ? opts.startText : 'Snikkers lädt…'));
+    }
+
+    function onStageClick() { stage.focus({preventScroll:true}); jumpOrStart(); }
+    function onKeyDown(e) {
+      if (e.code!=='Space') return;
+      if (!root.contains(document.activeElement)) return;
+      e.preventDefault();jumpOrStart();
+    }
+    function onVisibility() {
+      if (document.hidden && running && !over) {
+        paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');
+      }
+    }
+    function resumeIfPaused() {
+      if (!paused || destroyed) return false;
+      paused=false;running=true;last=performance.now();rafId=requestAnimationFrame(loop);return true;
+    }
+    function stageAction() {
+      stage.focus({preventScroll:true});
+      if (!resumeIfPaused()) jumpOrStart();
+    }
+    function toggleMusic() {
+      if (!audio) return;
+      wantMusic=!wantMusic;updateMusicButton();
+      if (wantMusic && running) audio.play().catch(()=>{}); else audio.pause();
+    }
+
+    stage.addEventListener('click',stageAction);
+    root.addEventListener('keydown',onKeyDown);
+    musicBtn.addEventListener('click',toggleMusic);
+    document.addEventListener('visibilitychange',onVisibility);
+
+    renderStatic();
+
+    return {
+      start,
+      reset() { running=false;over=false;cancelAnimationFrame(rafId);score=0;distance=0;obstacles=[];particles=[];dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;renderStatic(); },
+      pause() { if (running&&!over&&!paused){paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');} },
+      getState() { return {running,over,paused,score,best}; },
+      destroy() {
+        if (destroyed) return;
+        destroyed=true;cancelAnimationFrame(rafId);
+        stage.removeEventListener('click',stageAction);
+        root.removeEventListener('keydown',onKeyDown);
+        musicBtn.removeEventListener('click',toggleMusic);
+        document.removeEventListener('visibilitychange',onVisibility);
+        if (audio) { audio.pause();audio.src=''; }
+        container.replaceChildren();
+      }
+    };
+  }
+
+  global.SnikkersRunner = { mount };
+})(window);

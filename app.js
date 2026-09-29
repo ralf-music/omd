@@ -10,6 +10,7 @@
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
   const state = loadState();
   let payoutSelectedCents=0;
+  let snikkersGame=null;
   const $ = id => document.getElementById(id);
 
   // Start migration: 14.09.2026 and 15.09.2026 count as fully completed launch days.
@@ -34,7 +35,8 @@
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
-    absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn')
+    absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
+    openSnikkersRunBtn:$('openSnikkersRunBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
   };
 
   function loadState(){
@@ -1008,6 +1010,44 @@
   refs.submitPayoutBtn.addEventListener('click',()=>{ refs.payoutMessage.textContent='Vorschau: Die Anforderung ist vorbereitet. Noch wurde nichts gesendet, reserviert oder abgezogen.'; refs.payoutMessage.classList.remove('hidden'); });
   refs.closePayoutBtn.addEventListener('click',()=>refs.payoutDialog.close());
   refs.payoutDialog.addEventListener('click',e=>{if(e.target===refs.payoutDialog) refs.payoutDialog.close();});
+
+  function destroySnikkersRun(){
+    if(snikkersGame){
+      try{ snikkersGame.destroy(); }catch(err){ console.warn('Snikkers Run destroy:',err); }
+      snikkersGame=null;
+    }
+  }
+
+  function openSnikkersRun(){
+    if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRunner) return;
+    destroySnikkersRun();
+    refs.snikkersRunDialog.showModal();
+    snikkersGame=window.SnikkersRunner.mount(refs.snikkersRunMount,{
+      assetBase:'./assets/games/snikkers-runner',
+      audioSrc:'./assets/audio/puppy_adventure_theme.mp3',
+      bestScoreKey:'omd_snikkers_run_best_v1',
+      accent:'#ff2f92',
+      accentHover:'#ff65b5',
+      title:'Snikkers Run',
+      subtitle:'Tippen oder Leertaste: springen',
+      startText:'Tippen oder Leertaste zum Starten',
+      musicDefaultOn:false,
+      musicVolume:0.25
+    });
+  }
+
+  function closeSnikkersRun(){
+    destroySnikkersRun();
+    if(refs.snikkersRunDialog?.open) refs.snikkersRunDialog.close();
+  }
+
+  if(refs.openSnikkersRunBtn) refs.openSnikkersRunBtn.addEventListener('click',openSnikkersRun);
+  if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
+  if(refs.snikkersRunDialog){
+    refs.snikkersRunDialog.addEventListener('cancel',()=>{ destroySnikkersRun(); });
+    refs.snikkersRunDialog.addEventListener('close',destroySnikkersRun);
+    refs.snikkersRunDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersRunDialog) closeSnikkersRun(); });
+  }
 
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
 

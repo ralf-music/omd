@@ -78,3 +78,22 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 .admin-approve-btn{background:#24242b;color:#fff}
 .admin-reject-btn{background:#17171d;color:#fff}
 @media(max-width:560px){.admin-request-section-head{align-items:stretch;flex-direction:column}.admin-refresh-btn{width:100%}}
+
+
+/* v0.8.0 · Snikkers Run */
+.snikkers-launch-copy{margin-bottom:14px;line-height:1.5}
+.snikkers-launch-badge{display:grid;place-items:center;min-width:48px;height:48px;border-radius:15px;background:#22222b;border:1px solid #34343f;font-size:24px;box-shadow:0 0 18px rgba(255,47,146,.08)}
+.snikkers-game-dialog{width:min(1000px,100%);max-width:none;margin:auto;padding:10px;background:transparent}
+.snikkers-game-dialog::backdrop{background:rgba(0,0,0,.88);backdrop-filter:blur(7px)}
+.snikkers-game-dialog-card{width:100%;max-height:calc(100vh - 20px);overflow:auto;background:#111116;border:1px solid #33333d;border-radius:24px;padding:16px;box-shadow:0 28px 80px #000}
+.snikkers-game-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+.snikkers-game-dialog-head h2{margin:0}
+.snikkers-game-close{display:grid;place-items:center;flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid #3a3945;background:#1d1d25;color:#fff;font-size:28px;line-height:1;cursor:pointer}
+.snikkers-game-close:focus-visible{outline:2px solid var(--pink2);outline-offset:3px}
+.snikkers-game-dialog .snikkers-runner{--sr-accent:var(--pink);--sr-accent-hover:var(--pink2);--sr-panel:#15151b;--sr-text:var(--text);--sr-muted:var(--muted)}
+.snikkers-game-dialog .snikkers-runner__panel{border-color:#34343f;background:#15151b;padding:12px}
+.snikkers-game-dialog .snikkers-runner__title{color:var(--pink2)}
+.snikkers-game-dialog .snikkers-runner__music{border-color:var(--pink);color:var(--text)}
+.snikkers-game-dialog .snikkers-runner__music:hover{background:rgba(255,47,146,.09)}
+.snikkers-game-dialog .snikkers-runner__music:focus-visible,.snikkers-game-dialog .snikkers-runner__stage:focus-visible{outline-color:rgba(255,101,181,.7)}
+@media(max-width:560px){.snikkers-game-dialog{padding:6px}.snikkers-game-dialog-card{padding:10px;border-radius:19px}.snikkers-game-dialog-head{padding:2px 2px 0}.snikkers-game-dialog .snikkers-runner__panel{padding:8px}.snikkers-game-dialog .snikkers-runner__footer{font-size:.7rem}}
