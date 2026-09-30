@@ -61,6 +61,22 @@
         <p id="locationHint" class="microcopy">Standort wird nur beim Tippen geprüft. Keine Hintergrund-Ortung.</p>
       </section>
 
+      <section id="pushReminderCard" class="card push-card hidden">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ERINNERUNGEN</p>
+            <h2>Check-in Push</h2>
+          </div>
+          <div id="pushPermissionBadge" class="badge">AUS</div>
+        </div>
+        <p class="muted">Erinnert auf dem User-Handy nur dann an ARBEIT oder ZUHAUSE, wenn die jeweilige Buchung zu den festgelegten Zeiten noch fehlt.</p>
+        <div class="push-actions">
+          <button id="enableUserPushBtn" class="secondary-btn" type="button">ERINNERUNGEN AKTIVIEREN</button>
+          <button id="disableUserPushBtn" class="ghost-btn hidden" type="button">DEAKTIVIEREN</button>
+        </div>
+        <p id="userPushStatus" class="microcopy">Noch nicht eingerichtet.</p>
+      </section>
+
       <section id="rewardCard" class="card reward-card locked">
         <div class="reward-lock" id="rewardLock">🔒</div>
         <p class="eyebrow">TAGESBELOHNUNG</p>
@@ -166,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.8.4</button>
+      <button id="versionBtn" class="version-btn">v0.9.0</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -232,6 +248,22 @@
         <div id="adminAbsenceList" class="admin-absence-list">
           <p class="microcopy">Noch nicht geladen.</p>
         </div>
+      </div>
+      <div class="admin-request-section admin-push-section">
+        <div class="admin-request-section-head">
+          <div>
+            <p class="eyebrow">PUSH</p>
+            <h3>Admin-Handy</h3>
+          </div>
+          <span id="adminPushBadge" class="badge">AUS</span>
+        </div>
+        <p class="microcopy">Nur auf dem vorgesehenen Admin-Handy aktivieren. Haupt-PC und Surface-PC bleiben ohne Push.</p>
+        <div class="admin-push-actions">
+          <button id="enableAdminPushBtn" class="secondary-btn" type="button">DIESES GERÄT ALS ADMIN-HANDY REGISTRIEREN</button>
+          <button id="testAdminPushBtn" class="ghost-btn" type="button" disabled>TEST-PUSH SENDEN</button>
+          <button id="disableAdminPushBtn" class="ghost-btn hidden" type="button">ADMIN-PUSH DEAKTIVIEREN</button>
+        </div>
+        <p id="adminPushStatus" class="microcopy">Noch nicht eingerichtet.</p>
       </div>
       <p id="adminMessage" class="microcopy"></p>
       <button id="closeAdminBtn" class="ghost-btn" type="button">SCHLIESSEN</button>
@@ -358,19 +390,15 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.8.4</h2>
+      <h2>One More Day v0.9.0</h2>
       <ul>
-        <li>Vollbild für Snikkers Run robust neu aufgebaut: zuverlässiges PWA-CSS-Vollbild plus optionaler System-Fullscreen-Fallback.</li>
-        <li>Beim Vollbildversuch wird auf unterstützten Geräten zusätzlich Querformat angefordert.</li>
-        <li>Der kaum sichtbare Ast wurde vollständig durch eine deutlich erkennbare blaue Wasserpfütze mit Lichtreflexen und Wellen ersetzt.</li>
-        <li>Neue Minigames-Sammlung ergänzt: Statt des direkten Spielstarts gibt es jetzt eine eigene <strong>Minigames</strong>-Ansicht innerhalb der PWA.</li>
-        <li>Snikkers Run verwendet dort jetzt ein eigenes quadratisches Retro-Game-Cover als klickbare Startfläche.</li>
-        <li>Die bisherige einzelne Spiel-Kachel wurde dadurch auf eine zukünftige Mehrspielesammlung vorbereitet.</li>
-        <li>Der komplette Minigames-Bereich bleibt vorerst im Admin-Testmodus und ist nur auf Geräten mit aktivierter Admin-Oberfläche sichtbar.</li>
-        <li>Normale User sehen aktuell weder die Minigames-Kachel noch die Snikkers-Run-Coveransicht.</li>
-        <li>Snikkers Run bleibt vollständig vom Arbeitsguthaben, Geo-Check-in, Tagesstatus und Bonus-System getrennt.</li>
-        <li>Theme-Pfad bleibt: <code>assets/audio/puppy_adventure_theme.mp3</code>.</li>
-        <li>Bestehende Funktionen und Cloudflare-/D1-Logik aus v0.7.4 bleiben unverändert.</li>
+        <li>Web-Push-Grundfunktion für User-Handy und Admin-Handy ergänzt.</li>
+        <li>User-Handy kann Erinnerungs-Pushs aktivieren; Admin-Geräte sehen diese User-Aktivierung nicht.</li>
+        <li>Admin-Bereich enthält eine separate Registrierung ausschließlich für das Admin-Handy sowie einen Test-Push.</li>
+        <li>Service Worker verarbeitet Push-Nachrichten auch bei geschlossener PWA und öffnet One More Day beim Antippen.</li>
+        <li>Erfolgreiche ARBEIT-/ZUHAUSE-Buchungen vom User-Handy werden mit Geräte- und Buchungskennung an den Server gemeldet, damit später der Admin-Push eindeutig ausgelöst werden kann.</li>
+        <li>Minigames bleiben weiterhin Admin-only im Testmodus.</li>
+        <li>Guthaben, Check-in-Regeln, Abwesenheiten und bestehende Cloud-Daten bleiben unverändert.</li>
       </ul>
       <button class="primary-btn" onclick="document.getElementById('versionDialog').close()">SCHLIESSEN</button>
     </div>

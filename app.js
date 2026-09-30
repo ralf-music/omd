@@ -36,6 +36,8 @@
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
+    pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
+    adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
     miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
   };
 
@@ -234,7 +236,7 @@
     if(locked){ ds.rewardSnapshot=locked; ds.rewardOpened=true; ds.rewardOpenedAt ||= locked.lockedAt || new Date().toISOString(); saveState(); }
     return locked;
   }
-  async function syncDayWithCloud(key,ds){
+  async function syncDayWithCloud(key,ds,bookingEvent=null){
     try{
       const existing=await apiJson(`/day?date=${encodeURIComponent(key)}`);
       if(existing.day){
@@ -244,13 +246,18 @@
         ds.homeAt ||= existing.day.home_confirmed_at;
       }
       if(ds.work || ds.home){
+        const payload={
+          date:key,work_confirmed:!!ds.work,work_confirmed_at:ds.workAt||null,
+          home_confirmed:!!ds.home,home_confirmed_at:ds.homeAt||null,
+          status:ds.work&&ds.home?'COMPLETE':'OPEN'
+        };
+        if(bookingEvent && !adminUiEnabled()){
+          payload.device_role='user-phone';
+          payload.booking_event=bookingEvent;
+        }
         await apiJson('/day',{
           method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            date:key,work_confirmed:!!ds.work,work_confirmed_at:ds.workAt||null,
-            home_confirmed:!!ds.home,home_confirmed_at:ds.homeAt||null,
-            status:ds.work&&ds.home?'COMPLETE':'OPEN'
-          })
+          body:JSON.stringify(payload)
         });
       }
     }catch(err){ console.warn('D1 day sync:',key,err); }
@@ -313,7 +320,7 @@
     await syncCurrentWeekFromCloud(new Date());
     await syncCurrentWeekStatusesFromCloud(new Date());
     // Then merge known day state and lock/upload existing local rewards.
-    for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds);
+    for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds,target);
     for(const [key,ds] of Object.entries(state.days||{})){
       if(!ds?.rewardOpened) continue;
       try{
@@ -1023,6 +1030,142 @@
     if(refs.miniGamesDialog?.open) refs.miniGamesDialog.close();
   }
 
+  function pushSupported(){
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+
+  function getPushDeviceId(){
+    let id=localStorage.getItem('omd-push-device-id');
+    if(!id){
+      id=`omd-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+      localStorage.setItem('omd-push-device-id',id);
+    }
+    return id;
+  }
+
+  function vapidKeyToUint8Array(value){
+    const padding='='.repeat((4-value.length%4)%4);
+    const base64=(value+padding).replace(/-/g,'+').replace(/_/g,'/');
+    const raw=atob(base64);
+    return Uint8Array.from([...raw].map(ch=>ch.charCodeAt(0)));
+  }
+
+  async function getServiceWorkerRegistration(){
+    if(!('serviceWorker' in navigator)) throw new Error('Service Worker nicht unterstützt.');
+    const existing=await navigator.serviceWorker.getRegistration('./');
+    if(existing) return existing;
+    return navigator.serviceWorker.register('./sw.js');
+  }
+
+  async function getCurrentPushSubscription(){
+    if(!pushSupported()) return null;
+    const registration=await getServiceWorkerRegistration();
+    return registration.pushManager.getSubscription();
+  }
+
+  async function postPushSubscription(role,subscription){
+    const headers={'Content-Type':'application/json'};
+    if(role==='admin-phone'){
+      const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+      if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
+      localStorage.setItem('omd-admin-key',adminKey);
+      headers['X-Admin-Key']=adminKey;
+    }
+    const result=await apiJson('/push/subscribe',{
+      method:'POST',headers,
+      body:JSON.stringify({
+        device_id:getPushDeviceId(),
+        device_role:role,
+        subscription:subscription.toJSON()
+      })
+    });
+    localStorage.setItem('omd-push-role',role);
+    return result;
+  }
+
+  async function enablePushForRole(role){
+    if(!pushSupported()) throw new Error('Push wird auf diesem Gerät/Browser nicht unterstützt.');
+    let permission=Notification.permission;
+    if(permission!=='granted') permission=await Notification.requestPermission();
+    if(permission!=='granted') throw new Error('Benachrichtigungen wurden nicht erlaubt.');
+    const registration=await getServiceWorkerRegistration();
+    const keyResult=await apiJson('/push/public-key');
+    let subscription=await registration.pushManager.getSubscription();
+    if(!subscription){
+      subscription=await registration.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:vapidKeyToUint8Array(keyResult.public_key)
+      });
+    }
+    await postPushSubscription(role,subscription);
+    return subscription;
+  }
+
+  async function disablePushForRole(role){
+    if(!pushSupported()) return;
+    const registration=await getServiceWorkerRegistration();
+    const subscription=await registration.pushManager.getSubscription();
+    if(subscription){
+      const headers={'Content-Type':'application/json'};
+      if(role==='admin-phone'){
+        const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+        if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
+        headers['X-Admin-Key']=adminKey;
+      }
+      await apiJson('/push/unsubscribe',{
+        method:'POST',headers,
+        body:JSON.stringify({endpoint:subscription.endpoint})
+      });
+      await subscription.unsubscribe();
+    }
+    if(localStorage.getItem('omd-push-role')===role) localStorage.removeItem('omd-push-role');
+  }
+
+  async function refreshPushUi(){
+    const supported=pushSupported();
+    const admin=adminUiEnabled();
+    if(refs.pushReminderCard) refs.pushReminderCard.classList.toggle('hidden',admin);
+    if(!supported){
+      if(refs.userPushStatus) refs.userPushStatus.textContent='Push wird auf diesem Gerät/Browser nicht unterstützt.';
+      if(refs.enableUserPushBtn) refs.enableUserPushBtn.disabled=true;
+      if(refs.adminPushStatus) refs.adminPushStatus.textContent='Push wird auf diesem Gerät/Browser nicht unterstützt.';
+      if(refs.enableAdminPushBtn) refs.enableAdminPushBtn.disabled=true;
+      if(refs.testAdminPushBtn) refs.testAdminPushBtn.disabled=true;
+      return;
+    }
+    let subscription=null;
+    try{ subscription=await getCurrentPushSubscription(); }catch{}
+    const role=subscription ? localStorage.getItem('omd-push-role') : null;
+    const permission=Notification.permission;
+    const userActive=!!subscription && role==='user-phone' && permission==='granted';
+    const adminActive=!!subscription && role==='admin-phone' && permission==='granted';
+    if(refs.pushPermissionBadge){
+      refs.pushPermissionBadge.textContent=userActive?'AN':permission==='denied'?'BLOCKIERT':'AUS';
+      refs.pushPermissionBadge.classList.toggle('done',userActive);
+    }
+    if(refs.userPushStatus) refs.userPushStatus.textContent=userActive?'Erinnerungs-Push ist auf diesem User-Handy aktiv.':permission==='denied'?'Benachrichtigungen sind im Browser blockiert.':'Noch nicht eingerichtet.';
+    if(refs.enableUserPushBtn){ refs.enableUserPushBtn.classList.toggle('hidden',userActive); refs.enableUserPushBtn.disabled=permission==='denied'; }
+    if(refs.disableUserPushBtn) refs.disableUserPushBtn.classList.toggle('hidden',!userActive);
+    if(refs.adminPushBadge){ refs.adminPushBadge.textContent=adminActive?'AN':permission==='denied'?'BLOCKIERT':'AUS'; refs.adminPushBadge.classList.toggle('done',adminActive); }
+    if(refs.adminPushStatus) refs.adminPushStatus.textContent=adminActive?'Dieses Gerät ist als Admin-Handy für Push registriert.':permission==='denied'?'Benachrichtigungen sind im Browser blockiert.':'Noch nicht eingerichtet.';
+    if(refs.enableAdminPushBtn){ refs.enableAdminPushBtn.classList.toggle('hidden',adminActive); refs.enableAdminPushBtn.disabled=permission==='denied'; }
+    if(refs.disableAdminPushBtn) refs.disableAdminPushBtn.classList.toggle('hidden',!adminActive);
+    if(refs.testAdminPushBtn) refs.testAdminPushBtn.disabled=!adminActive;
+  }
+
+  async function sendAdminPushTest(){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
+    localStorage.setItem('omd-admin-key',adminKey);
+    const result=await apiJson('/admin/push/test',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+      body:JSON.stringify({role:'admin-phone'})
+    });
+    if(!result.result?.recipients) throw new Error('Kein aktives Admin-Handy registriert.');
+    return result;
+  }
+
   function destroySnikkersRun(){
     if(snikkersGame){
       try{ snikkersGame.destroy(); }catch(err){ console.warn('Snikkers Run destroy:',err); }
@@ -1139,6 +1282,40 @@
     refs.snikkersRunDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersRunDialog) closeSnikkersRun(); });
   }
 
+  if(refs.enableUserPushBtn) refs.enableUserPushBtn.addEventListener('click',async()=>{
+    refs.enableUserPushBtn.disabled=true;
+    if(refs.userPushStatus) refs.userPushStatus.textContent='Push wird eingerichtet …';
+    try{ await enablePushForRole('user-phone'); }
+    catch(err){ if(refs.userPushStatus) refs.userPushStatus.textContent=`Push konnte nicht aktiviert werden: ${err.message||err}`; }
+    await refreshPushUi();
+  });
+  if(refs.disableUserPushBtn) refs.disableUserPushBtn.addEventListener('click',async()=>{
+    if(refs.userPushStatus) refs.userPushStatus.textContent='Push wird deaktiviert …';
+    try{ await disablePushForRole('user-phone'); }
+    catch(err){ if(refs.userPushStatus) refs.userPushStatus.textContent=`Push konnte nicht deaktiviert werden: ${err.message||err}`; }
+    await refreshPushUi();
+  });
+  if(refs.enableAdminPushBtn) refs.enableAdminPushBtn.addEventListener('click',async()=>{
+    refs.enableAdminPushBtn.disabled=true;
+    if(refs.adminPushStatus) refs.adminPushStatus.textContent='Admin-Push wird eingerichtet …';
+    try{ await enablePushForRole('admin-phone'); }
+    catch(err){ if(refs.adminPushStatus) refs.adminPushStatus.textContent=`Admin-Push konnte nicht aktiviert werden: ${err.message||err}`; }
+    await refreshPushUi();
+  });
+  if(refs.disableAdminPushBtn) refs.disableAdminPushBtn.addEventListener('click',async()=>{
+    if(refs.adminPushStatus) refs.adminPushStatus.textContent='Admin-Push wird deaktiviert …';
+    try{ await disablePushForRole('admin-phone'); }
+    catch(err){ if(refs.adminPushStatus) refs.adminPushStatus.textContent=`Admin-Push konnte nicht deaktiviert werden: ${err.message||err}`; }
+    await refreshPushUi();
+  });
+  if(refs.testAdminPushBtn) refs.testAdminPushBtn.addEventListener('click',async()=>{
+    refs.testAdminPushBtn.disabled=true;
+    if(refs.adminPushStatus) refs.adminPushStatus.textContent='Test-Push wird gesendet …';
+    try{ await sendAdminPushTest(); if(refs.adminPushStatus) refs.adminPushStatus.textContent='Test-Push wurde an das Admin-Handy gesendet.'; }
+    catch(err){ if(refs.adminPushStatus) refs.adminPushStatus.textContent=`Test-Push fehlgeschlagen: ${err.message||err}`; }
+    await refreshPushUi();
+  });
+
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
 
   const adminEnabled=adminUiEnabled();
@@ -1152,6 +1329,7 @@
       renderAdminWeek();
       refs.adminDialog.showModal();
       loadAdminAbsenceRequests();
+      refreshPushUi();
     });
   }
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
@@ -1180,6 +1358,6 @@
   const cancelPauseBtn=$('cancelPauseBtn');
   if(cancelPauseBtn && refs.pauseDialog) cancelPauseBtn.addEventListener('click',()=>refs.pauseDialog.close());
   refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
-  if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-  render(); migrateAndSyncCloud(); setInterval(render,60000);
+  if('serviceWorker' in navigator) window.addEventListener('load',async()=>{ try{ await navigator.serviceWorker.register('./sw.js'); }catch{} await refreshPushUi(); });
+  render(); refreshPushUi(); migrateAndSyncCloud(); setInterval(render,60000);
 })();

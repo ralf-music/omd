@@ -1,4 +1,4 @@
-ONE MORE DAY v0.8.4
+ONE MORE DAY v0.9.0
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -317,3 +317,11 @@ CHANGELOG v0.8.4
 - Snikkers Run Vollbild robust neu aufgebaut: CSS-Vollbild als zuverlässiger PWA-Fallback, zusätzlich System-Fullscreen und Querformatversuch.
 - Dünnen Ast durch deutlich sichtbare blaue Wasserpfütze ersetzt.
 - Minigames bleiben im Admin-Testmodus.
+
+
+CHANGELOG v0.9.0
+- Web Push Registrierung für User-Handy und Admin-Handy.
+- User-Erinnerungs-Push und Admin-Buchungs-Push technisch getrennt.
+- Admin-PCs werden nicht automatisch registriert.
+- Service Worker kann Push bei geschlossener PWA anzeigen.
+- Admin-Test-Push direkt aus dem Admin-Bereich.
