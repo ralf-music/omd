@@ -1,4 +1,4 @@
-ONE MORE DAY v0.9.0
+ONE MORE DAY v0.9.1
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -325,3 +325,21 @@ CHANGELOG v0.9.0
 - Admin-PCs werden nicht automatisch registriert.
 - Service Worker kann Push bei geschlossener PWA anzeigen.
 - Admin-Test-Push direkt aus dem Admin-Bereich.
+
+
+CHANGELOG v0.9.1
+- Snikkers Run Vollbild korrigiert: echtes System-Vollbild wird jetzt direkt auf den Spiel-Dialog statt auf die gesamte PWA angewendet.
+- Während Snikkers-Vollbild aktiv ist, wird die restliche PWA vollständig ausgeblendet; beim Verlassen erscheint sie unverändert wieder.
+- Admin-Wochenstatus zeigt nur noch NORMAL / FREIER TAG / KRANK. URLAUB bleibt intern nur zur Kompatibilität alter Daten erhalten.
+- Guthaben-Hinweis von FREI/URLAUB auf FREI vereinheitlicht.
+- Versionsanzeige und Service-Worker-Cache auf v0.9.1 angehoben.
+- Keine Änderung an Guthabenlogik, Check-ins, Push-Backend, Worker oder D1.
+
+DATEIEN v0.9.1
+GEÄNDERT: app.js, data.js, index.html, styles.css, sw.js, README.txt
+NEU: UPDATE-v0.9.1.txt
+GELÖSCHT: Keine
+
+UPLOAD
+HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
+NICHT HOCHLADEN: cloudflare/

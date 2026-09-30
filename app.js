@@ -587,7 +587,7 @@
       row.className='admin-day-row';
       row.innerHTML=`<div class="admin-day-info"><strong>${labels[i]} · ${key}</strong><span>${DAY_STATUS_LABELS[status]}${done?' · Arbeit erledigt':''}</span></div>
         <div class="admin-status-buttons">
-          ${['normal','frei','urlaub','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
+          ${['normal','frei','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
         </div>`;
       refs.adminWeek.appendChild(row);
     }
@@ -1223,7 +1223,7 @@
 
     // Zusätzlich echtes System-Vollbild versuchen. Scheitert das, bleibt der CSS-Fallback aktiv.
     try{
-      const target=document.documentElement;
+      const target=refs.snikkersRunDialog;
       if(!document.fullscreenElement && typeof target.requestFullscreen==='function'){
         await target.requestFullscreen({navigationUI:'hide'});
       }else if(!document.fullscreenElement && typeof target.webkitRequestFullscreen==='function'){
