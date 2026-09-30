@@ -1,4 +1,4 @@
-const CACHE='omd-v0.9.1';
+const CACHE='omd-v0.9.2';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./data.js','./content.js','./manifest.webmanifest','./games/snikkers-runner/snikkers-runner.css','./games/snikkers-runner/snikkers-runner.js','./assets/joey-motivation.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/games/snikkers-runner/run1.png','./assets/games/snikkers-runner/run2.png','./assets/games/snikkers-runner/run3.png','./assets/games/snikkers-runner/run4.png','./assets/games/snikkers-runner/jump1.png','./assets/games/snikkers-runner/jump2.png','./assets/games/snikkers-runner/land.png','./assets/games/snikkers-runner/gameover.png','./assets/games/snikkers-runner/cover.png'];
 
 self.addEventListener('install',event=>{

@@ -1,4 +1,4 @@
-ONE MORE DAY v0.9.1
+ONE MORE DAY v0.9.2
 
 D1-SYNCHRONISATION – STUFE 1
 - Tagesstatus wird mit Cloudflare D1 synchronisiert.
@@ -338,6 +338,22 @@ CHANGELOG v0.9.1
 DATEIEN v0.9.1
 GEÄNDERT: app.js, data.js, index.html, styles.css, sw.js, README.txt
 NEU: UPDATE-v0.9.1.txt
+GELÖSCHT: Keine
+
+UPLOAD
+HOCHLADEN: alle normalen PWA-Dateien und Asset-Ordner.
+NICHT HOCHLADEN: cloudflare/
+
+
+CHANGELOG v0.9.2
+- PWA-Orientierung im Manifest von portrait-primary auf any geändert.
+- Dadurch darf Android die App im Snikkers-Run-Vollbild auf Querformat drehen.
+- Die bestehende Fullscreen-Logik fordert weiterhin landscape über Screen Orientation API an.
+- Keine Änderung an Worker, D1, Push-Backend oder Check-in-Logik.
+
+DATEIEN v0.9.2
+GEÄNDERT: manifest.webmanifest, index.html, data.js, sw.js, README.txt
+NEU: UPDATE-v0.9.2.txt
 GELÖSCHT: Keine
 
 UPLOAD
