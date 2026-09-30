@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#111116">
+  <title>One More Day – Ralf S24 Ultra</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #0d0d12;
+      color: #f5f5f7;
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(520px, 100%);
+      background: #17171f;
+      border: 1px solid #30303b;
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #ff4ca6;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+    }
+
+    .intro {
+      margin: 0 0 24px;
+      color: #aaaab5;
+      line-height: 1.55;
+    }
+
+    .device,
+    .token-box,
+    #result {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 13px;
+      background: #111117;
+      border: 1px solid #30303b;
+    }
+
+    .device strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    #tokenText {
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    button,
+    a.button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid #ff4ca6;
+      background: #ff4ca6;
+      color: #111116;
+      font: inherit;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button.secondary,
+    a.button.secondary {
+      background: transparent;
+      color: #f7f7f9;
+      border-color: #3b3b46;
+    }
+
+    #result.success {
+      border-color: #3b8d62;
+      color: #95e8ba;
+    }
+
+    #result.error {
+      border-color: #a54562;
+      color: #ff9fb9;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="card">
+
+    <p class="eyebrow">
+      ONE MORE DAY · ADMIN
+    </p>
+
+    <h1>
+      Ralf S24 Ultra registrieren
+    </h1>
+
+    <p class="intro">
+      Dieses Gerät wird als Admin-Handy mit One More Day verbunden.
+    </p>
+
+    <div class="device">
+      <strong>Ralf S24 Ultra</strong>
+      <span>Technische ID: admin-phone · Rolle ADMIN</span>
+    </div>
+
+    <div class="token-box">
+      <strong>Geräte-Token</strong>
+
+      <div id="tokenText">
+        wird erzeugt …
+      </div>
+    </div>
+
+    <button
+      id="copyBtn"
+      type="button"
+    >
+      TOKEN KOPIEREN
+    </button>
+
+    <button
+      id="shareBtn"
+      class="secondary"
+      type="button"
+    >
+      TOKEN TEILEN
+    </button>
+
+    <button
+      id="testBtn"
+      class="secondary"
+      type="button"
+    >
+      REGISTRIERUNG PRÜFEN
+    </button>
+
+    <a
+      id="appBtn"
+      class="button secondary hidden"
+      href="./"
+    >
+      ONE MORE DAY ÖFFNEN
+    </a>
+
+    <div id="result">
+      Das Gerät ist noch nicht freigeschaltet.
+    </div>
+
+  </main>
+
+  <script>
+
+    const API_BASE =
+      "https://one-more-day-api.ralf-music.workers.dev/api/v1";
+
+    const TOKEN_KEY =
+      "omd-device-token";
+
+    const DEVICE_ID_KEY =
+      "omd-device-id";
+
+    const DEVICE_ROLE_KEY =
+      "omd-device-role";
+
+    const DEVICE_NAME_KEY =
+      "omd-device-name";
+
+    const DEVICE_ID =
+      "admin-phone";
+
+    const DEVICE_ROLE =
+      "ADMIN";
+
+    const DEVICE_NAME =
+      "Ralf S24 Ultra";
+
+    const refs = {
+      tokenText:
+        document.getElementById("tokenText"),
+
+      copyBtn:
+        document.getElementById("copyBtn"),
+
+      shareBtn:
+        document.getElementById("shareBtn"),
+
+      testBtn:
+        document.getElementById("testBtn"),
+
+      appBtn:
+        document.getElementById("appBtn"),
+
+      result:
+        document.getElementById("result")
+    };
+
+    function setResult(
+      message,
+      type = ""
+    ) {
+      refs.result.textContent =
+        message;
+
+      refs.result.className =
+        type;
+    }
+
+    function createToken() {
+      if (!crypto.randomUUID) {
+        throw new Error(
+          "Sichere Token-Erzeugung wird auf diesem Gerät nicht unterstützt."
+        );
+      }
+
+      return [
+        "omd",
+        crypto.randomUUID(),
+        crypto.randomUUID()
+      ].join("-");
+    }
+
+    function saveIdentity(
+      token
+    ) {
+      localStorage.setItem(
+        TOKEN_KEY,
+        token
+      );
+
+      localStorage.setItem(
+        DEVICE_ID_KEY,
+        DEVICE_ID
+      );
+
+      localStorage.setItem(
+        DEVICE_ROLE_KEY,
+        DEVICE_ROLE
+      );
+
+      localStorage.setItem(
+        DEVICE_NAME_KEY,
+        DEVICE_NAME
+      );
+    }
+
+    function getToken() {
+      let token =
+        localStorage.getItem(
+          TOKEN_KEY
+        );
+
+      if (!token) {
+        token =
+          createToken();
+
+        saveIdentity(
+          token
+        );
+      }
+
+      return token;
+    }
+
+    const deviceToken =
+      getToken();
+
+    refs.tokenText.textContent =
+      deviceToken;
+
+    refs.copyBtn.addEventListener(
+      "click",
+      async () => {
+        try {
+          await navigator.clipboard.writeText(
+            deviceToken
+          );
+
+          setResult(
+            "Token wurde kopiert."
+          );
+        } catch {
+          setResult(
+            "Token konnte nicht kopiert werden.",
+            "error"
+          );
+        }
+      }
+    );
+
+    refs.shareBtn.addEventListener(
+      "click",
+      async () => {
+        if (!navigator.share) {
+          setResult(
+            "Teilen wird von diesem Browser nicht unterstützt.",
+            "error"
+          );
+
+          return;
+        }
+
+        try {
+          await navigator.share({
+            title:
+              "One More Day – Ralf S24 Ultra",
+            text:
+              deviceToken
+          });
+        } catch {}
+      }
+    );
+
+    async function checkRegistration() {
+      setResult(
+        "Registrierung wird geprüft …"
+      );
+
+      try {
+        const response =
+          await fetch(
+            `${API_BASE}/device/me`,
+            {
+              method: "GET",
+              headers: {
+                "X-Device-Token":
+                  deviceToken
+              },
+              cache: "no-store"
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          response.ok &&
+          data.ok &&
+          data.registered &&
+          data.device?.device_id ===
+            DEVICE_ID &&
+          data.device?.device_role ===
+            DEVICE_ROLE
+        ) {
+          saveIdentity(
+            deviceToken
+          );
+
+          setResult(
+            "✓ Ralf S24 Ultra ist erfolgreich registriert.",
+            "success"
+          );
+
+          refs.appBtn.classList.remove(
+            "hidden"
+          );
+
+          return;
+        }
+
+        refs.appBtn.classList.add(
+          "hidden"
+        );
+
+        setResult(
+          "Noch nicht freigeschaltet."
+        );
+
+      } catch (error) {
+        setResult(
+          "Prüfung fehlgeschlagen: " +
+          String(
+            error?.message ||
+            error
+          ),
+          "error"
+        );
+      }
+    }
+
+    refs.testBtn.addEventListener(
+      "click",
+      checkRegistration
+    );
+
+    checkRegistration();
+
+  </script>
+
+</body>
+</html>
