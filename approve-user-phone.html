@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="de">
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <meta name="theme-color" content="#111116">
+
+  <title>
+    One More Day – Gerät freigeben
+  </title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #0d0d12;
+      color: #f5f5f7;
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(560px, 100%);
+      background: #17171f;
+      border: 1px solid #30303b;
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #ff4ca6;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    h1 {
+      margin: 0 0 24px;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 8px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #3b3b47;
+      border-radius: 13px;
+      background: #101015;
+      color: white;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 18px;
+      border: 1px solid #ff4ca6;
+      border-radius: 14px;
+      background: #ff4ca6;
+      color: #111116;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 13px;
+      background: #111117;
+      color: #aaaab5;
+      line-height: 1.5;
+    }
+
+    #result.success {
+      border: 1px solid #3b8d62;
+      color: #95e8ba;
+    }
+
+    #result.error {
+      border: 1px solid #a54562;
+      color: #ff9fb9;
+    }
+
+    .device {
+      padding: 16px;
+      border-radius: 14px;
+      background: #111117;
+      border: 1px solid #2b2b34;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <main class="card">
+
+    <p class="eyebrow">
+      ONE MORE DAY · ADMIN
+    </p>
+
+    <h1>
+      Michi S24 Ultra freigeben
+    </h1>
+
+    <div class="device">
+      <strong>Michi S24 Ultra</strong><br>
+      user-phone · USER
+    </div>
+
+    <label for="deviceToken">
+      Geräte-Token von Michis Handy
+    </label>
+
+    <textarea
+      id="deviceToken"
+      spellcheck="false"
+      autocomplete="off"
+      placeholder="Token hier einfügen"
+    ></textarea>
+
+    <label for="adminKey">
+      Admin Key
+    </label>
+
+    <input
+      id="adminKey"
+      type="password"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="ADMIN_KEY"
+    >
+
+    <button
+      id="approveBtn"
+      type="button"
+    >
+      MICHI S24 ULTRA FREIGEBEN
+    </button>
+
+    <div id="result">
+      Noch nicht registriert.
+    </div>
+
+  </main>
+
+  <script>
+
+    const API =
+      "https://one-more-day-api.ralf-music.workers.dev/api/v1";
+
+    const refs = {
+
+      token:
+        document.getElementById(
+          "deviceToken"
+        ),
+
+      adminKey:
+        document.getElementById(
+          "adminKey"
+        ),
+
+      button:
+        document.getElementById(
+          "approveBtn"
+        ),
+
+      result:
+        document.getElementById(
+          "result"
+        )
+    };
+
+    function setResult(
+      message,
+      type = ""
+    ) {
+
+      refs.result.textContent =
+        message;
+
+      refs.result.className =
+        type;
+    }
+
+    async function approve() {
+
+      const token =
+        refs.token.value.trim();
+
+      const adminKey =
+        refs.adminKey.value.trim();
+
+      if (!token) {
+
+        setResult(
+          "Geräte-Token fehlt.",
+          "error"
+        );
+
+        return;
+      }
+
+      if (!adminKey) {
+
+        setResult(
+          "Admin Key fehlt.",
+          "error"
+        );
+
+        return;
+      }
+
+      refs.button.disabled =
+        true;
+
+      setResult(
+        "Gerät wird registriert …"
+      );
+
+      try {
+
+        const response =
+          await fetch(
+            `${API}/admin/device/register`,
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                "X-Admin-Key":
+                  adminKey
+              },
+
+              body:
+                JSON.stringify({
+                  device_id:
+                    "user-phone",
+
+                  device_name:
+                    "Michi S24 Ultra",
+
+                  device_role:
+                    "USER",
+
+                  device_token:
+                    token
+                })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.ok
+        ) {
+
+          throw new Error(
+            data.error ||
+            `HTTP ${response.status}`
+          );
+        }
+
+        refs.adminKey.value =
+          "";
+
+        setResult(
+          "✓ Michi S24 Ultra wurde erfolgreich als USER-Gerät freigegeben.",
+          "success"
+        );
+
+      } catch (error) {
+
+        setResult(
+          "Freigabe fehlgeschlagen: " +
+          String(
+            error?.message ||
+            error
+          ),
+          "error"
+        );
+
+      } finally {
+
+        refs.button.disabled =
+          false;
+      }
+    }
+
+    refs.button.addEventListener(
+      "click",
+      approve
+    );
+
+  </script>
+
+</body>
+</html>

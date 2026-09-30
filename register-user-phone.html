@@ -10,7 +10,7 @@
 
   <meta name="theme-color" content="#111116">
 
-  <title>One More Day – User-Handy registrieren</title>
+  <title>One More Day – Michi S24 Ultra</title>
 
   <style>
     * {
@@ -88,29 +88,29 @@
       font-size: 14px;
     }
 
-    label {
-      display: block;
-      margin: 18px 0 8px;
-      color: #ddddE5;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px 15px;
-      border: 1px solid #3b3b47;
+    .token-box {
+      margin-top: 18px;
+      padding: 14px;
       border-radius: 13px;
+      border: 1px solid #363641;
       background: #101015;
-      color: white;
-      font: inherit;
-      outline: none;
     }
 
-    input:focus {
-      border-color: #ff4ca6;
-      box-shadow:
-        0 0 0 3px rgba(255, 76, 166, 0.13);
+    .token-label {
+      margin-bottom: 8px;
+      color: #aaaab5;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #tokenText {
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-all;
+      color: #f7f7fa;
     }
 
     button,
@@ -139,11 +139,6 @@
       border-color: #3b3b46;
     }
 
-    button:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
-
     #result {
       margin-top: 20px;
       min-height: 24px;
@@ -152,7 +147,6 @@
       background: #111117;
       color: #b7b7c2;
       line-height: 1.5;
-      word-break: break-word;
     }
 
     #result.success {
@@ -179,6 +173,7 @@
 </head>
 
 <body>
+
   <main class="card">
 
     <p class="eyebrow">
@@ -186,46 +181,44 @@
     </p>
 
     <h1>
-      User-Handy registrieren
+      Michi S24 Ultra registrieren
     </h1>
 
     <p class="intro">
-      Diese Registrierung verbindet genau dieses Handy dauerhaft
-      mit One More Day als USER-Gerät.
+      Dieses Handy wird als einziges USER-Gerät mit One More Day verbunden.
     </p>
 
     <div class="device">
-      <strong>
-        Gerät
-      </strong>
-
-      <span>
-        user-phone · Rolle USER
-      </span>
+      <strong>Michi S24 Ultra</strong>
+      <span>Technische ID: user-phone · Rolle USER</span>
     </div>
 
-    <div id="registrationArea">
+    <div class="token-box">
 
-      <label for="adminKey">
-        Admin Key
-      </label>
+      <div class="token-label">
+        Geräte-Token
+      </div>
 
-      <input
-        id="adminKey"
-        type="password"
-        autocomplete="off"
-        spellcheck="false"
-        placeholder="ADMIN_KEY einmalig eingeben"
-      >
-
-      <button
-        id="registerBtn"
-        type="button"
-      >
-        USER-HANDY REGISTRIEREN
-      </button>
+      <div id="tokenText">
+        wird erzeugt …
+      </div>
 
     </div>
+
+    <button
+      id="copyBtn"
+      type="button"
+    >
+      TOKEN KOPIEREN
+    </button>
+
+    <button
+      id="shareBtn"
+      class="secondary"
+      type="button"
+    >
+      TOKEN TEILEN
+    </button>
 
     <button
       id="testBtn"
@@ -244,29 +237,20 @@
     </a>
 
     <div id="result">
-      Noch nicht geprüft.
+      Das Gerät ist noch nicht freigeschaltet.
     </div>
 
     <p class="small">
-      Der Admin Key wird nicht gespeichert.
-      Der geheime Geräte-Token bleibt ausschließlich lokal
-      auf diesem Handy. In D1 wird nur dessen SHA-256-Hash gespeichert.
+      Der geheime Token bleibt lokal auf Michis S24 Ultra gespeichert.
+      Im Server wird später nur sein SHA-256-Hash gespeichert.
     </p>
 
   </main>
 
   <script>
+
     const API_BASE =
       "https://one-more-day-api.ralf-music.workers.dev/api/v1";
-
-    const DEVICE_ID =
-      "user-phone";
-
-    const DEVICE_NAME =
-      "User-Handy";
-
-    const DEVICE_ROLE =
-      "USER";
 
     const TOKEN_KEY =
       "omd-device-token";
@@ -280,30 +264,53 @@
     const DEVICE_NAME_KEY =
       "omd-device-name";
 
-    const refs = {
-      adminKey:
-        document.getElementById("adminKey"),
+    const DEVICE_ID =
+      "user-phone";
 
-      registerBtn:
-        document.getElementById("registerBtn"),
+    const DEVICE_ROLE =
+      "USER";
+
+    const DEVICE_NAME =
+      "Michi S24 Ultra";
+
+    const refs = {
+
+      tokenText:
+        document.getElementById(
+          "tokenText"
+        ),
+
+      copyBtn:
+        document.getElementById(
+          "copyBtn"
+        ),
+
+      shareBtn:
+        document.getElementById(
+          "shareBtn"
+        ),
 
       testBtn:
-        document.getElementById("testBtn"),
-
-      result:
-        document.getElementById("result"),
-
-      registrationArea:
-        document.getElementById("registrationArea"),
+        document.getElementById(
+          "testBtn"
+        ),
 
       appBtn:
-        document.getElementById("appBtn")
+        document.getElementById(
+          "appBtn"
+        ),
+
+      result:
+        document.getElementById(
+          "result"
+        )
     };
 
     function setResult(
       message,
       type = ""
     ) {
+
       refs.result.textContent =
         message;
 
@@ -311,10 +318,12 @@
         type;
     }
 
-    function createDeviceToken() {
+    function createToken() {
+
       if (!crypto.randomUUID) {
+
         throw new Error(
-          "Dieses Gerät unterstützt keine sichere Token-Erzeugung."
+          "Sichere Token-Erzeugung wird auf diesem Gerät nicht unterstützt."
         );
       }
 
@@ -325,17 +334,10 @@
       ].join("-");
     }
 
-    function getStoredToken() {
-      return (
-        localStorage.getItem(
-          TOKEN_KEY
-        ) || ""
-      ).trim();
-    }
-
-    function saveDeviceIdentity(
+    function saveIdentity(
       token
     ) {
+
       localStorage.setItem(
         TOKEN_KEY,
         token
@@ -357,31 +359,93 @@
       );
     }
 
-    async function checkRegistration() {
-      const token =
-        getStoredToken();
+    function getToken() {
+
+      let token =
+        localStorage.getItem(
+          TOKEN_KEY
+        );
 
       if (!token) {
-        setResult(
-          "Auf diesem Handy ist noch kein Device-Token gespeichert."
-        );
 
-        refs.registrationArea.classList.remove(
-          "hidden"
-        );
+        token =
+          createToken();
 
-        refs.appBtn.classList.add(
-          "hidden"
+        saveIdentity(
+          token
         );
-
-        return false;
       }
+
+      return token;
+    }
+
+    const deviceToken =
+      getToken();
+
+    refs.tokenText.textContent =
+      deviceToken;
+
+    refs.copyBtn.addEventListener(
+      "click",
+      async () => {
+
+        try {
+
+          await navigator.clipboard.writeText(
+            deviceToken
+          );
+
+          setResult(
+            "Token wurde kopiert."
+          );
+
+        } catch {
+
+          setResult(
+            "Token konnte nicht automatisch kopiert werden.",
+            "error"
+          );
+        }
+      }
+    );
+
+    refs.shareBtn.addEventListener(
+      "click",
+      async () => {
+
+        if (!navigator.share) {
+
+          setResult(
+            "Teilen wird von diesem Browser nicht unterstützt. Bitte TOKEN KOPIEREN verwenden.",
+            "error"
+          );
+
+          return;
+        }
+
+        try {
+
+          await navigator.share({
+            title:
+              "One More Day – Michi S24 Ultra",
+            text:
+              deviceToken
+          });
+
+        } catch {
+          /* Abbruch durch Benutzer ist kein Fehler */
+        }
+      }
+    );
+
+    async function checkRegistration() {
 
       setResult(
         "Registrierung wird geprüft …"
       );
 
       try {
+
         const response =
           await fetch(
             `${API_BASE}/device/me`,
@@ -390,10 +454,11 @@
 
               headers: {
                 "X-Device-Token":
-                  token
+                  deviceToken
               },
 
-              cache: "no-store"
+              cache:
+                "no-store"
             }
           );
 
@@ -409,40 +474,30 @@
           data.device?.device_role ===
             DEVICE_ROLE
         ) {
-          saveDeviceIdentity(
-            token
+
+          saveIdentity(
+            deviceToken
           );
 
           setResult(
-            "✓ Dieses Handy ist erfolgreich als user-phone registriert.",
+            "✓ Michi S24 Ultra ist erfolgreich registriert.",
             "success"
-          );
-
-          refs.registrationArea.classList.add(
-            "hidden"
           );
 
           refs.appBtn.classList.remove(
             "hidden"
           );
 
-          return true;
+          return;
         }
-
-        setResult(
-          "Der gespeicherte Token ist nicht als user-phone freigegeben.",
-          "error"
-        );
-
-        refs.registrationArea.classList.remove(
-          "hidden"
-        );
 
         refs.appBtn.classList.add(
           "hidden"
         );
 
-        return false;
+        setResult(
+          "Noch nicht freigeschaltet. Token zuerst auf dem Admin-Gerät registrieren."
+        );
 
       } catch (error) {
 
@@ -454,139 +509,8 @@
           ),
           "error"
         );
-
-        return false;
       }
     }
-
-    async function registerDevice() {
-      const adminKey =
-        refs.adminKey.value.trim();
-
-      if (!adminKey) {
-        setResult(
-          "Bitte zuerst den ADMIN_KEY eingeben.",
-          "error"
-        );
-
-        return;
-      }
-
-      refs.registerBtn.disabled =
-        true;
-
-      refs.testBtn.disabled =
-        true;
-
-      setResult(
-        "User-Handy wird registriert …"
-      );
-
-      let token =
-        getStoredToken();
-
-      if (!token) {
-        try {
-          token =
-            createDeviceToken();
-        } catch (error) {
-          setResult(
-            String(
-              error?.message ||
-              error
-            ),
-            "error"
-          );
-
-          refs.registerBtn.disabled =
-            false;
-
-          refs.testBtn.disabled =
-            false;
-
-          return;
-        }
-      }
-
-      try {
-        const response =
-          await fetch(
-            `${API_BASE}/admin/device/register`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                "X-Admin-Key":
-                  adminKey
-              },
-
-              body:
-                JSON.stringify({
-                  device_id:
-                    DEVICE_ID,
-
-                  device_name:
-                    DEVICE_NAME,
-
-                  device_role:
-                    DEVICE_ROLE,
-
-                  device_token:
-                    token
-                })
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (
-          !response.ok ||
-          !data.ok
-        ) {
-          throw new Error(
-            data.error ||
-            `HTTP ${response.status}`
-          );
-        }
-
-        saveDeviceIdentity(
-          token
-        );
-
-        refs.adminKey.value =
-          "";
-
-        await checkRegistration();
-
-      } catch (error) {
-
-        setResult(
-          "Registrierung fehlgeschlagen: " +
-          String(
-            error?.message ||
-            error
-          ),
-          "error"
-        );
-
-      } finally {
-
-        refs.registerBtn.disabled =
-          false;
-
-        refs.testBtn.disabled =
-          false;
-      }
-    }
-
-    refs.registerBtn.addEventListener(
-      "click",
-      registerDevice
-    );
 
     refs.testBtn.addEventListener(
       "click",
@@ -594,6 +518,8 @@
     );
 
     checkRegistration();
+
   </script>
+
 </body>
 </html>
