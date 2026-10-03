@@ -35,7 +35,8 @@
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
-    absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestDate:$('absenceRequestDate'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
+    adminRangeType:$('adminRangeType'), adminRangeFrom:$('adminRangeFrom'), adminRangeTo:$('adminRangeTo'), adminApplyRangeBtn:$('adminApplyRangeBtn'),
+    absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
     miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn')
@@ -251,7 +252,7 @@
           home_confirmed:!!ds.home,home_confirmed_at:ds.homeAt||null,
           status:ds.work&&ds.home?'COMPLETE':'OPEN'
         };
-        if(bookingEvent && !adminUiEnabled()){
+        if(bookingEvent){
           payload.device_role='user-phone';
           payload.booking_event=bookingEvent;
         }
@@ -292,10 +293,14 @@
         const existing=await apiJson(`/day?date=${encodeURIComponent(key)}`);
         if(existing.day){
           const before=JSON.stringify({work:ds.work,home:ds.home,workAt:ds.workAt,homeAt:ds.homeAt});
-          ds.work=!!existing.day.work_confirmed || !!ds.work;
-          ds.home=!!existing.day.home_confirmed || !!ds.home;
-          ds.workAt ||= existing.day.work_confirmed_at || null;
-          ds.homeAt ||= existing.day.home_confirmed_at || null;
+          ds.work=!!existing.day.work_confirmed;
+          ds.home=!!existing.day.home_confirmed;
+          ds.workAt=existing.day.work_confirmed_at || null;
+          ds.homeAt=existing.day.home_confirmed_at || null;
+          if(!ds.work || !ds.home){
+            ds.rewardOpened=false;
+            ds.rewardOpenedAt=null;
+          }
           if(JSON.stringify({work:ds.work,home:ds.home,workAt:ds.workAt,homeAt:ds.homeAt})!==before) changed=true;
         }
       }catch(err){ console.warn('D1 week day load:',key,err); }
@@ -320,7 +325,7 @@
     await syncCurrentWeekFromCloud(new Date());
     await syncCurrentWeekStatusesFromCloud(new Date());
     // Then merge known day state and lock/upload existing local rewards.
-    for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds,target);
+    for(const [key,ds] of Object.entries(state.days||{})) await syncDayWithCloud(key,ds);
     for(const [key,ds] of Object.entries(state.days||{})){
       if(!ds?.rewardOpened) continue;
       try{
@@ -450,13 +455,35 @@
     return dateKey(d);
   }
 
+  function validDateKey(value){
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));
+  }
+
+  function normalizeRange(from,to,maxDays=93){
+    if(!from || !to || !validDateKey(from) || !validDateKey(to) || to<from) return null;
+    const start=localDate(from), end=localDate(to);
+    const days=Math.round((end-start)/86400000)+1;
+    if(days<1 || days>maxDays) return null;
+    const workdays=[];
+    for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+      if(isWorkday(d)) workdays.push(dateKey(d));
+    }
+    return {from,to,days,workdays};
+  }
+
+  function formatRangeLabel(from,to){
+    return from===to ? from : `${from} → ${to}`;
+  }
+
   async function submitAbsenceRequest(){
-    const date=refs.absenceRequestDate.value;
+    const from=refs.absenceRequestFrom.value;
+    const to=refs.absenceRequestTo.value;
     const type=String(refs.absenceRequestType.value||'').toLowerCase();
     const note=(refs.absenceRequestNote.value||'').trim();
+    const range=normalizeRange(from,to);
 
-    if(!date || !['frei','krank'].includes(type)){
-      refs.absenceRequestMessage.textContent='Bitte Datum und Art der Abwesenheit auswählen.';
+    if(!range || !range.workdays.length || !['frei','krank'].includes(type)){
+      refs.absenceRequestMessage.textContent='Bitte gültigen Von-/Bis-Zeitraum und Art auswählen.';
       refs.absenceRequestMessage.className='geo-error';
       return;
     }
@@ -468,18 +495,19 @@
       const result=await apiJson('/absence-request',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({date,type,note})
+        body:JSON.stringify({date:from,date_from:from,date_to:to,type,note})
       });
 
       if(result.duplicate){
-        refs.absenceRequestMessage.textContent='Für diesen Tag und diese Art gibt es bereits einen offenen Antrag.';
+        refs.absenceRequestMessage.textContent='Für diesen Zeitraum und diese Art gibt es bereits einen offenen Antrag.';
       }else{
-        refs.absenceRequestMessage.textContent='Antrag gesendet. Er wartet jetzt auf Admin-Freigabe.';
+        refs.absenceRequestMessage.textContent=`Antrag für ${formatRangeLabel(from,to)} gesendet. ${range.workdays.length} Arbeitstag${range.workdays.length===1?'':'e'} warten auf Admin-Freigabe.`;
       }
       refs.absenceRequestMessage.className='geo-success';
       localStorage.setItem('omd-last-absence-request',JSON.stringify({
         id:result.request?.id||null,
-        date,
+        dateFrom:from,
+        dateTo:to,
         type,
         status:'pending',
         createdAt:result.request?.created_at||new Date().toISOString()
@@ -487,6 +515,92 @@
     }catch(err){
       refs.absenceRequestMessage.textContent='Antrag konnte nicht gesendet werden.';
       refs.absenceRequestMessage.className='geo-error';
+    }
+  }
+
+  async function applyAdminStatusRange(){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const from=refs.adminRangeFrom?.value||'';
+    const to=refs.adminRangeTo?.value||'';
+    const status=normalizeDayStatus(refs.adminRangeType?.value||'normal');
+    const range=normalizeRange(from,to);
+
+    if(!adminKey){
+      refs.adminMessage.textContent='Admin-Schlüssel fehlt.';
+      refs.adminMessage.className='geo-error';
+      return;
+    }
+    if(!range || !range.workdays.length){
+      refs.adminMessage.textContent='Bitte einen gültigen Von-/Bis-Zeitraum auswählen.';
+      refs.adminMessage.className='geo-error';
+      return;
+    }
+
+    localStorage.setItem('omd-admin-key',adminKey);
+    refs.adminMessage.textContent='Zeitraum wird gespeichert …';
+    refs.adminMessage.className='geo-neutral';
+
+    try{
+      const result=await apiJson('/admin/day-status-range',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({date_from:from,date_to:to,status})
+      });
+      for(const item of result.day_statuses||[]){
+        setCachedDayStatus(item.day_date,item.status,{source:'cloud',updatedAt:item.updated_at||new Date().toISOString()});
+      }
+      await syncCurrentWeekFromCloud(new Date());
+      await refreshCloudWallet();
+      refs.adminMessage.textContent=`${result.updated_count||range.workdays.length} Arbeitstag${(result.updated_count||range.workdays.length)===1?'':'e'} als ${DAY_STATUS_LABELS[status]} gespeichert.`;
+      refs.adminMessage.className='geo-success';
+      renderAdminWeek();
+      render();
+    }catch(err){
+      refs.adminMessage.textContent='Zeitraum konnte nicht gespeichert werden. Worker/Migration prüfen.';
+      refs.adminMessage.className='geo-error';
+    }
+  }
+
+  async function setAdminBooking(key,booking,value){
+    if(!value){
+      const extra=booking==='work'?' Falls ZUHAUSE bereits gebucht ist, wird diese Buchung ebenfalls widerrufen.':'';
+      if(!window.confirm(`${booking==='work'?'ARBEIT':'ZUHAUSE'} am ${key} wirklich widerrufen?${extra}`)) return;
+    }
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey){
+      refs.adminMessage.textContent='Admin-Schlüssel fehlt.';
+      refs.adminMessage.className='geo-error';
+      return;
+    }
+    localStorage.setItem('omd-admin-key',adminKey);
+    refs.adminMessage.textContent=`${booking==='work'?'ARBEIT':'ZUHAUSE'} wird ${value?'gebucht':'widerrufen'} …`;
+    refs.adminMessage.className='geo-neutral';
+    try{
+      const result=await apiJson('/admin/day-booking',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({date:key,booking,value:!!value})
+      });
+      const row=result.day||{};
+      const ds=dayState(key);
+      ds.work=!!row.work_confirmed;
+      ds.home=!!row.home_confirmed;
+      ds.workAt=row.work_confirmed_at||null;
+      ds.homeAt=row.home_confirmed_at||null;
+      if(!ds.work || !ds.home){
+        ds.rewardOpened=false;
+        ds.rewardOpenedAt=null;
+      }
+      saveState();
+      await refreshCloudWallet();
+      refs.adminMessage.textContent=`${key}: ${booking==='work'?'ARBEIT':'ZUHAUSE'} ${value?'gebucht':'widerrufen'}.`;
+      refs.adminMessage.className='geo-success';
+      renderAdminWeek();
+      render();
+    }catch(err){
+      const msg=String(err?.message||'');
+      refs.adminMessage.textContent=msg.includes('work required')?'ZUHAUSE kann erst gebucht werden, wenn ARBEIT gebucht ist.':'Buchung konnte nicht geändert werden.';
+      refs.adminMessage.className='geo-error';
     }
   }
 
@@ -516,9 +630,11 @@
       refs.adminAbsenceList.innerHTML=requests.map(r=>{
         const typeLabel=DAY_STATUS_LABELS[normalizeDayStatus(r.type)]||String(r.type||'').toUpperCase();
         const note=r.note?`<p class="admin-request-note">${escapeHtml(r.note)}</p>`:'';
+        const from=r.date_from||r.day_date;
+        const to=r.date_to||r.day_date;
         return `<div class="admin-request-card" data-request-id="${r.id}">
           <div class="admin-request-head">
-            <div><strong>${typeLabel}</strong><span>${r.day_date}</span></div>
+            <div><strong>${typeLabel}</strong><span>${formatRangeLabel(from,to)}</span></div>
             <span class="admin-request-status">OFFEN</span>
           </div>
           ${note}
@@ -551,7 +667,13 @@
         body:JSON.stringify({id,decision})
       });
 
-      if(result.day_status){
+      for(const item of result.day_statuses||[]){
+        setCachedDayStatus(item.day_date,item.status,{
+          source:'cloud',
+          updatedAt:item.updated_at||new Date().toISOString()
+        });
+      }
+      if(result.day_status && !(result.day_statuses||[]).length){
         setCachedDayStatus(result.day_status.day_date,result.day_status.status,{
           source:'cloud',
           updatedAt:result.day_status.updated_at||new Date().toISOString()
@@ -582,17 +704,27 @@
     const labels=['MO','DI','MI','DO','FR'];
     for(let i=0;i<5;i++){
       const d=new Date(start); d.setDate(start.getDate()+i);
-      const key=dateKey(d), status=getDayStatus(key), ds=state.days[key], done=!!(ds&&ds.work&&ds.home);
+      const key=dateKey(d), status=getDayStatus(key), ds=state.days[key]||{}, done=!!(ds.work&&ds.home);
+      const bookingDisabled=status!=='normal';
       const row=document.createElement('div');
       row.className='admin-day-row';
       row.innerHTML=`<div class="admin-day-info"><strong>${labels[i]} · ${key}</strong><span>${DAY_STATUS_LABELS[status]}${done?' · Arbeit erledigt':''}</span></div>
-        <div class="admin-status-buttons">
-          ${['normal','frei','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
+        <div class="admin-day-actions">
+          <div class="admin-status-buttons">
+            ${['normal','frei','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
+          </div>
+          <div class="admin-booking-buttons">
+            <button type="button" class="admin-booking-btn ${ds.work?'active revoke':''}" data-booking-date="${key}" data-booking="work" data-value="${ds.work?'0':'1'}" ${bookingDisabled?'disabled':''}>${ds.work?'ARBEIT WIDERRUFEN':'ARBEIT BUCHEN'}</button>
+            <button type="button" class="admin-booking-btn ${ds.home?'active revoke':''}" data-booking-date="${key}" data-booking="home" data-value="${ds.home?'0':'1'}" ${bookingDisabled?'disabled':''}>${ds.home?'ZUHAUSE WIDERRUFEN':'ZUHAUSE BUCHEN'}</button>
+          </div>
         </div>`;
       refs.adminWeek.appendChild(row);
     }
     refs.adminWeek.querySelectorAll('[data-date][data-status]').forEach(btn=>{
       btn.addEventListener('click',()=>setAdminDayStatus(btn.dataset.date,btn.dataset.status));
+    });
+    refs.adminWeek.querySelectorAll('[data-booking-date][data-booking]').forEach(btn=>{
+      btn.addEventListener('click',()=>setAdminBooking(btn.dataset.bookingDate,btn.dataset.booking,btn.dataset.value==='1'));
     });
   }
 
@@ -673,7 +805,7 @@
           if(before13){ ds.work=true; ds.workAt=nowIso; ds.workSource='geo-api'; }
           else { ds.home=true; ds.homeAt=nowIso; ds.homeSource='geo-api'; }
           saveState();
-          await syncDayWithCloud(key,ds);
+          await syncDayWithCloud(key,ds,target);
           reconcileLedger();
           await syncLedgerToCloud();
           await refreshCloudWallet();
@@ -1323,11 +1455,17 @@
 
   if(refs.adminBtn){
     refs.adminBtn.classList.toggle('hidden',!adminEnabled);
-    refs.adminBtn.addEventListener('click',()=>{
+    refs.adminBtn.addEventListener('click',async()=>{
       refs.adminKey.value=localStorage.getItem('omd-admin-key')||'';
       refs.adminMessage.textContent='';
-      renderAdminWeek();
+      const tomorrow=localTomorrowKey();
+      if(refs.adminRangeFrom) refs.adminRangeFrom.value=tomorrow;
+      if(refs.adminRangeTo) refs.adminRangeTo.value=tomorrow;
+      if(refs.adminRangeType) refs.adminRangeType.value='frei';
       refs.adminDialog.showModal();
+      await syncCurrentWeekFromCloud(new Date());
+      await syncCurrentWeekStatusesFromCloud(new Date());
+      renderAdminWeek();
       loadAdminAbsenceRequests();
       refreshPushUi();
     });
@@ -1335,10 +1473,13 @@
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
   if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
   if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests();});
+  if(refs.adminApplyRangeBtn) refs.adminApplyRangeBtn.addEventListener('click',applyAdminStatusRange);
 
   if(refs.absenceRequestBtn){
     refs.absenceRequestBtn.addEventListener('click',()=>{
-      refs.absenceRequestDate.value=localTomorrowKey();
+      const tomorrow=localTomorrowKey();
+      refs.absenceRequestFrom.value=tomorrow;
+      refs.absenceRequestTo.value=tomorrow;
       refs.absenceRequestType.value='frei';
       refs.absenceRequestNote.value='';
       refs.absenceRequestMessage.textContent='';

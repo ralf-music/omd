@@ -56,7 +56,7 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 .admin-day-row{border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;display:grid;gap:10px}
 .admin-day-info{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .admin-day-info span{font-size:.85rem;opacity:.75}
-.admin-status-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.admin-status-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .admin-status-btn{border:1px solid rgba(255,255,255,.14);background:#17171d;color:#fff;border-radius:10px;padding:9px 6px;font-size:.72rem;font-weight:800}
 .admin-status-btn.active{box-shadow:0 0 0 1px #ff3fa4 inset}
 @media(max-width:560px){.admin-status-buttons{grid-template-columns:1fr 1fr}}
@@ -168,3 +168,16 @@ body.snikkers-fullscreen-lock #snikkersRunDialog::backdrop{background:#0b0b0f!im
 .snikkers-game-dialog.snikkers-force-fullscreen,
 .snikkers-game-dialog:fullscreen,
 .snikkers-game-dialog:-webkit-full-screen{background:#0b0b0f!important;overflow:hidden!important}
+
+
+/* v0.9.3 admin booking + absence ranges */
+.admin-range-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+.admin-range-grid label{margin:0}
+.admin-booking-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.admin-booking-btn{border:1px solid rgba(255,255,255,.14);background:#17171d;color:#fff;border-radius:10px;padding:9px 8px;font-size:.72rem;font-weight:850;cursor:pointer}
+.admin-booking-btn.active{border-color:rgba(85,220,135,.45);background:rgba(85,220,135,.10);color:#bfffd4}
+.admin-booking-btn.revoke{border-color:rgba(255,100,120,.38);background:rgba(255,100,120,.08);color:#ffc1cc}
+.admin-booking-btn:disabled{opacity:.35;cursor:not-allowed}
+.admin-day-row{align-items:flex-start}
+.admin-day-actions{min-width:min(100%,360px)}
+@media(max-width:700px){.admin-range-grid{grid-template-columns:1fr}.admin-day-row{display:grid;gap:10px}.admin-day-actions{min-width:0;width:100%}}
