@@ -7,7 +7,7 @@
     bestScoreKey: 'omd_snikkers_run_best_v1',
     accent: '#ea580c',
     accentHover: '#f97316',
-    title: 'Snikkers Run',
+    title: 'Snikkers Runner',
     subtitle: 'Tippen oder Leertaste: springen',
     startText: 'Tippen oder Leertaste zum Starten',
     musicDefaultOn: false,
@@ -50,7 +50,7 @@
           </div>
           <button class="snikkers-runner__music" type="button" aria-pressed="false">🔊 Musik an</button>
         </div>
-        <button class="snikkers-runner__stage" type="button" aria-label="Snikkers Run starten oder springen">
+        <button class="snikkers-runner__stage" type="button" aria-label="Snikkers Runner starten oder springen">
           <canvas class="snikkers-runner__canvas" width="960" height="360"></canvas>
         </button>
         <div class="snikkers-runner__footer">Tippen = Springen · Leertaste funktioniert, solange das Spiel fokussiert ist</div>
@@ -423,7 +423,7 @@
     }
 
     function renderStatic(message) {
-      drawWorld();drawDog();drawHud();overlay('Snikkers Run',message || (assetsReady ? opts.startText : 'Snikkers lädt…'));
+      drawWorld();drawDog();drawHud();overlay('Snikkers Runner',message || (assetsReady ? opts.startText : 'Snikkers lädt…'));
     }
 
     function onKeyDown(e) {

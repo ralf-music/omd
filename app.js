@@ -1376,11 +1376,11 @@
     updateSnikkersFullscreenButton();
     snikkersGame=window.SnikkersRunner.mount(refs.snikkersRunMount,{
       assetBase:'./assets/games/snikkers-runner',
-      audioSrc:'./assets/audio/puppy_adventure_theme.mp3',
+      audioSrc:'./games/snikkers-runner/assets/audio/theme.mp3',
       bestScoreKey:'omd_snikkers_run_best_v1',
       accent:'#ff2f92',
       accentHover:'#ff65b5',
-      title:'Snikkers Run',
+      title:'Snikkers Runner',
       subtitle:'Tippen oder Leertaste: springen',
       startText:'Tippen oder Leertaste zum Starten',
       musicDefaultOn:false,
