@@ -124,7 +124,7 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
   .snikkers-game-dialog .snikkers-run__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
   .snikkers-game-dialog .snikkers-run__stage{flex:1;min-height:0;border-radius:10px;display:flex;align-items:center;justify-content:center}
   .snikkers-game-dialog .snikkers-run__canvas{width:100%;height:auto;max-height:100%}
-  .snikkers-game-dialog .snikkers-run__footer{display:none}
+  .snikkers-game-dialog .snikkers-run__footer{display:block;flex:0 0 auto;margin:4px 0 0;padding:2px 6px;font-size:.66rem;line-height:1.15;background:#0b0b0b}
 }
 
 .mini-games-launch-card .secondary-btn{margin-top:4px}
@@ -156,7 +156,7 @@ html.snikkers-fullscreen-lock,body.snikkers-fullscreen-lock{overflow:hidden!impo
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__stage{flex:1;min-height:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__canvas{width:100%;height:auto;max-height:100%}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__footer{display:none}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__footer{display:block;flex:0 0 auto;margin:4px 0 0;padding:2px 6px;font-size:.66rem;line-height:1.15;background:#0b0b0b}
 
 .push-card .muted{line-height:1.5}.push-actions,.admin-push-actions{display:grid;gap:9px;margin-top:14px}.push-actions{grid-template-columns:1fr auto}.admin-push-actions{grid-template-columns:1fr}.push-card .badge.done,.admin-push-section .badge.done{background:rgba(85,220,135,.14);border-color:rgba(85,220,135,.35);color:#bfffd4}.admin-push-section{margin-top:16px;padding-top:16px;border-top:1px solid #292932}.admin-push-section .admin-request-section-head{align-items:center}@media(max-width:560px){.push-actions{grid-template-columns:1fr}.push-actions .ghost-btn{width:100%}}
 
@@ -215,3 +215,12 @@ body.snikkers-fullscreen-lock #snikkersRunDialog::backdrop{background:#0b0b0f!im
   .snikkers-chase-dialog-head h2{font-size:1rem}
   .snikkers-chase-frame{border-radius:8px}
 }
+
+
+/* v0.9.9 · Minigames: komplette Darstellung in Landscape/Vollbild */
+.snikkers-game-dialog:fullscreen .snikkers-run__footer,
+.snikkers-game-dialog:-webkit-full-screen .snikkers-run__footer{display:block;flex:0 0 auto;margin:4px 0 0;padding:2px 6px;font-size:.66rem;line-height:1.15;background:#0b0b0b}
+.snikkers-game-dialog:fullscreen .snikkers-run__stage,
+.snikkers-game-dialog:-webkit-full-screen .snikkers-run__stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.snikkers-game-dialog:fullscreen .snikkers-run__canvas,
+.snikkers-game-dialog:-webkit-full-screen .snikkers-run__canvas{width:100%;height:auto;max-height:100%;object-fit:contain}

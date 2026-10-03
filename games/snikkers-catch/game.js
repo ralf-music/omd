@@ -56,7 +56,7 @@
     { id:'biscuit', label:'+10', points:10, weight:38, size:34, speed:[155,205] },
     { id:'bone', label:'+20', points:20, weight:24, size:43, speed:[150,195] },
     { id:'special', label:'+30', points:30, weight:10, size:40, speed:[145,190] },
-    { id:'shoe', label:'−20', points:-20, weight:16, size:48, speed:[175,225] },
+    { id:'chocolate', label:'−20', points:-20, weight:16, size:46, speed:[175,225] },
     { id:'rock', label:'−30', points:-30, weight:12, size:42, speed:[195,250] },
   ];
 
@@ -185,7 +185,7 @@
     if(keys.left) dog.targetX -= dog.speed*dt;
     if(keys.right) dog.targetX += dog.speed*dt;
     dog.targetX = clamp(dog.targetX,dog.width*.46,W-dog.width*.46);
-    dog.x = lerp(dog.x,dog.targetX,1-Math.pow(0.00025,dt));
+    dog.x = lerp(dog.x,dog.targetX,1-Math.pow(0.00005,dt));
 
     spawnTimer -= dt;
     if(spawnTimer <= 0){
@@ -393,10 +393,10 @@
   function drawBiscuit(item){ctx.fillStyle='#c98a45';roundRect(-item.size*.45,-item.size*.28,item.size*.9,item.size*.56,item.size*.16);ctx.fill();ctx.strokeStyle='#89552b';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#6f472b';for(const [x,y] of [[-.2,-.1],[.18,-.12],[-.08,.13],[.26,.1]]){ctx.beginPath();ctx.arc(x*item.size,y*item.size,2.2,0,Math.PI*2);ctx.fill();}}
   function drawBone(item){ctx.fillStyle='#f4d69b';ctx.strokeStyle='#a97738';ctx.lineWidth=2;ctx.beginPath();ctx.arc(-item.size*.33,0,item.size*.16,0,Math.PI*2);ctx.arc(item.size*.33,0,item.size*.16,0,Math.PI*2);ctx.fill();ctx.stroke();roundRect(-item.size*.33,-item.size*.12,item.size*.66,item.size*.24,item.size*.1);ctx.fill();ctx.stroke();}
   function drawSpecial(item){ctx.fillStyle='#ffd95e';ctx.strokeStyle='#a66d15';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5;const r=i%2===0?item.size*.42:item.size*.19;const x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();}
-  function drawShoe(item){ctx.fillStyle='#6e4a35';ctx.strokeStyle='#3f2c22';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-item.size*.34,-item.size*.25);ctx.lineTo(item.size*.12,-item.size*.2);ctx.quadraticCurveTo(item.size*.18,item.size*.08,item.size*.4,item.size*.2);ctx.quadraticCurveTo(item.size*.24,item.size*.34,-item.size*.31,item.size*.25);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#d5b18d';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-item.size*.12,-item.size*.14);ctx.lineTo(.08*item.size,.1*item.size);ctx.stroke();}
+  function drawChocolate(item){ctx.fillStyle='#6b3b25';ctx.strokeStyle='#3c2118';ctx.lineWidth=2;roundRect(-item.size*.42,-item.size*.3,item.size*.84,item.size*.6,item.size*.09);ctx.fill();ctx.stroke();ctx.strokeStyle='#a76b49';ctx.lineWidth=1.5;for(let x=-1;x<=1;x+=2){ctx.beginPath();ctx.moveTo(x*item.size*.14,-item.size*.27);ctx.lineTo(x*item.size*.14,item.size*.27);ctx.stroke();}ctx.beginPath();ctx.moveTo(-item.size*.38,0);ctx.lineTo(item.size*.38,0);ctx.stroke();}
   function drawRock(item){ctx.fillStyle='#70757a';ctx.strokeStyle='#42484d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-item.size*.34,item.size*.16);ctx.lineTo(-item.size*.23,-item.size*.24);ctx.lineTo(item.size*.05,-item.size*.37);ctx.lineTo(item.size*.35,-item.size*.08);ctx.lineTo(item.size*.29,item.size*.27);ctx.lineTo(-item.size*.06,item.size*.36);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(255,255,255,.23)';ctx.beginPath();ctx.moveTo(-item.size*.17,-item.size*.16);ctx.lineTo(item.size*.05,-item.size*.24);ctx.stroke();}
 
-  function drawItem(item){ctx.save();ctx.translate(item.x,item.y);ctx.rotate(item.rotation);if(item.type.id==='biscuit')drawBiscuit(item);else if(item.type.id==='bone')drawBone(item);else if(item.type.id==='special')drawSpecial(item);else if(item.type.id==='shoe')drawShoe(item);else drawRock(item);ctx.restore();}
+  function drawItem(item){ctx.save();ctx.translate(item.x,item.y);ctx.rotate(item.rotation);if(item.type.id==='biscuit')drawBiscuit(item);else if(item.type.id==='bone')drawBone(item);else if(item.type.id==='special')drawSpecial(item);else if(item.type.id==='chocolate')drawChocolate(item);else drawRock(item);ctx.restore();}
 
   function drawDog(){
     ctx.save();ctx.globalAlpha=.2;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(dog.x,FLOOR_Y-4,dog.width*.39,12,0,0,Math.PI*2);ctx.fill();ctx.restore();
