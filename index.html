@@ -165,7 +165,7 @@
           </div>
           <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell ist Snikkers Run im Admin-Testmodus verfügbar.</p>
+        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell sind Snikkers Run und Snikkers Catch im Admin-Testmodus verfügbar.</p>
         <button id="openMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
         <p class="microcopy">Reine Minigames. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
       </section>
@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.3</button>
+      <button id="versionBtn" class="version-btn">v0.9.4</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -206,6 +206,13 @@
             <span>Jump &amp; Run Minigame</span>
           </div>
         </button>
+        <button id="snikkersCatchCoverBtn" class="mini-game-cover-btn" type="button" aria-label="Snikkers Catch starten">
+          <img src="assets/games/snikkers-catch/cover.png" alt="Game Cover von Snikkers Catch" />
+          <div class="mini-game-cover-meta">
+            <strong>Snikkers Catch</strong>
+            <span>Catch &amp; Dodge Minigame</span>
+          </div>
+        </button>
       </div>
       <p class="microcopy">Reines Minigame. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
     </div>
@@ -225,6 +232,19 @@
         </div>
       </div>
       <div id="snikkersRunMount"></div>
+    </div>
+  </dialog>
+
+  <dialog id="snikkersCatchDialog" class="snikkers-catch-dialog">
+    <div class="snikkers-catch-dialog-card">
+      <div class="snikkers-catch-dialog-head">
+        <div>
+          <p class="eyebrow">MINI-GAME</p>
+          <h2>Snikkers Catch</h2>
+        </div>
+        <button id="closeSnikkersCatchBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Catch schließen">×</button>
+      </div>
+      <iframe id="snikkersCatchFrame" class="snikkers-catch-frame" title="Snikkers Catch" allow="fullscreen" allowfullscreen></iframe>
     </div>
   </dialog>
 
@@ -420,8 +440,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.3</h2>
+      <h2>One More Day v0.9.4</h2>
       <ul>
+        <li><strong>v0.9.4:</strong> Snikkers Catch als zweites Spiel in die Minigame-Bibliothek integriert.</li>
+        <li><strong>v0.9.4:</strong> Eigenes Cover, Musikschalter und Vollbildmodus für Snikkers Catch.</li>
         <li><strong>v0.9.3:</strong> Admin kann ARBEIT/ZUHAUSE buchen oder widerrufen.</li>
         <li><strong>v0.9.3:</strong> FREI/KRANK kann als Von-Bis-Zeitraum beantragt bzw. administrativ gesetzt werden.</li>
         <li><strong>v0.9.3:</strong> Admin-Push bei echter User-Buchung und Cloud-Start-Sync korrigiert.</li>
