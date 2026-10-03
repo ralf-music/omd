@@ -11,13 +11,13 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; background: #0d0b10; }
     body {
-      min-height: 100vh;
+      min-height: var(--omd-game-vh, 100dvh);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #f5f5f5;
       overflow-x: hidden;
     }
     .run-page {
-      min-height: 100vh;
+      min-height: var(--omd-game-vh, 100dvh);
       padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
       display: flex;
       align-items: center;
@@ -65,7 +65,7 @@
     }
     .run-page.is-fullscreen {
       width: 100vw;
-      height: 100vh;
+      height: var(--omd-game-vh, 100dvh);
       padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
       align-items: center;
       background: #050505;
@@ -98,6 +98,7 @@
     </div>
   </main>
 
+  <script src="../game-viewport.js"></script>
   <script src="snikkers-run.js"></script>
   <script>
     (() => {

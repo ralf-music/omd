@@ -24,6 +24,7 @@
   const H = ROWS * CELL;
   const BEST_KEY = 'snikkers_chase_best_time_v1';
   const MUSIC_KEY = 'snikkers_chase_music_v1';
+  const viewportFitter = window.OMDGameViewport?.createFitter({ stage, content: canvas, logicalWidth: W, logicalHeight: H });
 
   const GRID = [
     '###################',
@@ -497,9 +498,10 @@
     if(active){pseudoFullscreen=false;gameCard.classList.remove('is-fullscreen');await leaveNativeFullscreen();}
     else{pseudoFullscreen=true;gameCard.classList.add('is-fullscreen');await requestNativeFullscreen();}
     updateFullscreenButton();
+    window.OMDGameViewport?.refit();
   });
-  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&pseudoFullscreen)gameCard.classList.add('is-fullscreen');updateFullscreenButton();});
-  document.addEventListener('webkitfullscreenchange',updateFullscreenButton);
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&pseudoFullscreen)gameCard.classList.add('is-fullscreen');updateFullscreenButton();window.OMDGameViewport?.refit();});
+  document.addEventListener('webkitfullscreenchange',()=>{updateFullscreenButton();window.OMDGameViewport?.refit();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pauseGame();});
 
   startBtn.addEventListener('click',()=>{if(paused)resumeGame();else newGame();});

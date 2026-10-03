@@ -75,6 +75,7 @@
     const W = canvas.width;
     const H = canvas.height;
     const GROUND = 290;
+    const viewportFitter = global.OMDGameViewport?.createFitter({ stage, content: canvas, logicalWidth: W, logicalHeight: H });
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -486,6 +487,7 @@
         document.removeEventListener('visibilitychange',onVisibility);
         window.removeEventListener('pagehide',onPageHide);
         if (audio) { audio.pause();audio.src=''; }
+        viewportFitter?.destroy?.();
         container.replaceChildren();
       }
     };

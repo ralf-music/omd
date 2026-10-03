@@ -23,6 +23,7 @@
   const ROUND_SECONDS = 90;
   const BEST_KEY = 'snikkers_catch_best_v1';
   const MUSIC_KEY = 'snikkers_catch_music_v1';
+  const viewportFitter = window.OMDGameViewport?.createFitter({ stage, content: canvas, logicalWidth: W, logicalHeight: H });
 
   const dogImage = new Image();
   dogImage.src = 'assets/snikkers.png';
@@ -467,13 +468,15 @@
       pseudoFullscreen=true;gameCard.classList.add('is-fullscreen');await requestNativeFullscreen();
     }
     updateFullscreenButton();
+    window.OMDGameViewport?.refit();
   });
 
   document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement&&pseudoFullscreen){gameCard.classList.add('is-fullscreen');}
     updateFullscreenButton();
+    window.OMDGameViewport?.refit();
   });
-  document.addEventListener('webkitfullscreenchange',updateFullscreenButton);
+  document.addEventListener('webkitfullscreenchange',()=>{updateFullscreenButton();window.OMDGameViewport?.refit();});
 
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pauseRound();});
 

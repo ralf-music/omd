@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.9</button>
+      <button id="versionBtn" class="version-btn">v0.9.10</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -460,8 +460,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.9</h2>
+      <h2>One More Day v0.9.10</h2>
       <ul>
+        <li><strong>v0.9.10:</strong> Gemeinsame adaptive Minigame-Ansicht für Run, Catch und Chase: Hochformat, Querformat, Rotation und Vollbild werden anhand des tatsächlich verfügbaren Viewports neu eingepasst.</li>
+        <li><strong>v0.9.10:</strong> Snikkers Chase behält im Vollbild jetzt das echte 912×624-Seitenverhältnis; die untere Maze-Reihe wird nicht mehr durch eine gestreckte Canvas-Darstellung abgeschnitten.</li>
         <li><strong>v0.9.9:</strong> Alle drei Minigames zeigen Steuerungshinweise jetzt auch im Querformat und Vollbild vollständig an; Spielflächen werden ohne Abschneiden eingepasst.</li>
         <li><strong>v0.9.9:</strong> Snikkers Catch: Schokolade ersetzt den fälschlich geführten Schuh als −20-Hindernis; Legende korrigiert und Touch-Nachführung leicht beschleunigt.</li>
         <li><strong>v0.9.8:</strong> Snikkers Chase als drittes Minigame mit eigenem Cover, Standalone-Spiel und Vollbild-Unterstützung integriert.</li>
@@ -487,6 +489,7 @@
 
   <script src="data.js"></script>
   <script src="content.js"></script>
+  <script src="games/game-viewport.js"></script>
   <script src="games/snikkers-run/snikkers-run.js"></script>
   <script src="app.js"></script>
 </body>

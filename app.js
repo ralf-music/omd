@@ -1314,6 +1314,7 @@
     refs.snikkersRunDialog.classList.toggle('snikkers-force-fullscreen',!!active);
     document.documentElement.classList.toggle('snikkers-fullscreen-lock',!!active);
     document.body.classList.toggle('snikkers-fullscreen-lock',!!active);
+    window.OMDGameViewport?.refit();
   }
 
   function updateSnikkersFullscreenButton(){
