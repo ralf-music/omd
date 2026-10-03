@@ -1,8 +1,0 @@
-One More Day – Update v0.9.0
-
-- Push-Grundfunktion für User-Handy und Admin-Handy
-- User-Handy: Erinnerungen aktivieren/deaktivieren
-- Admin-Handy: separate Registrierung und Test-Push
-- Service Worker zeigt Push auch bei geschlossener PWA
-- Check-in-Sync kennzeichnet echte User-Handy-Buchungen für spätere Admin-Pushs
-- Noch KEIN Cron für 10/12/14/20 Uhr in diesem Schritt
