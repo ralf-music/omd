@@ -1369,18 +1369,18 @@
   function openSnikkersRun(){
     // Temporary v0.8.2 test gate: Snikkers Run is visible/launchable only on admin-enabled devices.
     if(!adminUiEnabled()) return;
-    if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRunner) return;
+    if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRun) return;
     closeMiniGames();
     destroySnikkersRun();
     refs.snikkersRunDialog.showModal();
     updateSnikkersFullscreenButton();
-    snikkersGame=window.SnikkersRunner.mount(refs.snikkersRunMount,{
-      assetBase:'./assets/games/snikkers-runner',
-      audioSrc:'./games/snikkers-runner/assets/audio/theme.mp3',
+    snikkersGame=window.SnikkersRun.mount(refs.snikkersRunMount,{
+      assetBase:'./assets/games/snikkers-run',
+      audioSrc:'./games/snikkers-run/assets/audio/theme.mp3',
       bestScoreKey:'omd_snikkers_run_best_v1',
       accent:'#ff2f92',
       accentHover:'#ff65b5',
-      title:'Snikkers Runner',
+      title:'Snikkers Run',
       subtitle:'Tippen oder Leertaste: springen',
       startText:'Tippen oder Leertaste zum Starten',
       musicDefaultOn:false,

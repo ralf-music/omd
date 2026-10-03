@@ -93,13 +93,13 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
 .snikkers-game-close{font-size:28px}.snikkers-game-fullscreen{font-size:22px}
 .snikkers-game-fullscreen[hidden]{display:none}
 .snikkers-game-close:focus-visible,.snikkers-game-fullscreen:focus-visible{outline:2px solid var(--pink2);outline-offset:3px}
-.snikkers-game-dialog .snikkers-runner{--sr-accent:var(--pink);--sr-accent-hover:var(--pink2);--sr-panel:#15151b;--sr-text:var(--text);--sr-muted:var(--muted)}
-.snikkers-game-dialog .snikkers-runner__panel{border-color:#34343f;background:#15151b;padding:12px}
-.snikkers-game-dialog .snikkers-runner__title{color:var(--pink2)}
-.snikkers-game-dialog .snikkers-runner__music{border-color:var(--pink);color:var(--text)}
-.snikkers-game-dialog .snikkers-runner__music:hover{background:rgba(255,47,146,.09)}
-.snikkers-game-dialog .snikkers-runner__music:focus-visible,.snikkers-game-dialog .snikkers-runner__stage:focus-visible{outline-color:rgba(255,101,181,.7)}
-@media(max-width:560px){.snikkers-game-dialog{padding:6px}.snikkers-game-dialog-card{padding:10px;border-radius:19px}.snikkers-game-dialog-head{padding:2px 2px 0}.snikkers-game-dialog .snikkers-runner__panel{padding:8px}.snikkers-game-dialog .snikkers-runner__footer{font-size:.7rem}}
+.snikkers-game-dialog .snikkers-run{--sr-accent:var(--pink);--sr-accent-hover:var(--pink2);--sr-panel:#15151b;--sr-text:var(--text);--sr-muted:var(--muted)}
+.snikkers-game-dialog .snikkers-run__panel{border-color:#34343f;background:#15151b;padding:12px}
+.snikkers-game-dialog .snikkers-run__title{color:var(--pink2)}
+.snikkers-game-dialog .snikkers-run__music{border-color:var(--pink);color:var(--text)}
+.snikkers-game-dialog .snikkers-run__music:hover{background:rgba(255,47,146,.09)}
+.snikkers-game-dialog .snikkers-run__music:focus-visible,.snikkers-game-dialog .snikkers-run__stage:focus-visible{outline-color:rgba(255,101,181,.7)}
+@media(max-width:560px){.snikkers-game-dialog{padding:6px}.snikkers-game-dialog-card{padding:10px;border-radius:19px}.snikkers-game-dialog-head{padding:2px 2px 0}.snikkers-game-dialog .snikkers-run__panel{padding:8px}.snikkers-game-dialog .snikkers-run__footer{font-size:.7rem}}
 
 
 /* v0.8.1 · Snikkers Run Mobile/Fullscreen */
@@ -117,14 +117,14 @@ dialog{border:0;background:transparent;padding:14px;width:min(560px,100%);color:
   .snikkers-game-dialog-head .eyebrow{display:none}
   .snikkers-game-dialog-head h2{font-size:1rem}
   #snikkersRunMount{flex:1;min-height:0;display:flex}
-  .snikkers-game-dialog .snikkers-runner{flex:1;min-height:0}
-  .snikkers-game-dialog .snikkers-runner__panel{height:100%;padding:0;border:0;border-radius:0;background:#0b0b0b;display:flex;flex-direction:column;position:relative}
-  .snikkers-game-dialog .snikkers-runner__head{position:absolute;z-index:5;top:7px;right:7px;margin:0;pointer-events:none}
-  .snikkers-game-dialog .snikkers-runner__copy{display:none}
-  .snikkers-game-dialog .snikkers-runner__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
-  .snikkers-game-dialog .snikkers-runner__stage{flex:1;min-height:0;border-radius:10px;display:flex;align-items:center;justify-content:center}
-  .snikkers-game-dialog .snikkers-runner__canvas{width:100%;height:auto;max-height:100%}
-  .snikkers-game-dialog .snikkers-runner__footer{display:none}
+  .snikkers-game-dialog .snikkers-run{flex:1;min-height:0}
+  .snikkers-game-dialog .snikkers-run__panel{height:100%;padding:0;border:0;border-radius:0;background:#0b0b0b;display:flex;flex-direction:column;position:relative}
+  .snikkers-game-dialog .snikkers-run__head{position:absolute;z-index:5;top:7px;right:7px;margin:0;pointer-events:none}
+  .snikkers-game-dialog .snikkers-run__copy{display:none}
+  .snikkers-game-dialog .snikkers-run__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
+  .snikkers-game-dialog .snikkers-run__stage{flex:1;min-height:0;border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .snikkers-game-dialog .snikkers-run__canvas{width:100%;height:auto;max-height:100%}
+  .snikkers-game-dialog .snikkers-run__footer{display:none}
 }
 
 .mini-games-launch-card .secondary-btn{margin-top:4px}
@@ -149,14 +149,14 @@ html.snikkers-fullscreen-lock,body.snikkers-fullscreen-lock{overflow:hidden!impo
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-game-dialog-head{flex:0 0 auto;margin:0 0 4px;min-height:44px}
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-game-dialog-head .eyebrow{display:none}
 .snikkers-game-dialog.snikkers-force-fullscreen .snikkers-game-dialog-head h2{font-size:1rem}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner{flex:1;min-height:0}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__panel{height:100%;padding:0;border:0;border-radius:0;background:#0b0b0b;display:flex;flex-direction:column;position:relative}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__head{position:absolute;z-index:5;top:7px;right:7px;margin:0;pointer-events:none}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__copy{display:none}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__stage{flex:1;min-height:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__canvas{width:100%;height:auto;max-height:100%}
-.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-runner__footer{display:none}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run{flex:1;min-height:0}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__panel{height:100%;padding:0;border:0;border-radius:0;background:#0b0b0b;display:flex;flex-direction:column;position:relative}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__head{position:absolute;z-index:5;top:7px;right:7px;margin:0;pointer-events:none}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__copy{display:none}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__music{pointer-events:auto;width:auto;min-height:38px;padding:6px 11px;background:rgba(17,17,22,.82);backdrop-filter:blur(4px)}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__stage{flex:1;min-height:0;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__canvas{width:100%;height:auto;max-height:100%}
+.snikkers-game-dialog.snikkers-force-fullscreen .snikkers-run__footer{display:none}
 
 .push-card .muted{line-height:1.5}.push-actions,.admin-push-actions{display:grid;gap:9px;margin-top:14px}.push-actions{grid-template-columns:1fr auto}.admin-push-actions{grid-template-columns:1fr}.push-card .badge.done,.admin-push-section .badge.done{background:rgba(85,220,135,.14);border-color:rgba(85,220,135,.35);color:#bfffd4}.admin-push-section{margin-top:16px;padding-top:16px;border-top:1px solid #292932}.admin-push-section .admin-request-section-head{align-items:center}@media(max-width:560px){.push-actions{grid-template-columns:1fr}.push-actions .ghost-btn{width:100%}}
 

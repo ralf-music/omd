@@ -60,22 +60,23 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .game-card:-webkit-full-screen .stage{flex:1;min-height:0;aspect-ratio:auto;border-radius:8px}
 .game-card.is-fullscreen canvas,
 .game-card:fullscreen canvas,
-.game-card:-webkit-full-screen canvas{width:100%;height:100%;object-fit:contain}
+.game-card:-webkit-full-screen canvas{width:100%;height:100%;object-fit:cover}
 .game-card.is-fullscreen .legend,.game-card.is-fullscreen .hint,
 .game-card:fullscreen .legend,.game-card:fullscreen .hint,
 .game-card:-webkit-full-screen .legend,.game-card:-webkit-full-screen .hint{display:none}
 
-@media(max-width:760px){
-  body{padding:0}.page-shell{width:100%}.game-card{min-height:100dvh;border:0;border-radius:0;padding:8px;display:flex;flex-direction:column}
+@media(max-width:760px) and (orientation:portrait){
+  body{padding:0}.page-shell{width:100%}.game-card{min-height:100dvh;border:0;border-radius:0;padding:8px;display:flex;flex-direction:column;justify-content:flex-start}
   .game-head{align-items:center;margin-bottom:6px}.game-title-wrap .subtitle,.game-title-wrap .eyebrow{display:none}h1{font-size:1rem}
   .game-toolbar{margin-left:auto}.hud>div{min-width:58px;padding:5px 7px}.hud strong{font-size:1rem}.hud span{font-size:.5rem}
   .tool-btn{height:36px;min-width:50px;padding:0 8px;font-size:.72rem}.fullscreen-btn{min-width:38px}
-  .stage{flex:1;min-height:0;aspect-ratio:auto;border-radius:10px}.stage canvas{width:100%;height:100%;object-fit:contain}
+  .stage{flex:0 0 auto;width:100%;aspect-ratio:16/9;min-height:0;border-radius:10px}.stage canvas{width:100%;height:100%;object-fit:cover}
   .legend{margin-top:6px}.hint{display:none}
 }
-@media(max-height:520px) and (orientation:landscape){
-  body{padding:0}.game-card{height:100dvh;min-height:0;padding:4px;border:0;border-radius:0;display:flex;flex-direction:column}
+@media(max-height:620px) and (orientation:landscape){
+  body{padding:0}.page-shell{width:100%;max-width:none}.game-card{width:100vw;height:100dvh;min-height:0;padding:4px;border:0;border-radius:0;display:flex;flex-direction:column}
   .game-title-wrap{display:none}.game-head{margin:0 0 4px;align-items:center}.game-toolbar{width:100%;justify-content:space-between}
   .hud>div{padding:2px 7px;min-width:56px}.hud strong{font-size:.9rem}.hud span{font-size:.48rem}.tool-btn{height:32px}
-  .stage{flex:1;min-height:0;aspect-ratio:auto;border-radius:6px}.legend,.hint{display:none}
+  .stage{flex:1;min-height:0;width:100%;aspect-ratio:auto;border-radius:6px;overflow:hidden}.stage canvas{width:100%;height:100%;object-fit:cover}
+  .legend,.hint{display:none}
 }
