@@ -39,7 +39,7 @@
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
-    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn')
+    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn')
   };
 
   function loadState(){
@@ -1414,13 +1414,31 @@
     if(refs.snikkersCatchDialog.open) refs.snikkersCatchDialog.close();
   }
 
+  function openSnikkersChase(){
+    if(!adminUiEnabled()) return;
+    if(!refs.snikkersChaseDialog || !refs.snikkersChaseFrame) return;
+    closeMiniGames();
+    refs.snikkersChaseFrame.src='./games/snikkers-chase/index.html';
+    refs.snikkersChaseDialog.showModal();
+  }
+
+  function closeSnikkersChase(){
+    if(!refs.snikkersChaseDialog) return;
+    if(refs.snikkersChaseFrame){
+      refs.snikkersChaseFrame.src='about:blank';
+    }
+    if(refs.snikkersChaseDialog.open) refs.snikkersChaseDialog.close();
+  }
+
   if(refs.openMiniGamesBtn) refs.openMiniGamesBtn.addEventListener('click',openMiniGames);
   if(refs.closeMiniGamesBtn) refs.closeMiniGamesBtn.addEventListener('click',closeMiniGames);
   if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
   if(refs.snikkersCatchCoverBtn) refs.snikkersCatchCoverBtn.addEventListener('click',openSnikkersCatch);
+  if(refs.snikkersChaseCoverBtn) refs.snikkersChaseCoverBtn.addEventListener('click',openSnikkersChase);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
   if(refs.closeSnikkersCatchBtn) refs.closeSnikkersCatchBtn.addEventListener('click',closeSnikkersCatch);
+  if(refs.closeSnikkersChaseBtn) refs.closeSnikkersChaseBtn.addEventListener('click',closeSnikkersChase);
   document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen')){ /* CSS-Fallback bleibt aktiv */ } updateSnikkersFullscreenButton(); });
   if(refs.miniGamesDialog){
     refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
@@ -1436,6 +1454,12 @@
     refs.snikkersCatchDialog.addEventListener('cancel',()=>{ if(refs.snikkersCatchFrame) refs.snikkersCatchFrame.src='about:blank'; });
     refs.snikkersCatchDialog.addEventListener('close',()=>{ if(refs.snikkersCatchFrame) refs.snikkersCatchFrame.src='about:blank'; });
     refs.snikkersCatchDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersCatchDialog) closeSnikkersCatch(); });
+  }
+
+  if(refs.snikkersChaseDialog){
+    refs.snikkersChaseDialog.addEventListener('cancel',()=>{ if(refs.snikkersChaseFrame) refs.snikkersChaseFrame.src='about:blank'; });
+    refs.snikkersChaseDialog.addEventListener('close',()=>{ if(refs.snikkersChaseFrame) refs.snikkersChaseFrame.src='about:blank'; });
+    refs.snikkersChaseDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersChaseDialog) closeSnikkersChase(); });
   }
 
   if(refs.enableUserPushBtn) refs.enableUserPushBtn.addEventListener('click',async()=>{

@@ -165,7 +165,7 @@
           </div>
           <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell sind Snikkers Run und Snikkers Catch im Admin-Testmodus verfügbar.</p>
+        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell sind Snikkers Run, Snikkers Catch und Snikkers Chase im Admin-Testmodus verfügbar.</p>
         <button id="openMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
         <p class="microcopy">Reine Minigames. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
       </section>
@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.7</button>
+      <button id="versionBtn" class="version-btn">v0.9.8</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -211,6 +211,13 @@
           <div class="mini-game-cover-meta">
             <strong>Snikkers Catch</strong>
             <span>Catch &amp; Dodge Minigame</span>
+          </div>
+        </button>
+        <button id="snikkersChaseCoverBtn" class="mini-game-cover-btn" type="button" aria-label="Snikkers Chase starten">
+          <img src="assets/games/snikkers-chase/cover.png" alt="Game Cover von Snikkers Chase" />
+          <div class="mini-game-cover-meta">
+            <strong>Snikkers Chase</strong>
+            <span>Maze Chase Minigame</span>
           </div>
         </button>
       </div>
@@ -245,6 +252,19 @@
         <button id="closeSnikkersCatchBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Catch schließen">×</button>
       </div>
       <iframe id="snikkersCatchFrame" class="snikkers-catch-frame" title="Snikkers Catch" allow="fullscreen" allowfullscreen></iframe>
+    </div>
+  </dialog>
+
+  <dialog id="snikkersChaseDialog" class="snikkers-chase-dialog">
+    <div class="snikkers-chase-dialog-card">
+      <div class="snikkers-chase-dialog-head">
+        <div>
+          <p class="eyebrow">MINI-GAME</p>
+          <h2>Snikkers Chase</h2>
+        </div>
+        <button id="closeSnikkersChaseBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Chase schließen">×</button>
+      </div>
+      <iframe id="snikkersChaseFrame" class="snikkers-chase-frame" title="Snikkers Chase" allow="fullscreen" allowfullscreen></iframe>
     </div>
   </dialog>
 
@@ -440,8 +460,9 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.7</h2>
+      <h2>One More Day v0.9.8</h2>
       <ul>
+        <li><strong>v0.9.8:</strong> Snikkers Chase als drittes Minigame mit eigenem Cover, Standalone-Spiel und Vollbild-Unterstützung integriert.</li>
         <li><strong>v0.9.7:</strong> Bezeichnung und technische Struktur des ersten Minigames wurden vollständig auf Snikkers Run vereinheitlicht.</li>
         <li><strong>v0.9.7:</strong> Snikkers Catch wird im Handy-Hochformat kompakt statt über die gesamte Bildschirmhöhe gestreckt dargestellt.</li>
         <li><strong>v0.9.7:</strong> Snikkers Catch nutzt im Querformat/Vollbild die gesamte verfügbare Breite ohne seitliche helle Ränder.</li>
