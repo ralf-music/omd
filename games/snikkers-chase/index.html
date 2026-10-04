@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#16151a" />
-  <title>Snikkers Chase – v0.1.3</title>
+  <title>Snikkers Chase – v0.2.0</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -32,8 +32,17 @@
         <div id="overlay" class="overlay">
           <div class="overlay-card">
             <strong id="overlayTitle">Snikkers Chase</strong>
-            <span id="overlayText">Sammle alle Snacks und weiche den Fliegen aus.</span>
+            <span id="overlayText">Wähle ein Level und sammle alle Snacks.</span>
+            <div id="levelPicker" class="level-picker" aria-label="Level wählen">
+              <button class="level-btn is-selected" type="button" data-level="1">
+                <span>LEVEL 1</span><small>2 Fliegen</small>
+              </button>
+              <button class="level-btn" type="button" data-level="2">
+                <span>LEVEL 2</span><small>3 Fliegen</small>
+              </button>
+            </div>
             <button id="startBtn" type="button">SPIEL STARTEN</button>
+            <small class="overlay-start-hint">Oder ins Spielfeld tippen</small>
           </div>
         </div>
       </div>

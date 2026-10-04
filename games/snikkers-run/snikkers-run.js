@@ -88,7 +88,7 @@
     let rafId = 0;
     let running = false;
     let over = false;
-    let paused = false;
+    let paused = true;
     let last = 0;
     let spawn = 950;
     let score = 0;
@@ -474,7 +474,7 @@
 
     return {
       start,
-      reset() { running=false;over=false;paused=false;cancelAnimationFrame(rafId);if(audio) audio.pause();score=0;distance=0;obstacles=[];particles=[];dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;renderStatic(); },
+      reset() { running=false;over=false;paused=true;cancelAnimationFrame(rafId);if(audio) audio.pause();score=0;distance=0;obstacles=[];particles=[];dog.y=GROUND-dog.h;dog.vy=0;dog.onGround=true;renderStatic(); },
       pause() { if(audio) audio.pause(); if (running&&!over&&!paused){paused=true;cancelAnimationFrame(rafId);renderStatic('Pausiert · tippen zum Fortsetzen');} },
       getState() { return {running,over,paused,score,best}; },
       destroy() {

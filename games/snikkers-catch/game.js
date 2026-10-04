@@ -29,7 +29,7 @@
   dogImage.src = 'assets/snikkers.png';
 
   let running = false;
-  let paused = false;
+  let paused = true;
   let roundEnded = false;
   let lastTime = 0;
   let animationFrame = 0;
@@ -416,7 +416,7 @@
 
   function pointerToWorldX(clientX){const rect=canvas.getBoundingClientRect();return clamp((clientX-rect.left)/rect.width*W,dog.width*.46,W-dog.width*.46);}
 
-  stage.addEventListener('pointerdown',(e)=>{if(!running)return;pointerActive=true;stage.setPointerCapture?.(e.pointerId);dog.targetX=pointerToWorldX(e.clientX);e.preventDefault();});
+  stage.addEventListener('pointerdown',(e)=>{if(!running){if(e.target.closest?.('button'))return;paused?resumeRound():startNewRound();e.preventDefault();return;}pointerActive=true;stage.setPointerCapture?.(e.pointerId);dog.targetX=pointerToWorldX(e.clientX);e.preventDefault();});
   stage.addEventListener('pointermove',(e)=>{if(!running)return;if(e.pointerType==='mouse'||pointerActive){dog.targetX=pointerToWorldX(e.clientX);e.preventDefault();}});
   stage.addEventListener('pointerup',(e)=>{pointerActive=false;stage.releasePointerCapture?.(e.pointerId);});
   stage.addEventListener('pointercancel',()=>{pointerActive=false;});
@@ -483,7 +483,7 @@
   startBtn.addEventListener('click',()=>{
     if(paused){resumeRound();return;}
     overlayTitle.textContent='Snikkers Catch';
-    overlayText.textContent='90 Sekunden · Touch ziehen oder Maus bewegen';
+    overlayText.textContent='90 Sekunden · Tippen ins Spielfeld oder auf SPIEL STARTEN';
     startBtn.textContent='SPIEL STARTEN';
     startNewRound();
   });
@@ -491,6 +491,13 @@
   themeAudio.addEventListener('ended',()=>{if(musicEnabled&&running){themeAudio.currentTime=0;playMusic();}});
   dogImage.addEventListener('load',render);
 
+  resetRound();
+  paused=true;
+  running=false;
+  overlayTitle.textContent='Snikkers Catch';
+  overlayText.textContent='90 Sekunden · Tippen ins Spielfeld oder auf SPIEL STARTEN';
+  startBtn.textContent='SPIEL STARTEN';
+  overlay.classList.remove('hidden');
   updateMusicButton();
   updateHud();
   render();

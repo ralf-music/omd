@@ -1,4 +1,4 @@
-Snikkers Memory v0.3.0
+Snikkers Memory v0.3.1
 
 Spielfeldgrößen:
 - 5x4: 20 Karten / 10 Paare
@@ -10,3 +10,5 @@ Bestzeit und Zugrekord werden getrennt pro Spielfeldgröße gespeichert.
 
 - Platzhalter durch 31 echte Snikkers-Fotos ersetzt
 - Bilder quadratisch und spieloptimiert aufbereitet
+
+- Schwere Stufe: Hochformat 5x6, Querformat automatisch 6x5 ohne Rundenreset

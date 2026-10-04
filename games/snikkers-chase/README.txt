@@ -1,8 +1,9 @@
-Snikkers Chase v0.1.2
+Snikkers Chase v0.2.0
 
 Änderungen in diesem Stand:
-- Snikkers nutzt jetzt echte Lauf-Frames statt nur eines statischen Bildes.
-- Leichte Lauf-/Idle-Bewegung (Bobbing) und dezentes Stretching für lebendigeren Eindruck.
-- Neue Idle-Grafik eingebunden, wenn Snikkers steht.
-- Laufrichtung links/rechts wird sauber gespiegelt; Fliegen-Animation bleibt unverändert.
-- Spielmechanik ansonsten unverändert.
+- Level-Auswahl ergänzt: Level 1 mit 2 Fliegen, Level 2 mit 3 Fliegen.
+- Level 2 ergänzt eine dritte jagende Fliege mit eigener Startposition.
+- Bestzeiten werden getrennt pro Level gespeichert; alter Bestwert wird für Level 1 übernommen.
+- Snikkers wird leicht größer dargestellt, ohne die Maze-Geometrie zu verändern.
+- Spiel startet im pausierten Bereitschaftszustand und beginnt erst nach bewusstem Start/Tap.
+- Lauf-/Idle-Animation, Musik, Vollbild und adaptive Viewport-Logik bleiben erhalten.

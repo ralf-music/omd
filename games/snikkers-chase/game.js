@@ -9,6 +9,8 @@
   const overlayTitle = document.getElementById('overlayTitle');
   const overlayText = document.getElementById('overlayText');
   const startBtn = document.getElementById('startBtn');
+  const levelPicker = document.getElementById('levelPicker');
+  const levelButtons = [...document.querySelectorAll('.level-btn')];
   const snacksEl = document.getElementById('snacks');
   const timeEl = document.getElementById('time');
   const bestEl = document.getElementById('best');
@@ -22,8 +24,13 @@
   const ROWS = 13;
   const W = COLS * CELL;
   const H = ROWS * CELL;
-  const BEST_KEY = 'snikkers_chase_best_time_v1';
+  const LEGACY_BEST_KEY = 'snikkers_chase_best_time_v1';
+  const BEST_KEY_PREFIX = 'snikkers_chase_best_time_v2_level_';
   const MUSIC_KEY = 'snikkers_chase_music_v1';
+  const LEVELS = {
+    1:{id:1,label:'Level 1',flies:2},
+    2:{id:2,label:'Level 2',flies:3}
+  };
   const viewportFitter = window.OMDGameViewport?.createFitter({ stage, content: canvas, logicalWidth: W, logicalHeight: H });
 
   const GRID = [
@@ -60,7 +67,7 @@
   const FLY_FRAME_H = 627;
 
   let running = false;
-  let paused = false;
+  let paused = true;
   let ended = false;
   let won = false;
   let lastNow = 0;
@@ -76,17 +83,18 @@
   let snacks = new Set();
   let particles = [];
   let playerFacing = 'right';
-
-  const savedBest = Number(localStorage.getItem(BEST_KEY) || 0);
-  let bestTime = savedBest > 0 ? savedBest : null;
+  let selectedLevel = 1;
+  let activeFlyCount = LEVELS[selectedLevel].flies;
+  let bestTime = null;
 
   const startPlayer = {r:11,c:9};
-  const flyStarts = [{r:1,c:1},{r:1,c:17}];
+  const flyStarts = [{r:1,c:1},{r:1,c:17},{r:11,c:17}];
 
   const player = makeEntity(startPlayer.r,startPlayer.c,165,'left');
   const flies = [
     {...makeEntity(flyStarts[0].r,flyStarts[0].c,118,'right'), color:'#50656e', ai:'direct', wing:0, frameOffset:0},
-    {...makeEntity(flyStarts[1].r,flyStarts[1].c,112,'left'), color:'#5c5a62', ai:'cutter', wing:Math.PI, frameOffset:2}
+    {...makeEntity(flyStarts[1].r,flyStarts[1].c,112,'left'), color:'#5c5a62', ai:'cutter', wing:Math.PI, frameOffset:2},
+    {...makeEntity(flyStarts[2].r,flyStarts[2].c,110,'left'), color:'#665560', ai:'ambush', wing:Math.PI/2, frameOffset:1}
   ];
 
   function makeEntity(r,c,speed,dir='none'){
@@ -98,6 +106,17 @@
   function canMove(r,c,dir){const d=DIRS[dir]; return dir!=='none' && walkable(r+d.dr,c+d.dc);}
   function centerOf(r,c){return {x:(c+.5)*CELL,y:(r+.5)*CELL};}
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function activeFlies(){return flies.slice(0,activeFlyCount);}
+  function bestKey(levelId=selectedLevel){return `${BEST_KEY_PREFIX}${levelId}`;}
+  function loadBest(levelId=selectedLevel){
+    let value=Number(localStorage.getItem(bestKey(levelId))||0);
+    if(!value && levelId===1) value=Number(localStorage.getItem(LEGACY_BEST_KEY)||0);
+    return value>0?value:null;
+  }
+  function updateLevelButtons(){
+    levelButtons.forEach(btn=>btn.classList.toggle('is-selected',Number(btn.dataset.level)===selectedLevel));
+  }
+  function showLevelPicker(show){levelPicker?.classList.toggle('hidden',!show);}
 
   function formatTime(sec){
     const s=Math.max(0,sec);
@@ -117,7 +136,7 @@
 
   function buildSnacks(){
     snacks=new Set();
-    const exclusions=new Set([tileKey(startPlayer.r,startPlayer.c), ...flyStarts.map(p=>tileKey(p.r,p.c))]);
+    const exclusions=new Set([tileKey(startPlayer.r,startPlayer.c), ...flyStarts.slice(0,activeFlyCount).map(p=>tileKey(p.r,p.c))]);
     for(let r=0;r<ROWS;r++){
       for(let c=0;c<COLS;c++){
         if(walkable(r,c)&&!exclusions.has(tileKey(r,c))) snacks.add(tileKey(r,c));
@@ -136,27 +155,39 @@
   function resetPositions(){
     resetEntity(player,startPlayer,'left');
     playerFacing='right';
-    resetEntity(flies[0],flyStarts[0],'right');
-    resetEntity(flies[1],flyStarts[1],'left');
+    activeFlies().forEach((fly,index)=>resetEntity(fly,flyStarts[index],index===0?'right':'left'));
     invulnerable=1.6;
   }
 
-  function newGame(){
+  function prepareGame(){
     cancelAnimationFrame(raf);
     buildSnacks();
-    lives=3; elapsed=0; particles=[]; ended=false; won=false; paused=false; running=true;
+    lives=3; elapsed=0; particles=[]; ended=false; won=false; paused=true; running=false;
     resetPositions();
+    updateHud();
+    render();
+  }
+
+  function startPreparedGame(){
+    running=true; paused=false; ended=false;
     overlay.classList.add('hidden');
     lastNow=performance.now();
     updateHud();
     playMusic();
     stage.focus({preventScroll:true});
+    cancelAnimationFrame(raf);
     raf=requestAnimationFrame(loop);
+  }
+
+  function newGame(){
+    prepareGame();
+    startPreparedGame();
   }
 
   function resumeGame(){
     if(ended) return newGame();
     running=true; paused=false; lastNow=performance.now(); overlay.classList.add('hidden'); playMusic();
+    cancelAnimationFrame(raf);
     raf=requestAnimationFrame(loop);
   }
 
@@ -164,20 +195,37 @@
     if(!running||ended) return;
     running=false; paused=true; cancelAnimationFrame(raf); pauseMusic();
     overlayTitle.textContent='PAUSIERT';
-    overlayText.textContent='Die Fliegen halten ausnahmsweise still.';
+    overlayText.textContent=`${LEVELS[selectedLevel].label} · Tippen zum Weiterspielen`;
     startBtn.textContent='WEITERSPIELEN';
+    showLevelPicker(false);
+    overlay.classList.remove('hidden');
+  }
+
+  function selectLevel(levelId){
+    if(running) return;
+    const next=LEVELS[Number(levelId)]||LEVELS[1];
+    selectedLevel=next.id;
+    activeFlyCount=next.flies;
+    bestTime=loadBest(selectedLevel);
+    updateLevelButtons();
+    prepareGame();
+    overlayTitle.textContent='Snikkers Chase';
+    overlayText.textContent=`${next.label} · ${next.flies} Fliegen · sammle alle Snacks.`;
+    startBtn.textContent='SPIEL STARTEN';
+    showLevelPicker(true);
     overlay.classList.remove('hidden');
   }
 
   function finishGame(isWin){
     running=false; ended=true; won=isWin; cancelAnimationFrame(raf); pauseMusic();
     if(isWin && (!bestTime || elapsed<bestTime)){
-      bestTime=elapsed; localStorage.setItem(BEST_KEY,String(bestTime));
+      bestTime=elapsed; localStorage.setItem(bestKey(),String(bestTime));
     }
     updateHud();
     overlayTitle.textContent=isWin?'GESCHAFFT!':'GAME OVER';
-    overlayText.textContent=isWin?`Alle Snacks gesammelt in ${formatTime(elapsed)}.`:'Snikkers wurde dreimal von den Fliegen erwischt.';
+    overlayText.textContent=isWin?`${LEVELS[selectedLevel].label} geschafft in ${formatTime(elapsed)}.`:`${LEVELS[selectedLevel].label}: Snikkers wurde dreimal von den Fliegen erwischt.`;
     startBtn.textContent='NOCHMAL SPIELEN';
+    showLevelPicker(true);
     overlay.classList.remove('hidden');
   }
 
@@ -225,12 +273,14 @@
 
     let target={r:player.r,c:player.c};
     if(fly.ai==='cutter') target=predictedPlayerTile(3);
+    if(fly.ai==='ambush') target=predictedPlayerTile(5);
 
     const chase=bfsFirstStep(fly.r,fly.c,target.r,target.c,candidates.length>1?reverse:null);
     if(fly.ai==='direct') return candidates.includes(chase)?chase:candidates[0];
 
-    // second fly: usually cuts off the path, sometimes wanders to stay less deterministic
-    if(Math.random()<0.72 && candidates.includes(chase)) return chase;
+    // cutter/ambush flies cut off the route, but stay slightly less deterministic
+    const chaseChance=fly.ai==='ambush'?0.82:0.72;
+    if(Math.random()<chaseChance && candidates.includes(chase)) return chase;
     return candidates[Math.floor(Math.random()*candidates.length)];
   }
 
@@ -283,7 +333,7 @@
 
   function handleCollisions(){
     if(invulnerable>0) return;
-    for(const fly of flies){
+    for(const fly of activeFlies()){
       const dx=player.x-fly.x, dy=player.y-fly.y;
       if(dx*dx+dy*dy < 24*24){
         lives--;
@@ -299,8 +349,7 @@
     elapsed+=dt;
     if(invulnerable>0) invulnerable=Math.max(0,invulnerable-dt);
     advanceEntity(player,dt,true,0);
-    advanceEntity(flies[0],dt,false,0);
-    advanceEntity(flies[1],dt,false,1);
+    activeFlies().forEach((fly,index)=>advanceEntity(fly,dt,false,index));
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
       if(p.life<=0) particles.splice(i,1);
@@ -379,7 +428,7 @@
     ctx.fill();
     ctx.globalAlpha=1;
     if(frameImg.complete && frameImg.naturalWidth){
-      ctx.drawImage(frameImg,-28,-21,56,36);
+      ctx.drawImage(frameImg,-29,-22,58,38);
     }else{
       ctx.fillStyle='#d59a62'; ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();
     }
@@ -430,7 +479,7 @@
     drawSnacks();
     drawMaze();
     drawPlayer();
-    drawFly(flies[0],0); drawFly(flies[1],1);
+    activeFlies().forEach((fly,index)=>drawFly(fly,index));
     drawParticles();
   }
 
@@ -460,7 +509,12 @@
   window.addEventListener('keydown',e=>handleKey(e,true));
 
   stage.addEventListener('pointerdown',e=>{
-    if(!running)return;
+    if(!running){
+      if(e.target.closest?.('button')) return;
+      paused?resumeGame():newGame();
+      e.preventDefault();
+      return;
+    }
     pointerStart={x:e.clientX,y:e.clientY,id:e.pointerId};
     stage.setPointerCapture?.(e.pointerId);
     e.preventDefault();
@@ -504,12 +558,13 @@
   document.addEventListener('webkitfullscreenchange',()=>{updateFullscreenButton();window.OMDGameViewport?.refit();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pauseGame();});
 
+  levelButtons.forEach(btn=>btn.addEventListener('click',()=>selectLevel(Number(btn.dataset.level))));
   startBtn.addEventListener('click',()=>{if(paused)resumeGame();else newGame();});
   snikkersImg.addEventListener('load',render);
   snikkersIdleImg.addEventListener('load',render);
   runImgs.forEach(img => img.addEventListener('load',render));
   flySheetImg.addEventListener('load',render);
 
-  buildSnacks();
-  updateMusicButton(); updateHud(); render();
+  updateMusicButton();
+  selectLevel(1);
 })();

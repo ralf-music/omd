@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.14</button>
+      <button id="versionBtn" class="version-btn">v0.9.17</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -256,7 +256,9 @@
           <p class="eyebrow">MINI-GAME</p>
           <h2>Snikkers Catch</h2>
         </div>
-        <button id="closeSnikkersCatchBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Catch schließen">×</button>
+        <div class="snikkers-game-actions">
+          <button id="closeSnikkersCatchBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Catch schließen">×</button>
+        </div>
       </div>
       <iframe id="snikkersCatchFrame" class="snikkers-catch-frame" title="Snikkers Catch" allow="fullscreen" allowfullscreen></iframe>
     </div>
@@ -269,7 +271,9 @@
           <p class="eyebrow">MINI-GAME</p>
           <h2>Snikkers Chase</h2>
         </div>
-        <button id="closeSnikkersChaseBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Chase schließen">×</button>
+        <div class="snikkers-game-actions">
+          <button id="closeSnikkersChaseBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Chase schließen">×</button>
+        </div>
       </div>
       <iframe id="snikkersChaseFrame" class="snikkers-chase-frame" title="Snikkers Chase" allow="fullscreen" allowfullscreen></iframe>
     </div>
@@ -282,7 +286,9 @@
           <p class="eyebrow">MINI-GAME</p>
           <h2>Snikkers Memory</h2>
         </div>
-        <button id="closeSnikkersMemoryBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Memory schließen">×</button>
+        <div class="snikkers-game-actions">
+          <button id="closeSnikkersMemoryBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Memory schließen">×</button>
+        </div>
       </div>
       <iframe id="snikkersMemoryFrame" class="snikkers-memory-frame" title="Snikkers Memory" allow="fullscreen" allowfullscreen></iframe>
     </div>
@@ -480,8 +486,12 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.14</h2>
+      <h2>One More Day v0.9.17</h2>
       <ul>
+        <li><strong>v0.9.17:</strong> Snikkers Memory v0.3.1 stellt die schwere 30-Karten-Stufe automatisch um: Hochformat 5×6, Querformat 6×5. Beim Drehen bleiben Runde, Karten, Züge, Paare und Zeit erhalten.</li>
+        <li><strong>v0.9.16:</strong> Snikkers Catch, Snikkers Chase und Snikkers Memory nutzen eine einheitlichere Minigame-Hülle mit sichtbarem MINI-GAME-Label und abgestimmtem Header.</li>
+        <li><strong>v0.9.15:</strong> Snikkers Chase v0.2.0 erhält eine Level-Auswahl: Level 1 mit 2 Fliegen, Level 2 mit 3 Fliegen. Bestzeiten werden pro Level getrennt gespeichert.</li>
+        <li><strong>v0.9.15:</strong> Run, Catch und Chase starten künftig im stillstehenden Bereitschaftszustand und laufen erst nach bewusstem Tap/Klick bzw. Startbutton los; Snikkers ist in Chase leicht größer.</li>
         <li><strong>v0.9.14:</strong> Snikkers Memory v0.3.0 ersetzt die bisherigen Platzhalter durch 31 echte Snikkers-Fotos, die quadratisch und fürs Handy optimiert aufbereitet wurden.</li>
         <li><strong>v0.9.14:</strong> Die drei Memory-Stufen 5×4, 5×5 und 5×6 bleiben erhalten; die 5×5-Stufe nutzt weiter eine leere, nicht anklickbare Mitte.</li>
         <li><strong>v0.9.11:</strong> Snikkers Memory v0.1.0 als viertes Minigame integriert, inklusive Cover, 5×4-Spielfeld, 10 zufälligen Paaren aus 16 Motiven und eigener Vollbildansicht.</li>

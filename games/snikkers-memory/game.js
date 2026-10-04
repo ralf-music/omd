@@ -110,9 +110,30 @@
     return doubled;
   }
 
+  function getBoardLayout(){
+    const viewport = window.OMDGameViewport?.getViewportSize?.() || {
+      width: window.innerWidth || document.documentElement.clientWidth || 1,
+      height: window.innerHeight || document.documentElement.clientHeight || 1
+    };
+    const landscape = viewport.width >= viewport.height;
+    if(level?.key === '5x6' && landscape){
+      return { cols:6, rows:5, landscape:true };
+    }
+    return { cols:level?.cols || 5, rows:level?.rows || 4, landscape };
+  }
+
+  function applyBoardLayout(){
+    if(!level) return getBoardLayout();
+    const layout = getBoardLayout();
+    boardEl.style.gridTemplateColumns = `repeat(${layout.cols},minmax(0,1fr))`;
+    boardEl.dataset.cols = String(layout.cols);
+    boardEl.dataset.rows = String(layout.rows);
+    return layout;
+  }
+
   function renderBoard(){
     boardEl.innerHTML = '';
-    boardEl.style.gridTemplateColumns = `repeat(${level.cols},minmax(0,1fr))`;
+    applyBoardLayout();
 
     cards.forEach(card => {
       if(card.type === 'spacer'){
@@ -221,7 +242,9 @@
     subtitleEl.textContent = `Finde alle ${level.pairs} Paare.`;
     hintEl.textContent = level.spacer
       ? `${level.fields} Felder · ${level.pairs} Paare · leere Mitte ohne Karte`
-      : `${level.fields} Karten · ${level.pairs} zufällige Paare aus dem Bilderpool`;
+      : level.key === '5x6'
+        ? `${level.fields} Karten · ${level.pairs} Paare · Hochformat 5×6 / Querformat 6×5`
+        : `${level.fields} Karten · ${level.pairs} zufällige Paare aus dem Bilderpool`;
     resetRound();
     scheduleBoardFit();
   }
@@ -252,7 +275,8 @@
     };
     const rect = boardWrap.getBoundingClientRect();
     const availableWidth = Math.max(1, rect.width || viewport.width);
-    const landscape = viewport.width >= viewport.height;
+    const layout = applyBoardLayout();
+    const landscape = layout.landscape;
     const fullscreen = pseudoFullscreen || document.fullscreenElement === gameCard || document.webkitFullscreenElement === gameCard;
 
     let availableHeight;
@@ -265,10 +289,10 @@
     }
 
     const gap = parseFloat(getComputedStyle(boardEl).gap) || 0;
-    const gapW = gap * (level.cols - 1);
-    const gapH = gap * (level.rows - 1);
+    const gapW = gap * (layout.cols - 1);
+    const gapH = gap * (layout.rows - 1);
     const widthFromHeight = Number.isFinite(availableHeight)
-      ? Math.max(1, ((availableHeight - gapH) / level.rows) * level.cols + gapW)
+      ? Math.max(1, ((availableHeight - gapH) / layout.rows) * layout.cols + gapW)
       : 590;
     const cap = fullscreen ? 720 : 590;
     const target = Math.max(1, Math.floor(Math.min(availableWidth, widthFromHeight, cap)));
