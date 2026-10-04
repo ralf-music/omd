@@ -39,7 +39,7 @@
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
-    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn')
+    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn')
   };
 
   function loadState(){
@@ -1431,15 +1431,34 @@
     if(refs.snikkersChaseDialog.open) refs.snikkersChaseDialog.close();
   }
 
+  function openSnikkersMemory(){
+    if(!adminUiEnabled()) return;
+    if(!refs.snikkersMemoryDialog || !refs.snikkersMemoryFrame) return;
+    closeMiniGames();
+    refs.snikkersMemoryFrame.src='./games/snikkers-memory/index.html';
+    refs.snikkersMemoryDialog.showModal();
+    window.OMDGameViewport?.refit();
+  }
+
+  function closeSnikkersMemory(){
+    if(!refs.snikkersMemoryDialog) return;
+    if(refs.snikkersMemoryFrame){
+      refs.snikkersMemoryFrame.src='about:blank';
+    }
+    if(refs.snikkersMemoryDialog.open) refs.snikkersMemoryDialog.close();
+  }
+
   if(refs.openMiniGamesBtn) refs.openMiniGamesBtn.addEventListener('click',openMiniGames);
   if(refs.closeMiniGamesBtn) refs.closeMiniGamesBtn.addEventListener('click',closeMiniGames);
   if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
   if(refs.snikkersCatchCoverBtn) refs.snikkersCatchCoverBtn.addEventListener('click',openSnikkersCatch);
   if(refs.snikkersChaseCoverBtn) refs.snikkersChaseCoverBtn.addEventListener('click',openSnikkersChase);
+  if(refs.snikkersMemoryCoverBtn) refs.snikkersMemoryCoverBtn.addEventListener('click',openSnikkersMemory);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
   if(refs.closeSnikkersCatchBtn) refs.closeSnikkersCatchBtn.addEventListener('click',closeSnikkersCatch);
   if(refs.closeSnikkersChaseBtn) refs.closeSnikkersChaseBtn.addEventListener('click',closeSnikkersChase);
+  if(refs.closeSnikkersMemoryBtn) refs.closeSnikkersMemoryBtn.addEventListener('click',closeSnikkersMemory);
   document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen')){ /* CSS-Fallback bleibt aktiv */ } updateSnikkersFullscreenButton(); });
   if(refs.miniGamesDialog){
     refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
@@ -1461,6 +1480,12 @@
     refs.snikkersChaseDialog.addEventListener('cancel',()=>{ if(refs.snikkersChaseFrame) refs.snikkersChaseFrame.src='about:blank'; });
     refs.snikkersChaseDialog.addEventListener('close',()=>{ if(refs.snikkersChaseFrame) refs.snikkersChaseFrame.src='about:blank'; });
     refs.snikkersChaseDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersChaseDialog) closeSnikkersChase(); });
+  }
+
+  if(refs.snikkersMemoryDialog){
+    refs.snikkersMemoryDialog.addEventListener('cancel',()=>{ if(refs.snikkersMemoryFrame) refs.snikkersMemoryFrame.src='about:blank'; });
+    refs.snikkersMemoryDialog.addEventListener('close',()=>{ if(refs.snikkersMemoryFrame) refs.snikkersMemoryFrame.src='about:blank'; });
+    refs.snikkersMemoryDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersMemoryDialog) closeSnikkersMemory(); });
   }
 
   if(refs.enableUserPushBtn) refs.enableUserPushBtn.addEventListener('click',async()=>{

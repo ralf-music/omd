@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#171319" />
+  <title>Snikkers Memory – v0.1.0</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <section id="gameCard" class="game-card" aria-labelledby="gameTitle">
+      <header class="game-head">
+        <div class="title-wrap">
+          <p class="eyebrow">MINIGAME</p>
+          <h1 id="gameTitle">Snikkers Memory</h1>
+          <p class="subtitle">Finde alle 10 Paare.</p>
+        </div>
+
+        <div class="top-actions">
+          <button id="newGameBtn" class="icon-btn text-btn" type="button">NEU</button>
+          <button id="fullscreenBtn" class="icon-btn" type="button" aria-label="Vollbild einschalten" title="Vollbild">⛶</button>
+        </div>
+      </header>
+
+      <section class="hud" aria-label="Spielstand">
+        <div class="hud-item"><span>PAARE</span><strong id="pairs">0 / 10</strong></div>
+        <div class="hud-item"><span>ZÜGE</span><strong id="moves">0</strong></div>
+        <div class="hud-item"><span>ZEIT</span><strong id="time">0:00</strong></div>
+        <div class="hud-item"><span>BEST</span><strong id="best">–</strong></div>
+      </section>
+
+      <section class="board-wrap">
+        <div id="board" class="board" aria-label="Memory-Spielfeld"></div>
+      </section>
+
+      <div id="finishPanel" class="finish-panel hidden" role="status" aria-live="polite">
+        <strong id="finishTitle">GESCHAFFT!</strong>
+        <span id="finishText"></span>
+        <button id="againBtn" type="button">NOCHMAL SPIELEN</button>
+      </div>
+
+      <p class="hint">20 Karten · 10 zufällige Paare aus dem Bilderpool</p>
+    </section>
+  </main>
+  <script src="../game-viewport.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

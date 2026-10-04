@@ -165,7 +165,7 @@
           </div>
           <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell sind Snikkers Run, Snikkers Catch und Snikkers Chase im Admin-Testmodus verfügbar.</p>
+        <p class="muted snikkers-launch-copy">Hier landen später mehrere kleine Spiele. Aktuell sind Snikkers Run, Snikkers Catch, Snikkers Chase und Snikkers Memory im Admin-Testmodus verfügbar.</p>
         <button id="openMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
         <p class="microcopy">Reine Minigames. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
       </section>
@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.10</button>
+      <button id="versionBtn" class="version-btn">v0.9.11</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -218,6 +218,13 @@
           <div class="mini-game-cover-meta">
             <strong>Snikkers Chase</strong>
             <span>Maze Chase Minigame</span>
+          </div>
+        </button>
+        <button id="snikkersMemoryCoverBtn" class="mini-game-cover-btn" type="button" aria-label="Snikkers Memory starten">
+          <img src="assets/games/snikkers-memory/cover.png" alt="Game Cover von Snikkers Memory" />
+          <div class="mini-game-cover-meta">
+            <strong>Snikkers Memory</strong>
+            <span>Memory Minigame</span>
           </div>
         </button>
       </div>
@@ -265,6 +272,19 @@
         <button id="closeSnikkersChaseBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Chase schließen">×</button>
       </div>
       <iframe id="snikkersChaseFrame" class="snikkers-chase-frame" title="Snikkers Chase" allow="fullscreen" allowfullscreen></iframe>
+    </div>
+  </dialog>
+
+  <dialog id="snikkersMemoryDialog" class="snikkers-memory-dialog">
+    <div class="snikkers-memory-dialog-card">
+      <div class="snikkers-memory-dialog-head">
+        <div>
+          <p class="eyebrow">MINI-GAME</p>
+          <h2>Snikkers Memory</h2>
+        </div>
+        <button id="closeSnikkersMemoryBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Memory schließen">×</button>
+      </div>
+      <iframe id="snikkersMemoryFrame" class="snikkers-memory-frame" title="Snikkers Memory" allow="fullscreen" allowfullscreen></iframe>
     </div>
   </dialog>
 
@@ -460,8 +480,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.10</h2>
+      <h2>One More Day v0.9.11</h2>
       <ul>
+        <li><strong>v0.9.11:</strong> Snikkers Memory v0.1.0 als viertes Minigame integriert, inklusive Cover, 5×4-Spielfeld, 10 zufälligen Paaren aus 16 Motiven und eigener Vollbildansicht.</li>
+        <li><strong>v0.9.11:</strong> Memory nutzt ebenfalls die gemeinsame dynamische Viewport-Höhe, damit Hochformat, Querformat und Vollbild auf Android sauber neu berechnet werden.</li>
         <li><strong>v0.9.10:</strong> Gemeinsame adaptive Minigame-Ansicht für Run, Catch und Chase: Hochformat, Querformat, Rotation und Vollbild werden anhand des tatsächlich verfügbaren Viewports neu eingepasst.</li>
         <li><strong>v0.9.10:</strong> Snikkers Chase behält im Vollbild jetzt das echte 912×624-Seitenverhältnis; die untere Maze-Reihe wird nicht mehr durch eine gestreckte Canvas-Darstellung abgeschnitten.</li>
         <li><strong>v0.9.9:</strong> Alle drei Minigames zeigen Steuerungshinweise jetzt auch im Querformat und Vollbild vollständig an; Spielflächen werden ohne Abschneiden eingepasst.</li>
