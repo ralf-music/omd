@@ -2,6 +2,11 @@
   'use strict';
 
   const boardEl = document.getElementById('board');
+  const boardWrap = document.getElementById('boardWrap');
+  const hudEl = document.getElementById('hud');
+  const levelSelect = document.getElementById('levelSelect');
+  const subtitleEl = document.getElementById('subtitle');
+  const hintEl = document.getElementById('hint');
   const pairsEl = document.getElementById('pairs');
   const movesEl = document.getElementById('moves');
   const timeEl = document.getElementById('time');
@@ -14,13 +19,15 @@
   const fullscreenBtn = document.getElementById('fullscreenBtn');
   const gameCard = document.getElementById('gameCard');
 
-  const PAIRS_PER_GAME = 10;
+  const LEVELS = {
+    '5x4': { key:'5x4', cols:5, rows:4, pairs:10, fields:20, joker:false, label:'5 × 4' },
+    '5x5': { key:'5x5', cols:5, rows:5, pairs:12, fields:25, spacer:true, label:'5 × 5' },
+    '5x6': { key:'5x6', cols:5, rows:6, pairs:15, fields:30, joker:false, label:'5 × 6' }
+  };
   const MISMATCH_DELAY = 820;
-  const BEST_TIME_KEY = 'snikkers_memory_best_time_v1';
-  const BEST_MOVES_KEY = 'snikkers_memory_best_moves_v1';
+  const IMAGE_POOL = Array.from({length: 31}, (_, i) => `assets/memory/snikkers${String(i + 1).padStart(2,'0')}.jpg`);
 
-  const IMAGE_POOL = Array.from({length: 16}, (_, i) => `assets/memory/${String(i + 1).padStart(2,'0')}.svg`);
-
+  let level = null;
   let cards = [];
   let firstCard = null;
   let secondCard = null;
@@ -32,6 +39,7 @@
   let timerId = null;
   let finished = false;
   let pseudoFullscreen = false;
+  let fitFrame = 0;
 
   function shuffle(array){
     const a = [...array];
@@ -49,18 +57,27 @@
     return `${min}:${String(sec).padStart(2,'0')}`;
   }
 
+  function bestKey(type){
+    return `snikkers_memory_${type}_v2_${level ? level.key : '5x4'}`;
+  }
+
   function getBestTime(){
-    const v = Number(localStorage.getItem(BEST_TIME_KEY) || 0);
-    return v > 0 ? v : null;
+    if(!level) return null;
+    let value = Number(localStorage.getItem(bestKey('best_time')) || 0);
+    if(!value && level.key === '5x4') value = Number(localStorage.getItem('snikkers_memory_best_time_v1') || 0);
+    return value > 0 ? value : null;
   }
 
   function getBestMoves(){
-    const v = Number(localStorage.getItem(BEST_MOVES_KEY) || 0);
-    return v > 0 ? v : null;
+    if(!level) return null;
+    let value = Number(localStorage.getItem(bestKey('best_moves')) || 0);
+    if(!value && level.key === '5x4') value = Number(localStorage.getItem('snikkers_memory_best_moves_v1') || 0);
+    return value > 0 ? value : null;
   }
 
   function updateHud(){
-    pairsEl.textContent = `${matchedPairs} / ${PAIRS_PER_GAME}`;
+    if(!level) return;
+    pairsEl.textContent = `${matchedPairs} / ${level.pairs}`;
     movesEl.textContent = String(moves);
     const nowElapsed = startedAt && !finished ? performance.now()-startedAt : elapsedMs;
     timeEl.textContent = formatTime(nowElapsed);
@@ -81,17 +98,31 @@
   }
 
   function createDeck(){
-    const chosen = shuffle(IMAGE_POOL).slice(0, PAIRS_PER_GAME);
-    const doubled = chosen.flatMap((src, pairId) => [
-      {pairId, src, uid:`${pairId}-a`},
-      {pairId, src, uid:`${pairId}-b`}
-    ]);
-    return shuffle(doubled);
+    const chosen = shuffle(IMAGE_POOL).slice(0, level.pairs);
+    const doubled = shuffle(chosen.flatMap((src, pairId) => [
+      {type:'pair', pairId, src, uid:`${pairId}-a`},
+      {type:'pair', pairId, src, uid:`${pairId}-b`}
+    ]));
+
+    if(level.spacer){
+      doubled.splice(Math.floor(level.fields / 2), 0, {type:'spacer', uid:'spacer'});
+    }
+    return doubled;
   }
 
   function renderBoard(){
     boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${level.cols},minmax(0,1fr))`;
+
     cards.forEach(card => {
+      if(card.type === 'spacer'){
+        const spacer = document.createElement('div');
+        spacer.className = 'spacer-card';
+        spacer.setAttribute('aria-hidden','true');
+        boardEl.appendChild(spacer);
+        return;
+      }
+
       const btn = document.createElement('button');
       btn.className = 'memory-card';
       btn.type = 'button';
@@ -101,11 +132,12 @@
       btn.innerHTML = `
         <span class="card-inner">
           <span class="card-face card-back" aria-hidden="true"></span>
-          <span class="card-face card-front"><img src="${card.src}" alt="Platzhaltermotiv" draggable="false"></span>
+          <span class="card-face card-front"><img src="${card.src}" alt="Memory-Motiv" draggable="false"></span>
         </span>`;
       btn.addEventListener('click', () => flipCard(btn));
       boardEl.appendChild(btn);
     });
+    scheduleBoardFit();
   }
 
   function flipCard(cardEl){
@@ -132,7 +164,7 @@
       secondCard = null;
       matchedPairs++;
       updateHud();
-      if(matchedPairs >= PAIRS_PER_GAME) finishGame();
+      if(matchedPairs >= level.pairs) finishGame();
       return;
     }
 
@@ -155,16 +187,16 @@
 
     const oldBestTime = getBestTime();
     const oldBestMoves = getBestMoves();
-    if(!oldBestTime || elapsedMs < oldBestTime) localStorage.setItem(BEST_TIME_KEY, String(Math.round(elapsedMs)));
-    if(!oldBestMoves || moves < oldBestMoves) localStorage.setItem(BEST_MOVES_KEY, String(moves));
+    if(!oldBestTime || elapsedMs < oldBestTime) localStorage.setItem(bestKey('best_time'), String(Math.round(elapsedMs)));
+    if(!oldBestMoves || moves < oldBestMoves) localStorage.setItem(bestKey('best_moves'), String(moves));
 
     updateHud();
     finishTitle.textContent = 'GESCHAFFT!';
-    finishText.textContent = `${formatTime(elapsedMs)} · ${moves} Züge`;
+    finishText.textContent = `${level.label} · ${formatTime(elapsedMs)} · ${moves} Züge`;
     finishPanel.classList.remove('hidden');
   }
 
-  function newGame(){
+  function resetRound(){
     if(timerId){ clearInterval(timerId); timerId = null; }
     cards = createDeck();
     firstCard = null;
@@ -178,6 +210,75 @@
     finishPanel.classList.add('hidden');
     renderBoard();
     updateHud();
+  }
+
+  function startLevel(levelKey){
+    level = LEVELS[levelKey] || LEVELS['5x4'];
+    levelSelect.classList.add('hidden');
+    hudEl.classList.remove('hidden');
+    boardWrap.classList.remove('hidden');
+    hintEl.classList.remove('hidden');
+    subtitleEl.textContent = `Finde alle ${level.pairs} Paare.`;
+    hintEl.textContent = level.spacer
+      ? `${level.fields} Felder · ${level.pairs} Paare · leere Mitte ohne Karte`
+      : `${level.fields} Karten · ${level.pairs} zufällige Paare aus dem Bilderpool`;
+    resetRound();
+    scheduleBoardFit();
+  }
+
+  function showLevelSelect(){
+    stopTimer();
+    level = null;
+    cards = [];
+    firstCard = null;
+    secondCard = null;
+    locked = false;
+    finished = false;
+    boardEl.innerHTML = '';
+    finishPanel.classList.add('hidden');
+    hudEl.classList.add('hidden');
+    boardWrap.classList.add('hidden');
+    hintEl.classList.add('hidden');
+    levelSelect.classList.remove('hidden');
+    subtitleEl.textContent = 'Wähle deine Spielfeldgröße.';
+    scheduleBoardFit();
+  }
+
+  function fitBoard(){
+    if(!level || boardWrap.classList.contains('hidden')) return;
+    const viewport = window.OMDGameViewport?.getViewportSize?.() || {
+      width: window.innerWidth || document.documentElement.clientWidth || 1,
+      height: window.innerHeight || document.documentElement.clientHeight || 1
+    };
+    const rect = boardWrap.getBoundingClientRect();
+    const availableWidth = Math.max(1, rect.width || viewport.width);
+    const landscape = viewport.width >= viewport.height;
+    const fullscreen = pseudoFullscreen || document.fullscreenElement === gameCard || document.webkitFullscreenElement === gameCard;
+
+    let availableHeight;
+    if(fullscreen){
+      availableHeight = Math.max(1, rect.height || (viewport.height - 120));
+    }else if(landscape){
+      availableHeight = Math.max(1, viewport.height - 20);
+    }else{
+      availableHeight = Number.POSITIVE_INFINITY;
+    }
+
+    const gap = parseFloat(getComputedStyle(boardEl).gap) || 0;
+    const gapW = gap * (level.cols - 1);
+    const gapH = gap * (level.rows - 1);
+    const widthFromHeight = Number.isFinite(availableHeight)
+      ? Math.max(1, ((availableHeight - gapH) / level.rows) * level.cols + gapW)
+      : 590;
+    const cap = fullscreen ? 720 : 590;
+    const target = Math.max(1, Math.floor(Math.min(availableWidth, widthFromHeight, cap)));
+    document.documentElement.style.setProperty('--memory-board-max', `${target}px`);
+  }
+
+  function scheduleBoardFit(){
+    cancelAnimationFrame(fitFrame);
+    fitFrame = requestAnimationFrame(fitBoard);
+    [60,180,360,700].forEach(delay => setTimeout(fitBoard, delay));
   }
 
   async function requestNativeFullscreen(){
@@ -201,6 +302,7 @@
     fullscreenBtn.textContent = active ? '⤢' : '⛶';
     fullscreenBtn.setAttribute('aria-label', active ? 'Vollbild verlassen' : 'Vollbild einschalten');
     fullscreenBtn.title = active ? 'Vollbild verlassen' : 'Vollbild';
+    scheduleBoardFit();
   }
 
   fullscreenBtn.addEventListener('click', async () => {
@@ -229,8 +331,16 @@
     }
   });
 
-  newGameBtn.addEventListener('click', newGame);
-  againBtn.addEventListener('click', newGame);
+  window.addEventListener('resize', scheduleBoardFit, {passive:true});
+  window.addEventListener('orientationchange', scheduleBoardFit, {passive:true});
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', scheduleBoardFit, {passive:true});
 
-  newGame();
+  levelSelect.addEventListener('click', event => {
+    const button = event.target.closest('[data-level]');
+    if(button) startLevel(button.dataset.level);
+  });
+  newGameBtn.addEventListener('click', showLevelSelect);
+  againBtn.addEventListener('click', () => level ? resetRound() : showLevelSelect());
+
+  showLevelSelect();
 })();

@@ -1,18 +1,12 @@
-Snikkers Memory v0.1.0
+Snikkers Memory v0.3.0
 
-Erster spielbarer Prototyp.
+Spielfeldgrößen:
+- 5x4: 20 Karten / 10 Paare
+- 5x5: 24 Spielkarten / 12 Paare + leere, nicht anklickbare Mitte
+- 5x6: 30 Karten / 15 Paare
 
-Enthalten:
-- 5x4 Feld = 20 Karten / 10 Paare
-- 16 Platzhaltermotive im Pool
-- pro Runde zufällige Auswahl von 10 Motiven
-- echte 3D-Flip-Animation
-- richtiges Paar bleibt offen
-- falsches Paar dreht sich nach kurzer Pause animiert zurück
-- Eingabesperre während Fehlpaar-Rückdrehung
-- Zeit und Züge
-- Bestzeit und niedrigste Zugzahl lokal gespeichert
-- Vollbildmodus mit CSS-Fallback
-- responsive Darstellung für Hoch- und Querformat
+Pro Runde werden die benötigten Motive zufällig aus dem 16-Motive-Pool gewählt, verdoppelt und gemischt.
+Bestzeit und Zugrekord werden getrennt pro Spielfeldgröße gespeichert.
 
-Die Platzhalterbilder unter assets/memory/ können später durch echte Snikkers-Fotos ersetzt werden.
+- Platzhalter durch 31 echte Snikkers-Fotos ersetzt
+- Bilder quadratisch und spieloptimiert aufbereitet
