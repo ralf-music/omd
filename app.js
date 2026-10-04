@@ -1153,7 +1153,6 @@
 
 
   function openMiniGames(){
-    if(!adminUiEnabled()) return;
     if(!refs.miniGamesDialog) return;
     refs.miniGamesDialog.showModal();
   }
@@ -1368,8 +1367,6 @@
   }
 
   function openSnikkersRun(){
-    // Temporary v0.8.2 test gate: Snikkers Run is visible/launchable only on admin-enabled devices.
-    if(!adminUiEnabled()) return;
     if(!refs.snikkersRunDialog || !refs.snikkersRunMount || !window.SnikkersRun) return;
     closeMiniGames();
     destroySnikkersRun();
@@ -1400,7 +1397,6 @@
   }
 
   function openSnikkersCatch(){
-    if(!adminUiEnabled()) return;
     if(!refs.snikkersCatchDialog || !refs.snikkersCatchFrame) return;
     closeMiniGames();
     refs.snikkersCatchFrame.src='./games/snikkers-catch/index.html';
@@ -1416,7 +1412,6 @@
   }
 
   function openSnikkersChase(){
-    if(!adminUiEnabled()) return;
     if(!refs.snikkersChaseDialog || !refs.snikkersChaseFrame) return;
     closeMiniGames();
     refs.snikkersChaseFrame.src='./games/snikkers-chase/index.html';
@@ -1432,7 +1427,6 @@
   }
 
   function openSnikkersMemory(){
-    if(!adminUiEnabled()) return;
     if(!refs.snikkersMemoryDialog || !refs.snikkersMemoryFrame) return;
     closeMiniGames();
     refs.snikkersMemoryFrame.src='./games/snikkers-memory/index.html';
