@@ -278,3 +278,5 @@ body.snikkers-fullscreen-lock #snikkersRunDialog::backdrop{background:#0b0b0f!im
   .snikkers-catch-dialog-head h2,.snikkers-chase-dialog-head h2,.snikkers-memory-dialog-head h2{font-size:1.15rem;line-height:1.06}
   .snikkers-catch-frame,.snikkers-chase-frame,.snikkers-memory-frame{border-radius:12px}
 }
+
+/* v0.9.18 · Run header cleanup + Memory theme */

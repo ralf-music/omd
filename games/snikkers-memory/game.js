@@ -17,6 +17,7 @@
   const finishTitle = document.getElementById('finishTitle');
   const finishText = document.getElementById('finishText');
   const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const musicBtn = document.getElementById('musicBtn');
   const gameCard = document.getElementById('gameCard');
 
   const LEVELS = {
@@ -40,6 +41,85 @@
   let finished = false;
   let pseudoFullscreen = false;
   let fitFrame = 0;
+
+  // Soft generative pentatonic Memory theme. No external audio file required.
+  let musicWanted = true;
+  let audioCtx = null;
+  let musicTimer = null;
+  let noteStep = 0;
+  const THEME_NOTES = [293.66, 392.00, 440.00, 523.25, 440.00, 392.00, 329.63, 293.66, 261.63, 329.63, 392.00, 440.00];
+
+  function updateMusicButton(){
+    if(!musicBtn) return;
+    musicBtn.textContent = musicWanted ? '♪ AN' : '♪ AUS';
+    musicBtn.setAttribute('aria-pressed', musicWanted ? 'true' : 'false');
+    musicBtn.setAttribute('aria-label', musicWanted ? 'Musik ausschalten' : 'Musik einschalten');
+  }
+
+  function createAudioContext(){
+    if(audioCtx) return audioCtx;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    audioCtx = new Ctx();
+    return audioCtx;
+  }
+
+  function playSoftTone(freq, when, duration=2.6, volume=.026){
+    const ctx = createAudioContext();
+    if(!ctx || !musicWanted) return;
+    const osc = ctx.createOscillator();
+    const harmonic = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.type = 'sine';
+    harmonic.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, when);
+    harmonic.frequency.setValueAtTime(freq * 2, when);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1450, when);
+    filter.Q.setValueAtTime(.35, when);
+    gain.gain.setValueAtTime(.0001, when);
+    gain.gain.exponentialRampToValueAtTime(volume, when + .055);
+    gain.gain.exponentialRampToValueAtTime(.0001, when + duration);
+    osc.connect(filter);
+    harmonic.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(when); harmonic.start(when);
+    osc.stop(when + duration + .05); harmonic.stop(when + duration + .05);
+  }
+
+  function playThemeStep(){
+    if(!musicWanted || !audioCtx || audioCtx.state !== 'running') return;
+    const now = audioCtx.currentTime + .03;
+    const freq = THEME_NOTES[noteStep % THEME_NOTES.length];
+    playSoftTone(freq, now, 2.4, .022);
+    // Quiet lower support every fourth note keeps it calm rather than melodic-busy.
+    if(noteStep % 4 === 0) playSoftTone(freq / 2, now, 3.4, .010);
+    noteStep++;
+  }
+
+  async function ensureMusic(){
+    if(!musicWanted) return;
+    const ctx = createAudioContext();
+    if(!ctx) return;
+    try{ if(ctx.state === 'suspended') await ctx.resume(); }catch{}
+    if(ctx.state !== 'running') return;
+    if(!musicTimer){
+      playThemeStep();
+      musicTimer = window.setInterval(playThemeStep, 1450);
+    }
+  }
+
+  function pauseMusic(){
+    if(musicTimer){ clearInterval(musicTimer); musicTimer = null; }
+    if(audioCtx && audioCtx.state === 'running'){ try{ audioCtx.suspend(); }catch{} }
+  }
+
+  function stopMusicCompletely(){
+    if(musicTimer){ clearInterval(musicTimer); musicTimer = null; }
+    if(audioCtx){ try{ audioCtx.close(); }catch{} audioCtx = null; }
+  }
 
   function shuffle(array){
     const a = [...array];
@@ -162,6 +242,7 @@
   }
 
   function flipCard(cardEl){
+    ensureMusic();
     if(locked || finished || cardEl.classList.contains('is-flipped') || cardEl.classList.contains('is-matched')) return;
     startTimerIfNeeded();
     cardEl.classList.add('is-flipped');
@@ -234,6 +315,7 @@
   }
 
   function startLevel(levelKey){
+    ensureMusic();
     level = LEVELS[levelKey] || LEVELS['5x4'];
     levelSelect.classList.add('hidden');
     hudEl.classList.remove('hidden');
@@ -329,6 +411,16 @@
     scheduleBoardFit();
   }
 
+  if(musicBtn){
+    musicBtn.addEventListener('click', async () => {
+      musicWanted = !musicWanted;
+      updateMusicButton();
+      if(musicWanted) await ensureMusic();
+      else pauseMusic();
+    });
+  }
+  updateMusicButton();
+
   fullscreenBtn.addEventListener('click', async () => {
     const active = pseudoFullscreen || document.fullscreenElement===gameCard || document.webkitFullscreenElement===gameCard;
     if(active){
@@ -350,8 +442,11 @@
   document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 
   document.addEventListener('visibilitychange', () => {
-    if(document.hidden && startedAt && !finished){
-      elapsedMs = performance.now()-startedAt;
+    if(document.hidden){
+      if(startedAt && !finished) elapsedMs = performance.now()-startedAt;
+      pauseMusic();
+    }else if(musicWanted){
+      ensureMusic();
     }
   });
 
@@ -366,5 +461,6 @@
   newGameBtn.addEventListener('click', showLevelSelect);
   againBtn.addEventListener('click', () => level ? resetRound() : showLevelSelect());
 
+  window.addEventListener('pagehide', stopMusicCompletely, {once:true});
   showLevelSelect();
 })();

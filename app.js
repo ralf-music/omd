@@ -1525,7 +1525,7 @@
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
 
   const adminEnabled=adminUiEnabled();
-  if(refs.miniGamesLaunchCard) refs.miniGamesLaunchCard.classList.toggle('hidden',!adminEnabled);
+  if(refs.miniGamesLaunchCard) refs.miniGamesLaunchCard.classList.remove('hidden');
 
   if(refs.adminBtn){
     refs.adminBtn.classList.toggle('hidden',!adminEnabled);

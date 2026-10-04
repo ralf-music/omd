@@ -43,20 +43,14 @@
     root.style.setProperty('--sr-accent-hover', opts.accentHover);
     root.innerHTML = `
       <div class="snikkers-run__panel">
-        <div class="snikkers-run__head">
-          <div class="snikkers-run__copy">
-            <h2 class="snikkers-run__title"></h2>
-            <p class="snikkers-run__hint"></p>
-          </div>
+        <div class="snikkers-run__head snikkers-run__head--compact">
           <button class="snikkers-run__music" type="button" aria-pressed="false">🔊 Musik an</button>
         </div>
         <button class="snikkers-run__stage" type="button" aria-label="Snikkers Run starten oder springen">
           <canvas class="snikkers-run__canvas" width="960" height="360"></canvas>
         </button>
-        <div class="snikkers-run__footer">Tippen = Springen · Leertaste funktioniert, solange das Spiel fokussiert ist</div>
+
       </div>`;
-    root.querySelector('.snikkers-run__title').textContent = opts.title;
-    root.querySelector('.snikkers-run__hint').textContent = opts.subtitle;
     container.replaceChildren(root);
     return root;
   }

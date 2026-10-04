@@ -1,4 +1,4 @@
-Snikkers Memory v0.3.1
+Snikkers Memory v0.3.2
 
 Spielfeldgrößen:
 - 5x4: 20 Karten / 10 Paare
@@ -12,3 +12,6 @@ Bestzeit und Zugrekord werden getrennt pro Spielfeldgröße gespeichert.
 - Bilder quadratisch und spieloptimiert aufbereitet
 
 - Schwere Stufe: Hochformat 5x6, Querformat automatisch 6x5 ohne Rundenreset
+
+- Freundliche generative Hintergrundmusik: ruhige meditative Pentatonik mit weichen Glocken-/Pluck-Tönen
+- Musikschalter im Header
