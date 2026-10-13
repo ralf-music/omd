@@ -39,7 +39,7 @@
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
-    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn')
+    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn'), snikkersPuzzleCoverBtn:$('snikkersPuzzleCoverBtn'), snikkersPuzzleDialog:$('snikkersPuzzleDialog'), snikkersPuzzleFrame:$('snikkersPuzzleFrame'), closeSnikkersPuzzleBtn:$('closeSnikkersPuzzleBtn')
   };
 
   function loadState(){
@@ -1442,17 +1442,34 @@
     if(refs.snikkersMemoryDialog.open) refs.snikkersMemoryDialog.close();
   }
 
+  function openSnikkersPuzzle(){
+    if(!refs.snikkersPuzzleDialog || !refs.snikkersPuzzleFrame) return;
+    closeMiniGames();
+    refs.snikkersPuzzleFrame.src='./games/snikkers-puzzle-slide/index.html';
+    refs.snikkersPuzzleDialog.showModal();
+  }
+
+  function closeSnikkersPuzzle(){
+    if(!refs.snikkersPuzzleDialog) return;
+    if(refs.snikkersPuzzleFrame){
+      refs.snikkersPuzzleFrame.src='about:blank';
+    }
+    if(refs.snikkersPuzzleDialog.open) refs.snikkersPuzzleDialog.close();
+  }
+
   if(refs.openMiniGamesBtn) refs.openMiniGamesBtn.addEventListener('click',openMiniGames);
   if(refs.closeMiniGamesBtn) refs.closeMiniGamesBtn.addEventListener('click',closeMiniGames);
   if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
   if(refs.snikkersCatchCoverBtn) refs.snikkersCatchCoverBtn.addEventListener('click',openSnikkersCatch);
   if(refs.snikkersChaseCoverBtn) refs.snikkersChaseCoverBtn.addEventListener('click',openSnikkersChase);
   if(refs.snikkersMemoryCoverBtn) refs.snikkersMemoryCoverBtn.addEventListener('click',openSnikkersMemory);
+  if(refs.snikkersPuzzleCoverBtn) refs.snikkersPuzzleCoverBtn.addEventListener('click',openSnikkersPuzzle);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
   if(refs.closeSnikkersCatchBtn) refs.closeSnikkersCatchBtn.addEventListener('click',closeSnikkersCatch);
   if(refs.closeSnikkersChaseBtn) refs.closeSnikkersChaseBtn.addEventListener('click',closeSnikkersChase);
   if(refs.closeSnikkersMemoryBtn) refs.closeSnikkersMemoryBtn.addEventListener('click',closeSnikkersMemory);
+  if(refs.closeSnikkersPuzzleBtn) refs.closeSnikkersPuzzleBtn.addEventListener('click',closeSnikkersPuzzle);
   document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen')){ /* CSS-Fallback bleibt aktiv */ } updateSnikkersFullscreenButton(); });
   if(refs.miniGamesDialog){
     refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
@@ -1480,6 +1497,12 @@
     refs.snikkersMemoryDialog.addEventListener('cancel',()=>{ if(refs.snikkersMemoryFrame) refs.snikkersMemoryFrame.src='about:blank'; });
     refs.snikkersMemoryDialog.addEventListener('close',()=>{ if(refs.snikkersMemoryFrame) refs.snikkersMemoryFrame.src='about:blank'; });
     refs.snikkersMemoryDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersMemoryDialog) closeSnikkersMemory(); });
+  }
+
+  if(refs.snikkersPuzzleDialog){
+    refs.snikkersPuzzleDialog.addEventListener('cancel',()=>{ if(refs.snikkersPuzzleFrame) refs.snikkersPuzzleFrame.src='about:blank'; });
+    refs.snikkersPuzzleDialog.addEventListener('close',()=>{ if(refs.snikkersPuzzleFrame) refs.snikkersPuzzleFrame.src='about:blank'; });
+    refs.snikkersPuzzleDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersPuzzleDialog) closeSnikkersPuzzle(); });
   }
 
   if(refs.enableUserPushBtn) refs.enableUserPushBtn.addEventListener('click',async()=>{
