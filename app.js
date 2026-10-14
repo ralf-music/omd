@@ -39,7 +39,7 @@
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
-    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn'), snikkersPuzzleCoverBtn:$('snikkersPuzzleCoverBtn'), snikkersPuzzleDialog:$('snikkersPuzzleDialog'), snikkersPuzzleFrame:$('snikkersPuzzleFrame'), closeSnikkersPuzzleBtn:$('closeSnikkersPuzzleBtn')
+    miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn'), snikkersPuzzleCoverBtn:$('snikkersPuzzleCoverBtn'), snikkersPuzzleDialog:$('snikkersPuzzleDialog'), snikkersPuzzleFrame:$('snikkersPuzzleFrame'), closeSnikkersPuzzleBtn:$('closeSnikkersPuzzleBtn'), snikkersSlotCoverBtn:$('snikkersSlotCoverBtn'), snikkersSlotDialog:$('snikkersSlotDialog'), snikkersSlotFrame:$('snikkersSlotFrame'), closeSnikkersSlotBtn:$('closeSnikkersSlotBtn')
   };
 
   function loadState(){
@@ -1457,6 +1457,21 @@
     if(refs.snikkersPuzzleDialog.open) refs.snikkersPuzzleDialog.close();
   }
 
+  function openSnikkersSlot(){
+    if(!refs.snikkersSlotDialog || !refs.snikkersSlotFrame) return;
+    closeMiniGames();
+    refs.snikkersSlotFrame.src='./games/snikkers-slot/index.html';
+    refs.snikkersSlotDialog.showModal();
+  }
+
+  function closeSnikkersSlot(){
+    if(!refs.snikkersSlotDialog) return;
+    if(refs.snikkersSlotFrame){
+      refs.snikkersSlotFrame.src='about:blank';
+    }
+    if(refs.snikkersSlotDialog.open) refs.snikkersSlotDialog.close();
+  }
+
   if(refs.openMiniGamesBtn) refs.openMiniGamesBtn.addEventListener('click',openMiniGames);
   if(refs.closeMiniGamesBtn) refs.closeMiniGamesBtn.addEventListener('click',closeMiniGames);
   if(refs.snikkersRunCoverBtn) refs.snikkersRunCoverBtn.addEventListener('click',openSnikkersRun);
@@ -1464,12 +1479,14 @@
   if(refs.snikkersChaseCoverBtn) refs.snikkersChaseCoverBtn.addEventListener('click',openSnikkersChase);
   if(refs.snikkersMemoryCoverBtn) refs.snikkersMemoryCoverBtn.addEventListener('click',openSnikkersMemory);
   if(refs.snikkersPuzzleCoverBtn) refs.snikkersPuzzleCoverBtn.addEventListener('click',openSnikkersPuzzle);
+  if(refs.snikkersSlotCoverBtn) refs.snikkersSlotCoverBtn.addEventListener('click',openSnikkersSlot);
   if(refs.snikkersFullscreenBtn) refs.snikkersFullscreenBtn.addEventListener('click',toggleSnikkersFullscreen);
   if(refs.closeSnikkersRunBtn) refs.closeSnikkersRunBtn.addEventListener('click',closeSnikkersRun);
   if(refs.closeSnikkersCatchBtn) refs.closeSnikkersCatchBtn.addEventListener('click',closeSnikkersCatch);
   if(refs.closeSnikkersChaseBtn) refs.closeSnikkersChaseBtn.addEventListener('click',closeSnikkersChase);
   if(refs.closeSnikkersMemoryBtn) refs.closeSnikkersMemoryBtn.addEventListener('click',closeSnikkersMemory);
   if(refs.closeSnikkersPuzzleBtn) refs.closeSnikkersPuzzleBtn.addEventListener('click',closeSnikkersPuzzle);
+  if(refs.closeSnikkersSlotBtn) refs.closeSnikkersSlotBtn.addEventListener('click',closeSnikkersSlot);
   document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && refs.snikkersRunDialog?.classList.contains('snikkers-force-fullscreen')){ /* CSS-Fallback bleibt aktiv */ } updateSnikkersFullscreenButton(); });
   if(refs.miniGamesDialog){
     refs.miniGamesDialog.addEventListener('click',e=>{ if(e.target===refs.miniGamesDialog) closeMiniGames(); });
@@ -1503,6 +1520,12 @@
     refs.snikkersPuzzleDialog.addEventListener('cancel',()=>{ if(refs.snikkersPuzzleFrame) refs.snikkersPuzzleFrame.src='about:blank'; });
     refs.snikkersPuzzleDialog.addEventListener('close',()=>{ if(refs.snikkersPuzzleFrame) refs.snikkersPuzzleFrame.src='about:blank'; });
     refs.snikkersPuzzleDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersPuzzleDialog) closeSnikkersPuzzle(); });
+  }
+
+  if(refs.snikkersSlotDialog){
+    refs.snikkersSlotDialog.addEventListener('cancel',()=>{ if(refs.snikkersSlotFrame) refs.snikkersSlotFrame.src='about:blank'; });
+    refs.snikkersSlotDialog.addEventListener('close',()=>{ if(refs.snikkersSlotFrame) refs.snikkersSlotFrame.src='about:blank'; });
+    refs.snikkersSlotDialog.addEventListener('click',e=>{ if(e.target===refs.snikkersSlotDialog) closeSnikkersSlot(); });
   }
 
   if(refs.enableUserPushBtn) refs.enableUserPushBtn.addEventListener('click',async()=>{

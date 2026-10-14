@@ -165,7 +165,7 @@
           </div>
           <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Fünf Snikkers-Minispiele stehen direkt in der App bereit: Run, Catch, Chase, Memory und Puzzle Slide.</p>
+        <p class="muted snikkers-launch-copy">Sechs Snikkers-Minispiele stehen direkt in der App bereit: Run, Catch, Chase, Memory, Puzzle Slide und Slot: Lucky Paws.</p>
         <button id="openMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
         <p class="microcopy">Reine Minigames. Kein Einfluss auf Arbeitsguthaben, Check-ins oder Boni.</p>
       </section>
@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.21</button>
+      <button id="versionBtn" class="version-btn">v0.9.22</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -232,6 +232,13 @@
           <div class="mini-game-cover-meta">
             <strong>Snikkers Puzzle Slide</strong>
             <span>Schiebepuzzle Minigame</span>
+          </div>
+        </button>
+        <button id="snikkersSlotCoverBtn" class="mini-game-cover-btn" type="button" aria-label="Snikkers Slot Lucky Paws starten">
+          <img src="assets/games/snikkers-slot/cover.png" alt="Game Cover von Snikkers Slot: Lucky Paws" />
+          <div class="mini-game-cover-meta">
+            <strong>Snikkers Slot: Lucky Paws</strong>
+            <span>Slot Minigame</span>
           </div>
         </button>
       </div>
@@ -313,6 +320,21 @@
         </div>
       </div>
       <iframe id="snikkersPuzzleFrame" class="snikkers-puzzle-frame" title="Snikkers Puzzle Slide" allow="fullscreen" allowfullscreen></iframe>
+    </div>
+  </dialog>
+
+  <dialog id="snikkersSlotDialog" class="snikkers-slot-dialog">
+    <div class="snikkers-slot-dialog-card">
+      <div class="snikkers-slot-dialog-head">
+        <div>
+          <p class="eyebrow">MINI-GAME</p>
+          <h2>Snikkers Slot: Lucky Paws</h2>
+        </div>
+        <div class="snikkers-game-actions">
+          <button id="closeSnikkersSlotBtn" class="snikkers-game-close" type="button" aria-label="Snikkers Slot Lucky Paws schließen">×</button>
+        </div>
+      </div>
+      <iframe id="snikkersSlotFrame" class="snikkers-slot-frame" title="Snikkers Slot: Lucky Paws" allow="fullscreen" allowfullscreen></iframe>
     </div>
   </dialog>
 
@@ -508,8 +530,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.21</h2>
+      <h2>One More Day v0.9.22</h2>
       <ul>
+        <li><strong>v0.9.22:</strong> Snikkers Slot: Lucky Paws v0.1.1 als sechstes Minigame mit eigenem Cover, Start-Overlay, Vollbild, Spiel-Coins und Soundeffekten integriert.</li>
+
         <li><strong>v0.9.21:</strong> Snikkers Puzzle Slide v0.1.2 als fünftes Minigame mit eigenem Cover, 31 Snikkers-Bildern, Theme-Song, Bestwerten und Vollbild-Unterstützung integriert.</li>
         <li><strong>v0.9.17:</strong> Snikkers Memory v0.3.1 stellt die schwere 30-Karten-Stufe automatisch um: Hochformat 5×6, Querformat 6×5. Beim Drehen bleiben Runde, Karten, Züge, Paare und Zeit erhalten.</li>
         <li><strong>v0.9.16:</strong> Snikkers Catch, Snikkers Chase und Snikkers Memory nutzen eine einheitlichere Minigame-Hülle mit sichtbarem MINI-GAME-Label und abgestimmtem Header.</li>
