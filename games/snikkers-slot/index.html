@@ -19,6 +19,41 @@
 .overlay{position:fixed;inset:0;background:rgba(6,8,11,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.overlay.hidden{display:none}.start-card{width:min(100%,520px);background:linear-gradient(180deg,#222831,#12161c);border:1px solid #454d5b;border-radius:24px;padding:22px;box-shadow:var(--shadow);text-align:center}.start-card .dog{height:92px;display:flex;align-items:center;justify-content:center}.start-card .dog img{height:92px;max-width:180px;object-fit:contain}.start-card h2{margin:6px 0 4px;font-size:32px}.start-card p{color:var(--muted);line-height:1.45;margin:8px 0 16px}.start-card .start{width:100%;padding:15px;border:0;border-radius:14px;background:linear-gradient(180deg,#ffb237,#e77c00);font-weight:1000;font-size:20px;color:#251500;cursor:pointer}.small{font-size:11px;color:var(--muted)}
 @media(max-width:560px){.app{padding:8px 8px 18px}.machine{padding:9px;border-radius:20px}.hud{gap:5px}.stat{padding:7px 4px}.stat .label{font-size:8px}.reel-frame{padding:5px}.reels{gap:3px}.symbol .txt{display:none}.legend{grid-template-columns:repeat(3,1fr)}}
 @media(orientation:landscape) and (max-height:620px){.app{width:min(100%,1040px);padding:6px 10px}.topbar{margin-bottom:4px}.brand-badge{width:36px;height:36px}.marquee{margin:0 0 4px}.marquee strong{font-size:24px}.hud{margin-bottom:6px}.reel{height:210px}.symbol{height:70px}.panel{margin-top:6px;padding:8px}.legend{display:none}.message{min-height:34px}.action-area{margin-top:6px}.spin-btn,.lever-btn{min-height:52px;height:52px}}
+
+/* v0.1.3: local Profi wallet and independently randomized prize classes. */
+#betRow[hidden],#proStorageNote[hidden]{display:none!important}
+.pro-storage-note{margin:3px auto 10px;max-width:600px;padding:7px 9px;border:1px solid #3d4048;border-radius:9px;font-size:11px;line-height:1.35;color:#c7cbd2;background:#171b22;text-align:center}
+
+/* v0.1.2: mobile/PWA fullscreen fallback, also when embedded in One More Day. */
+html.slot-fullscreen, html.slot-fullscreen body {width:100%;min-height:100%;margin:0;overscroll-behavior:contain}
+html.slot-fullscreen body {overflow-x:hidden}
+html.slot-fullscreen .app {width:min(100%,1100px);max-width:none;margin:0 auto;padding:8px 10px 14px}
+html.slot-fullscreen .legend {display:none}
+@media (orientation:landscape) and (max-height:750px){
+  html.slot-fullscreen .app{padding:4px 8px 8px}
+  html.slot-fullscreen .topbar{margin-bottom:4px}
+  html.slot-fullscreen .brand-badge{height:32px;width:32px;font-size:20px}
+  html.slot-fullscreen .title h1{font-size:20px}
+  html.slot-fullscreen .title p{font-size:10px;margin-top:2px}
+  html.slot-fullscreen .icon-btn{width:34px;height:34px;font-size:17px}
+  html.slot-fullscreen .machine{padding:7px;border-radius:14px}
+  html.slot-fullscreen .marquee{display:none}
+  html.slot-fullscreen .hud{margin-bottom:5px;gap:5px}
+  html.slot-fullscreen .stat{padding:3px 5px}
+  html.slot-fullscreen .stat .label{font-size:9px}
+  html.slot-fullscreen .stat .value{font-size:16px;margin-top:1px}
+  html.slot-fullscreen .reel-frame{padding:4px}
+  html.slot-fullscreen .reel{height:clamp(105px,31dvh,190px);max-height:none}
+  html.slot-fullscreen .symbol{height:calc(clamp(105px,31dvh,190px)/3);max-height:none;font-size:clamp(25px,5dvh,43px)}
+  html.slot-fullscreen .symbol .txt{display:none}
+  html.slot-fullscreen .panel{margin-top:5px;padding:6px}
+  html.slot-fullscreen .mode-btn,html.slot-fullscreen .bet-btn{padding:5px 9px;font-size:12px}
+  html.slot-fullscreen .mode-copy{min-height:0;margin:3px 0;font-size:11px}
+  html.slot-fullscreen .action-area{margin-top:5px}
+  html.slot-fullscreen .spin-btn{min-height:42px;font-size:20px}
+  html.slot-fullscreen .lever-btn{height:42px;min-height:42px}
+  html.slot-fullscreen .message{min-height:26px;margin-top:5px;padding:3px 8px;font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -39,6 +74,7 @@
     <section class="panel">
       <div class="row"><button class="mode-btn active" data-mode="endless">🐾 Einfach</button><button class="mode-btn" data-mode="pro">👑 Profi</button></div>
       <div class="mode-copy" id="modeCopy">Endlos spielen. Gewinne zählen als Punkte, kein Guthaben und kein Einsatz nötig.</div>
+      <div class="pro-storage-note" id="proStorageNote" hidden role="note">Coins werden ausschließlich lokal in diesem Browser auf diesem Gerät gespeichert. Keine Synchronisierung. Beim Löschen der Website-Daten gehen sie verloren.</div>
       <div class="row" id="betRow" hidden><button class="bet-btn active" data-bet="10">10</button><button class="bet-btn" data-bet="20">20</button><button class="bet-btn" data-bet="50">50</button><button class="bet-btn" data-bet="100">100</button></div>
       <div class="action-area"><button class="spin-btn" id="spinBtn">SPIN</button><div class="lever-wrap"><button class="lever-btn" id="leverBtn" aria-label="Hebel ziehen"></button></div></div>
       <div class="message" id="message">Bereit. Einmal drehen und sehen, ob Snikkers heute Glück hat.</div>
@@ -62,7 +98,38 @@ const symbols=[
 ];
 const paylines=[[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2]];
 const reelEl=document.getElementById("reels"),message=document.getElementById("message"),spinBtn=document.getElementById("spinBtn"),leverBtn=document.getElementById("leverBtn"),bankValue=document.getElementById("bankValue"),bankLabel=document.getElementById("bankLabel"),betValue=document.getElementById("betValue"),winValue=document.getElementById("winValue"),spinCountEl=document.getElementById("spinCount"),modeCopy=document.getElementById("modeCopy"),betRow=document.getElementById("betRow"),soundBtn=document.getElementById("soundBtn"),startOverlay=document.getElementById("startOverlay"),startBtn=document.getElementById("startBtn");
-let mode="endless",bank=0,bet=10,spins=0,spinning=false,soundOn=true,started=false,audioCtx;
+// localStorage persists game state within this browser/origin, not the service-worker asset cache.
+// Deleting site data, using private mode or another browser/device removes this wallet.
+const PRO_COINS_KEY="snikkers-slot-pro-coins-v1";
+const PRO_START_COINS=1000;
+let proStorageWorks=true;
+let proSavedBefore=false;
+function readProCoins(){
+  try{
+    const stored=localStorage.getItem(PRO_COINS_KEY);
+    if(stored===null)return PRO_START_COINS;
+    const n=Number(stored);
+    if(!Number.isSafeInteger(n)||n<0) return PRO_START_COINS;
+    proSavedBefore=true;
+    return n;
+  }catch(_){proStorageWorks=false;return PRO_START_COINS}
+}
+function persistProCoins(value){
+  try{
+    localStorage.setItem(PRO_COINS_KEY,String(value));
+    proSavedBefore=true;
+    proStorageWorks=true;
+  }catch(_){proStorageWorks=false}
+  updateStorageNote();
+}
+function updateStorageNote(){
+  const note=document.getElementById("proStorageNote");
+  note.hidden=mode!=="pro";
+  note.textContent=proStorageWorks
+    ?"Coins werden nur lokal in diesem Browser auf diesem Gerät gespeichert. Keine Synchronisierung. Beim Löschen der Website-Daten gehen sie verloren."
+    :"Lokale Speicherung ist hier gesperrt. Dein Coin-Guthaben geht beim Schließen verloren.";
+}
+let mode="endless",bank=0,endlessPoints=0,proCoins=readProCoins(),bet=10,spins=0,spinning=false,soundOn=true,started=false,audioCtx;
 function pickSymbol(){const total=symbols.reduce((s,x)=>s+x.weight,0);let r=Math.random()*total;for(const s of symbols){r-=s.weight;if(r<=0)return s}return symbols[0]}
 let current=Array.from({length:5},()=>Array.from({length:3},()=>pickSymbol()));
 function visualHTML(s){
@@ -76,9 +143,70 @@ function renderStatic(){reelEl.innerHTML="";current.forEach((col,ri)=>{const ree
 function renderLegend(){document.getElementById("legend").innerHTML=symbols.map(s=>`<div class="item"><div class="ico">${visualHTML(s)}</div><div class="name">${s.name}</div><div class="pay">5×: ${s.mult[4]}x</div></div>`).join("")}
 function updateHud(){bankLabel.textContent=mode==="pro"?"Guthaben":"Punkte";bankValue.textContent=bank.toLocaleString("de-DE");betValue.textContent=mode==="pro"?bet:"–";spinCountEl.textContent=spins}
 function clearWins(){document.querySelectorAll(".symbol.win").forEach(e=>e.classList.remove("win"));document.querySelectorAll(".payline.on").forEach(e=>e.classList.remove("on"))}
-function calcWins(){const wins=[];paylines.forEach((line,li)=>{const seq=line.map((row,col)=>current[col][row]);let base=seq[0].wild?null:seq[0].id;if(!base){const firstNonWild=seq.find(s=>!s.wild);base=firstNonWild?firstNonWild.id:"wild"}let count=0;for(const s of seq){if(s.wild||s.id===base)count++;else break}if(count>=3){const sym=symbols.find(s=>s.id===base)||symbols.find(s=>s.id==="wild");wins.push({line:li,count,sym,baseWin:sym.mult[count-1]})}});return wins}
+function calcWins(board=current){const wins=[];paylines.forEach((line,li)=>{const seq=line.map((row,col)=>board[col][row]);let base=seq[0].wild?null:seq[0].id;if(!base){const firstNonWild=seq.find(s=>!s.wild);base=firstNonWild?firstNonWild.id:"wild"}let count=0;for(const s of seq){if(s.wild||s.id===base)count++;else break}if(count>=3){const sym=symbols.find(s=>s.id===base)||symbols.find(s=>s.id==="wild");wins.push({line:li,count,sym,baseWin:sym.mult[count-1]})}});return wins}
 function markWins(wins){wins.forEach(w=>{document.querySelector(`.payline.l${w.line}`).classList.add("on");paylines[w.line].forEach((row,col)=>{if(col<w.count){const reel=document.querySelector(`.reel[data-reel="${col}"]`);const sym=reel.querySelectorAll(".symbol")[row];sym&&sym.classList.add("win")}})})}
 function payout(wins){const factor=mode==="pro"?bet/10:1;return Math.round(wins.reduce((sum,w)=>sum+w.baseWin,0)*factor)}
+
+// Each independent spin first chooses its prize class: no payout 52%, small 33%, medium 10%, large 5%.
+// Then the 5x3 visible symbol grid is randomized until its *actual five-payline payout*
+// matches that class. No spin counters, pity wins or secretly awarded mismatching prizes.
+const TIERS=[{id:"small",limit:.33},{id:"medium",limit:.43},{id:"big",limit:.48},{id:"none",limit:1}];
+const PRIZE_PATTERNS={
+  small:[{id:"poop",count:3},{id:"shoe",count:3},{id:"ball",count:3},{id:"cookie",count:3},{id:"poop",count:4}],
+  medium:[{id:"bone",count:3},{id:"paw",count:3},{id:"bowl",count:3},{id:"shoe",count:4},{id:"ball",count:4},{id:"cookie",count:4}],
+  big:[{id:"snikkers",count:3},{id:"bone",count:4},{id:"paw",count:4},{id:"bowl",count:4},
+       {id:"shoe",count:5},{id:"ball",count:5},{id:"cookie",count:5},{id:"bone",count:5},{id:"snikkers",count:4}]
+};
+function basePrize(board){return calcWins(board).reduce((sum,win)=>sum+win.baseWin,0)}
+function prizeTier(amount){return amount===0?"none":amount<20?"small":amount<50?"medium":"big"}
+function freshBoard(){return Array.from({length:5},()=>Array.from({length:3},pickSymbol))}
+function seededBoard(tier){
+  const board=freshBoard();
+  if(tier==="none")return board;
+  const patterns=PRIZE_PATTERNS[tier];
+  const pattern=patterns[Math.floor(Math.random()*patterns.length)];
+  const line=paylines[Math.floor(Math.random()*paylines.length)];
+  const symbol=symbols.find(s=>s.id===pattern.id);
+  for(let c=0;c<pattern.count;c++)board[c][line[c]]=symbol;
+  // A rare natural Wild can substitute a matching symbol and remains correctly evaluated.
+  if(Math.random()<.06){const c=Math.floor(Math.random()*pattern.count);board[c][line[c]]=symbols[symbols.length-1]}
+  return board;
+}
+function fallbackBoard(tier){
+  // A deterministic safety fallback is used only if repeated random attempts fail.
+  const board=Array.from({length:5},(_,col)=>Array.from({length:3},()=>symbols[col]));
+  const id=tier==="small"?"shoe":tier==="medium"?"paw":"snikkers";
+  const sym=symbols.find(s=>s.id===id);
+  for(let col=0;col<3;col++)board[col][0]=sym;
+  if(tier!=="none"&&board[3][0].id===sym.id)board[3][0]=symbols[0];
+  return board;
+}
+function generateOutcome(){
+  const r=Math.random();
+  const tier=TIERS.find(t=>r<t.limit).id;
+  for(let tries=0;tries<400;tries++){
+    const board=seededBoard(tier);
+    if(prizeTier(basePrize(board))===tier)return board;
+  }
+  const board=fallbackBoard(tier);
+  if(prizeTier(basePrize(board))!==tier)throw new Error("Ungültige Slot-Gewinnkombination");
+  return board;
+}
+const PRIZE_TITLES={small:"Kleingewinn",medium:"Mittlerer Gewinn",big:"Großgewinn"};
+function showResetCoins(){
+  message.className="message bad";
+  message.innerHTML='Die Keksdose ist leer. <button class="secondary" id="resetBankBtn">Neu mit 1.000 Coins</button>';
+  document.getElementById("resetBankBtn").onclick=()=>{
+    if(spinning)return;
+    bank=PRO_START_COINS;
+    proCoins=bank;
+    persistProCoins(bank);
+    updateHud();
+    message.className="message";
+    message.textContent="Keksdose wieder gefüllt. Weiter geht’s.";
+  };
+}
+
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function makeSpinStrip(finalCol,ri){return Array.from({length:34+ri*4},()=>pickSymbol()).concat(finalCol)}
 function reelEase(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2}
@@ -120,10 +248,193 @@ async function animateReel(ri,finalCol){
   Array.from(strip.children).forEach(el=>{el.style.transform="";el.style.opacity=""});
 }
 function tone(freq=440,dur=.08,type="sine",vol=.035){if(!soundOn||!started)return;try{audioCtx||=new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.value=vol;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}catch(e){}}
-async function spin(){if(spinning||!started)return;clearWins();if(mode==="pro"){if(bank<bet){message.className="message bad";message.textContent="Zu wenig Coins. Snikkers hat die Keksdose leergeräumt.";tone(140,.18,"sawtooth",.03);return}bank-=bet}spinning=true;spins++;winValue.textContent="0";updateHud();spinBtn.disabled=true;message.className="message";message.textContent="Die Walzen drehen … letzte Walze entscheidet.";leverBtn.classList.add("pulled");setTimeout(()=>leverBtn.classList.remove("pulled"),220);tone(180,.05,"square",.018);const next=Array.from({length:5},()=>Array.from({length:3},()=>pickSymbol()));const promises=next.map((col,ri)=>animateReel(ri,col).then(()=>tone(220+ri*45,.07,"triangle",.022)));await Promise.all(promises);current=next;renderStatic();const wins=calcWins(),won=payout(wins);if(won>0){bank+=won;winValue.textContent=won.toLocaleString("de-DE");markWins(wins);message.className="message good";message.textContent=`Gewinn ${won.toLocaleString("de-DE")}! ${wins.map(w=>`${w.count}× ${w.sym.name}`).join(" · ")}`;tone(523,.12,"sine",.04);setTimeout(()=>tone(659,.13,"sine",.035),120);setTimeout(()=>tone(784,.18,"sine",.035),240)}else{message.className="message";message.textContent=mode==="pro"?"Kein Gewinn. Der Kackhaufen war heute auch keine Hilfe.":"Nichts getroffen. Nochmal drehen."}if(mode==="pro"&&bank<=0){message.className="message bad";message.innerHTML=`Snikkers hat die Keksdose leergeräumt. <button class="secondary" id="resetBankBtn">Neu mit 1.000 Coins</button>`;document.getElementById("resetBankBtn").onclick=()=>{bank=1000;updateHud();message.className="message";message.textContent="Keksdose wieder gefüllt. Weiter geht's."}}updateHud();spinning=false;spinBtn.disabled=false}
-document.querySelectorAll(".mode-btn").forEach(btn=>btn.onclick=()=>{if(spinning)return;document.querySelectorAll(".mode-btn").forEach(x=>x.classList.remove("active"));btn.classList.add("active");mode=btn.dataset.mode;bank=mode==="pro"?1000:0;spins=0;winValue.textContent="0";betRow.hidden=mode!=="pro";modeCopy.textContent=mode==="pro"?"Startguthaben 1.000 Coins. Einsatz wählen und versuchen, die Keksbank nicht komplett zu ruinieren.":"Endlos spielen. Gewinne zählen als Punkte, kein Guthaben und kein Einsatz nötig.";clearWins();updateHud();message.className="message";message.textContent="Modus gewechselt. Bereit zum Drehen."});
+async function spin(){
+  if(spinning||!started)return;
+  clearWins();
+  if(mode==="pro"&&bank<bet){
+    if(bank<10)showResetCoins();
+    else{message.className="message bad";message.textContent="Zu wenig Coins für diesen Einsatz. Bitte einen kleineren Einsatz wählen."}
+    tone(140,.18,"sawtooth",.03);
+    return;
+  }
+  // Determine outcome before animation: refresh/closing mid-spin keeps a *settled* wallet.
+  const next=generateOutcome();
+  const plannedWins=calcWins(next);
+  const plannedPayout=payout(plannedWins);
+  if(mode==="pro"){
+    bank-=bet;
+    proCoins=bank+plannedPayout;
+    persistProCoins(proCoins);
+  }
+  spinning=true;
+  spins++;
+  winValue.textContent="0";
+  updateHud();
+  spinBtn.disabled=true;
+  message.className="message";
+  message.textContent="Die Walzen drehen … letzte Walze entscheidet.";
+  leverBtn.classList.add("pulled");
+  setTimeout(()=>leverBtn.classList.remove("pulled"),220);
+  tone(180,.05,"square",.018);
+  const promises=next.map((col,ri)=>animateReel(ri,col).then(()=>tone(220+ri*45,.07,"triangle",.022)));
+  await Promise.all(promises);
+  current=next;
+  renderStatic();
+  const wins=calcWins(),won=payout(wins);
+  if(won>0){
+    bank+=won;
+    if(mode==="endless")endlessPoints=bank;
+    if(mode==="pro"){proCoins=bank;persistProCoins(proCoins)}
+    winValue.textContent=won.toLocaleString("de-DE");
+    markWins(wins);
+    message.className="message good";
+    message.textContent=`${PRIZE_TITLES[prizeTier(basePrize(current))]}: ${won.toLocaleString("de-DE")}! ${wins.map(w=>`${w.count}× ${w.sym.name}`).join(" · ")}`;
+    tone(523,.12,"sine",.04);
+    setTimeout(()=>tone(659,.13,"sine",.035),120);
+    setTimeout(()=>tone(784,.18,"sine",.035),240);
+  }else{
+    message.className="message";
+    message.textContent=mode==="pro"?"Kein Gewinn. Diesmal gingen die Coins an die Keksdose.":"Nichts getroffen. Nochmal drehen.";
+  }
+  if(mode==="pro"&&bank<10)showResetCoins();
+  updateHud();
+  spinning=false;
+  spinBtn.disabled=false;
+}
+document.querySelectorAll(".mode-btn").forEach(btn=>btn.onclick=()=>{
+  if(spinning||btn.dataset.mode===mode)return;
+  if(mode==="endless")endlessPoints=bank;
+  else proCoins=bank;
+  document.querySelectorAll(".mode-btn").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
+  mode=btn.dataset.mode;
+  bank=mode==="pro"?proCoins:endlessPoints;
+  // Coins are not reset when switching modes. Points are kept separately in this session.
+  if(mode==="pro"&&!proSavedBefore)persistProCoins(proCoins);
+  spins=0;
+  winValue.textContent="0";
+  betRow.hidden=mode!=="pro";
+  modeCopy.textContent=mode==="pro"
+    ?"Dein Profi-Guthaben: "+bank.toLocaleString("de-DE")+" Coins. Einsatz wählen und auf Gewinne spielen."
+    :"Endlos spielen. Gewinne zählen als Punkte, kein Guthaben und kein Einsatz nötig.";
+  updateStorageNote();
+  clearWins();
+  updateHud();
+  message.className="message";
+  message.textContent="Modus gewechselt. Bereit zum Drehen.";
+  if(mode==="pro"&&bank<10)showResetCoins();
+});
 document.querySelectorAll(".bet-btn").forEach(btn=>btn.onclick=()=>{if(spinning)return;document.querySelectorAll(".bet-btn").forEach(x=>x.classList.remove("active"));btn.classList.add("active");bet=Number(btn.dataset.bet);updateHud()});
-spinBtn.onclick=spin;leverBtn.onclick=spin;soundBtn.onclick=()=>{soundOn=!soundOn;soundBtn.textContent=soundOn?"🔊":"🔇"};document.getElementById("fsBtn").onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};startBtn.onclick=async()=>{started=true;startOverlay.classList.add("hidden");try{audioCtx||=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume()}catch(e){}tone(392,.08,"sine",.025);setTimeout(()=>tone(523,.11,"sine",.025),100)};document.addEventListener("visibilitychange",()=>{if(document.hidden&&audioCtx)audioCtx.suspend();else if(!document.hidden&&audioCtx&&started)audioCtx.resume().catch(()=>{})});
+spinBtn.onclick=spin;leverBtn.onclick=spin;soundBtn.onclick=()=>{soundOn=!soundOn;soundBtn.textContent=soundOn?"🔊":"🔇"};document.getElementById("fsBtn").onclick=toggleSlotFullscreen;startBtn.onclick=async()=>{started=true;startOverlay.classList.add("hidden");try{audioCtx||=new (window.AudioContext||window.webkitAudioContext)();await audioCtx.resume()}catch(e){}tone(392,.08,"sine",.025);setTimeout(()=>tone(523,.11,"sine",.025),100)};document.addEventListener("visibilitychange",()=>{if(document.hidden&&audioCtx)audioCtx.suspend();else if(!document.hidden&&audioCtx&&started)audioCtx.resume().catch(()=>{})});
+
+// Fullscreen: never silently fail on Android PWA or inside a same-origin iframe.
+// In the One More Day dialog the parent dialog must expand, not just the iframe content.
+const fsBtn=document.getElementById('fsBtn');
+let slotFullscreen=false;
+let parentFullscreenDoc=null;
+let parentFullscreenDialog=null;
+const SLOT_PARENT_STYLE_ID='snikkers-slot-fallback-style';
+const SLOT_PARENT_CSS=`
+  html.slot-embed-fullscreen,body.slot-embed-fullscreen{overflow:hidden!important;overscroll-behavior:contain!important}
+  dialog.snikkers-slot-dialog.slot-embed-fullscreen{
+    position:fixed!important;inset:0!important;top:0!important;left:0!important;
+    width:100%!important;max-width:none!important;height:100vh!important;height:100dvh!important;
+    max-height:none!important;margin:0!important;padding:0!important;border:0!important;
+    border-radius:0!important;background:#0b0d11!important;overflow:hidden!important
+  }
+  dialog.snikkers-slot-dialog.slot-embed-fullscreen .snikkers-slot-dialog-card{
+    display:flex!important;flex-direction:column!important;box-sizing:border-box!important;
+    width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;
+    margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:hidden!important
+  }
+  dialog.snikkers-slot-dialog.slot-embed-fullscreen .snikkers-slot-dialog-head{display:none!important}
+  dialog.snikkers-slot-dialog.slot-embed-fullscreen iframe.snikkers-slot-frame{
+    display:block!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;
+    width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;
+    margin:0!important;padding:0!important;border:0!important;border-radius:0!important
+  }
+`;
+function locateSlotHost(){
+  try{
+    if(window.parent===window)return null;
+    const parentDoc=window.parent.document;
+    const frame=window.frameElement;
+    if(!frame||frame.id!=='snikkersSlotFrame')return null;
+    const dialog=parentDoc.getElementById('snikkersSlotDialog');
+    return dialog&&dialog.contains(frame)?{parentDoc,dialog}:null;
+  }catch(_){return null} // Cross-origin embedding cannot be enlarged by the child.
+}
+function setSlotFullscreenButton(){
+  fsBtn.textContent=slotFullscreen?'⤢':'⛶';
+  fsBtn.setAttribute('aria-label',slotFullscreen?'Vollbild verlassen':'Vollbild');
+  fsBtn.title=slotFullscreen?'Vollbild verlassen':'Vollbild';
+  fsBtn.setAttribute('aria-pressed',String(slotFullscreen));
+}
+function removeSlotHostFallback(){
+  if(!parentFullscreenDoc)return;
+  parentFullscreenDialog?.classList.remove('slot-embed-fullscreen');
+  parentFullscreenDoc.documentElement.classList.remove('slot-embed-fullscreen');
+  parentFullscreenDoc.body.classList.remove('slot-embed-fullscreen');
+  parentFullscreenDoc.getElementById(SLOT_PARENT_STYLE_ID)?.remove();
+  parentFullscreenDoc=null;
+  parentFullscreenDialog=null;
+}
+function setSlotPseudoFullscreen(active){
+  slotFullscreen=active;
+  document.documentElement.classList.toggle('slot-fullscreen',active);
+  if(active){
+    const host=locateSlotHost();
+    if(host){
+      parentFullscreenDoc=host.parentDoc;
+      parentFullscreenDialog=host.dialog;
+      if(!host.parentDoc.getElementById(SLOT_PARENT_STYLE_ID)){
+        const style=host.parentDoc.createElement('style');
+        style.id=SLOT_PARENT_STYLE_ID;
+        style.textContent=SLOT_PARENT_CSS;
+        host.parentDoc.head.appendChild(style);
+      }
+      host.parentDoc.documentElement.classList.add('slot-embed-fullscreen');
+      host.parentDoc.body.classList.add('slot-embed-fullscreen');
+      host.dialog.classList.add('slot-embed-fullscreen');
+    }
+  }else{removeSlotHostFallback()}
+  setSlotFullscreenButton();
+}
+async function toggleSlotFullscreen(){
+  if(slotFullscreen){
+    const ownFs=document.fullscreenElement||document.webkitFullscreenElement;
+    const parentFs=parentFullscreenDoc?.fullscreenElement||parentFullscreenDoc?.webkitFullscreenElement;
+    // Exit native fullscreen first; then release the CSS fallback.
+    try{
+      if(parentFs)await (parentFullscreenDoc.exitFullscreen?.()||parentFullscreenDoc.webkitExitFullscreen?.());
+      else if(ownFs)await (document.exitFullscreen?.()||document.webkitExitFullscreen?.());
+    }catch(err){console.warn('Slot: System-Vollbild verlassen nicht möglich:',err)}
+    setSlotPseudoFullscreen(false);
+    return;
+  }
+  // This activates immediately and stays available when browser fullscreen is denied.
+  setSlotPseudoFullscreen(true);
+  const target=parentFullscreenDialog||document.documentElement;
+  try{
+    if(target.requestFullscreen)await target.requestFullscreen({navigationUI:'hide'});
+    else if(target.webkitRequestFullscreen)target.webkitRequestFullscreen();
+  }catch(err){console.info('Slot: Browser-Vollbild nicht verfügbar. Bildschirmfüllende Ansicht aktiv.',err)}
+}
+function syncSlotNativeFullscreen(){
+  if(!slotFullscreen)return;
+  const nativeActive=!!(document.fullscreenElement||document.webkitFullscreenElement||
+    parentFullscreenDoc?.fullscreenElement||parentFullscreenDoc?.webkitFullscreenElement);
+  // Keep the CSS fallback if the native API is unavailable from the start.
+  // Exiting native fullscreen via system controls must also restore the embed.
+  if(nativeActive){slotNativeWasActive=true}
+  else if(slotNativeWasActive){slotNativeWasActive=false;setSlotPseudoFullscreen(false)}
+}
+let slotNativeWasActive=false;
+document.addEventListener('fullscreenchange',syncSlotNativeFullscreen);
+document.addEventListener('webkitfullscreenchange',syncSlotNativeFullscreen);
+try{window.parent.document.addEventListener('fullscreenchange',syncSlotNativeFullscreen)}catch(_){}
+window.addEventListener('pagehide',removeSlotHostFallback);
+
 renderStatic();renderLegend();updateHud();
 })();
 </script>
