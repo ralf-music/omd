@@ -34,7 +34,7 @@
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
-    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), closeAdminBtn:$('closeAdminBtn'),
+    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), adminPayoutList:$('adminPayoutList'), refreshAdminPayoutBtn:$('refreshAdminPayoutBtn'), closeAdminBtn:$('closeAdminBtn'),
     adminRangeType:$('adminRangeType'), adminRangeFrom:$('adminRangeFrom'), adminRangeTo:$('adminRangeTo'), adminApplyRangeBtn:$('adminApplyRangeBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
@@ -214,7 +214,7 @@
     const response=await fetch(`${API_BASE}${path}`,options);
     let result=null;
     try{ result=await response.json(); }catch{}
-    if(!response.ok || !result || result.ok!==true) throw new Error(`API ${path}`);
+    if(!response.ok || !result || result.ok!==true) throw new Error(result?.error || `API ${path}`);
     return result;
   }
   function snapshotFromCloudReward(reward){
@@ -482,7 +482,7 @@
     const note=(refs.absenceRequestNote.value||'').trim();
     const range=normalizeRange(from,to);
 
-    if(!range || !range.workdays.length || !['frei','krank'].includes(type)){
+    if(!range || !range.workdays.length || !['frei','urlaub','krank'].includes(type)){
       refs.absenceRequestMessage.textContent='Bitte gültigen Von-/Bis-Zeitraum und Art auswählen.';
       refs.absenceRequestMessage.className='geo-error';
       return;
@@ -495,7 +495,7 @@
       const result=await apiJson('/absence-request',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({date:from,date_from:from,date_to:to,type,note})
+        body:JSON.stringify({date:from,date_from:from,date_to:to,type,note,device_role:'user-phone'})
       });
 
       if(result.duplicate){
@@ -691,6 +691,76 @@
     }
   }
 
+  async function loadAdminPayoutRequests(){
+    if(!refs.adminPayoutList) return;
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+
+    if(!adminKey){
+      refs.adminPayoutList.innerHTML='<p class="microcopy">Admin-Schlüssel eingeben, um offene Anforderungen zu laden.</p>';
+      return;
+    }
+
+    localStorage.setItem('omd-admin-key',adminKey);
+    refs.adminPayoutList.innerHTML='<p class="microcopy">Offene Anforderungen werden geladen …</p>';
+
+    try{
+      const result=await apiJson('/admin/payout-requests',{headers:{'X-Admin-Key':adminKey}});
+      const requests=Array.isArray(result.requests)?result.requests:[];
+
+      if(!requests.length){
+        refs.adminPayoutList.innerHTML='<p class="microcopy">Keine offenen Guthaben-Anforderungen.</p>';
+        return;
+      }
+
+      refs.adminPayoutList.innerHTML=requests.map(r=>{
+        const wish=r.wish?`<p class="admin-request-note">${escapeHtml(r.wish)}</p>`:'';
+        return `<div class="admin-request-card" data-payout-request-id="${r.id}">
+          <div class="admin-request-head">
+            <div><strong>${euro(Number(r.amount_cents||0))}</strong><span>${escapeHtml(String(r.created_at||''))}</span></div>
+            <span class="admin-request-status">OFFEN</span>
+          </div>
+          ${wish}
+          <div class="admin-request-actions">
+            <button type="button" class="admin-approve-btn" data-payout-request-id="${r.id}" data-payout-decision="approved">AUSZAHLEN</button>
+            <button type="button" class="admin-reject-btn" data-payout-request-id="${r.id}" data-payout-decision="rejected">ABLEHNEN</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      refs.adminPayoutList.querySelectorAll('[data-payout-request-id][data-payout-decision]').forEach(btn=>{
+        btn.addEventListener('click',()=>decideAdminPayoutRequest(Number(btn.dataset.payoutRequestId),btn.dataset.payoutDecision));
+      });
+    }catch(err){
+      refs.adminPayoutList.innerHTML='<p class="geo-error">Guthaben-Anforderungen konnten nicht geladen werden.</p>';
+    }
+  }
+
+  async function decideAdminPayoutRequest(id,decision){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey) return;
+
+    refs.adminMessage.textContent=decision==='approved'?'Auszahlung wird gebucht …':'Anforderung wird abgelehnt …';
+    refs.adminMessage.className='geo-neutral';
+
+    try{
+      await apiJson('/admin/payout-request/decision',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({id,decision})
+      });
+
+      await refreshCloudWallet();
+      await loadAdminPayoutRequests();
+      refs.adminMessage.textContent=decision==='approved'?'Auszahlung gebucht.':'Guthaben-Anforderung abgelehnt.';
+      refs.adminMessage.className='geo-success';
+      render();
+    }catch(err){
+      const msg=String(err?.message||'');
+      refs.adminMessage.textContent=msg.includes('Insufficient balance')?'Auszahlung nicht möglich: Guthaben reicht nicht aus.':'Entscheidung konnte nicht gespeichert werden.';
+      refs.adminMessage.className='geo-error';
+    }
+  }
+
   function escapeHtml(value){
     return String(value??'').replace(/[&<>"']/g,ch=>({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
@@ -711,7 +781,7 @@
       row.innerHTML=`<div class="admin-day-info"><strong>${labels[i]} · ${key}</strong><span>${DAY_STATUS_LABELS[status]}${done?' · Arbeit erledigt':''}</span></div>
         <div class="admin-day-actions">
           <div class="admin-status-buttons">
-            ${['normal','frei','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
+            ${['normal','frei','urlaub','krank'].map(s=>`<button type="button" class="admin-status-btn ${status===s?'active':''}" data-date="${key}" data-status="${s}">${s==='normal'?'NORMAL':DAY_STATUS_LABELS[s]}</button>`).join('')}
           </div>
           <div class="admin-booking-buttons">
             <button type="button" class="admin-booking-btn ${ds.work?'active revoke':''}" data-booking-date="${key}" data-booking="work" data-value="${ds.work?'0':'1'}" ${bookingDisabled?'disabled':''}>${ds.work?'ARBEIT WIDERRUFEN':'ARBEIT BUCHEN'}</button>
@@ -1146,7 +1216,29 @@
   document.querySelectorAll('.payout-chip').forEach(btn=>btn.addEventListener('click',()=>{ payoutSelectedCents=Number(btn.dataset.cents||0); refs.customPayoutWrap.classList.add('hidden'); refs.customPayoutAmount.value=''; updatePayoutPreview(); }));
   refs.customPayoutBtn.addEventListener('click',()=>{ refs.customPayoutWrap.classList.remove('hidden'); payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); refs.customPayoutAmount.focus(); });
   refs.customPayoutAmount.addEventListener('input',()=>{ payoutSelectedCents=parseEuroCents(refs.customPayoutAmount.value); updatePayoutPreview(); });
-  refs.submitPayoutBtn.addEventListener('click',()=>{ refs.payoutMessage.textContent='Vorschau: Die Anforderung ist vorbereitet. Noch wurde nichts gesendet, reserviert oder abgezogen.'; refs.payoutMessage.classList.remove('hidden'); });
+  refs.submitPayoutBtn.addEventListener('click',async()=>{
+    const available=Math.max(0,currentWalletCents());
+    const wish=(refs.payoutWish.value||'').trim();
+    if(payoutSelectedCents<=0||payoutSelectedCents>available) return;
+    refs.submitPayoutBtn.disabled=true;
+    refs.payoutMessage.textContent='Guthaben-Anforderung wird gesendet …';
+    refs.payoutMessage.className='geo-neutral';
+    refs.payoutMessage.classList.remove('hidden');
+    try{
+      await apiJson('/payout-request',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({amount_cents:payoutSelectedCents,wish,device_role:'user-phone'})
+      });
+      refs.payoutMessage.textContent=`${euro(payoutSelectedCents)} wurden angefordert. Der Admin wurde benachrichtigt.`;
+      refs.payoutMessage.className='geo-success';
+    }catch(err){
+      const msg=String(err?.message||'');
+      refs.payoutMessage.textContent=msg.includes('Insufficient available balance')?'Der verfügbare Betrag ist durch eine bereits offene Anforderung reduziert.':'Guthaben-Anforderung konnte nicht gesendet werden.';
+      refs.payoutMessage.className='geo-error';
+      updatePayoutPreview();
+    }
+  });
   refs.closePayoutBtn.addEventListener('click',()=>refs.payoutDialog.close());
   refs.payoutDialog.addEventListener('click',e=>{if(e.target===refs.payoutDialog) refs.payoutDialog.close();});
 
@@ -1581,12 +1673,14 @@
       await syncCurrentWeekStatusesFromCloud(new Date());
       renderAdminWeek();
       loadAdminAbsenceRequests();
+      loadAdminPayoutRequests();
       refreshPushUi();
     });
   }
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
   if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
-  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests();});
+  if(refs.refreshAdminPayoutBtn) refs.refreshAdminPayoutBtn.addEventListener('click',loadAdminPayoutRequests);
+  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests(); loadAdminPayoutRequests();});
   if(refs.adminApplyRangeBtn) refs.adminApplyRangeBtn.addEventListener('click',applyAdminStatusRange);
 
   if(refs.absenceRequestBtn){

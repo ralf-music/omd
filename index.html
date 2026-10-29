@@ -182,7 +182,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.22</button>
+      <button id="versionBtn" class="version-btn">v0.9.23</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -351,13 +351,14 @@
         <div class="admin-request-section-head">
           <div>
             <p class="eyebrow">ZEITRAUM</p>
-            <h3>Frei / Krank direkt eintragen</h3>
+            <h3>Frei / Urlaub / Krank direkt eintragen</h3>
           </div>
         </div>
         <div class="admin-range-grid">
           <label>Art
             <select id="adminRangeType">
               <option value="frei">Frei</option>
+              <option value="urlaub">Urlaub</option>
               <option value="krank">Krank</option>
               <option value="normal">Normal</option>
             </select>
@@ -381,6 +382,18 @@
           <button id="refreshAdminAbsenceBtn" class="ghost-btn admin-refresh-btn" type="button">AKTUALISIEREN</button>
         </div>
         <div id="adminAbsenceList" class="admin-absence-list">
+          <p class="microcopy">Noch nicht geladen.</p>
+        </div>
+      </div>
+      <div class="admin-request-section">
+        <div class="admin-request-section-head">
+          <div>
+            <p class="eyebrow">GUTHABEN</p>
+            <h3>Offene Anforderungen</h3>
+          </div>
+          <button id="refreshAdminPayoutBtn" class="ghost-btn admin-refresh-btn" type="button">AKTUALISIEREN</button>
+        </div>
+        <div id="adminPayoutList" class="admin-absence-list">
           <p class="microcopy">Noch nicht geladen.</p>
         </div>
       </div>
@@ -439,17 +452,18 @@
       <p id="payoutMessage" class="geo-neutral hidden"></p>
       <button id="submitPayoutBtn" class="primary-btn" type="button" disabled>GUTHABEN ANFORDERN</button>
       <button id="closePayoutBtn" class="ghost-btn payout-close-btn" type="button">ABBRECHEN</button>
-      <p class="microcopy payout-preview-note">Vorschau: Es wird noch keine Anfrage gesendet und kein Guthaben reserviert oder abgezogen.</p>
+      <p class="microcopy payout-preview-note">Die Anfrage wird an den Admin gesendet. Bis zur Freigabe wird der angeforderte Betrag serverseitig als offen berücksichtigt.</p>
     </div>
   </dialog>
 
   <dialog id="absenceRequestDialog">
     <form id="absenceRequestForm" class="dialog-card">
       <p class="eyebrow">ABWESENHEIT</p>
-      <h2>Frei / Krank beantragen</h2>
+      <h2>Frei / Urlaub / Krank beantragen</h2>
       <label>Art
         <select id="absenceRequestType" required>
           <option value="frei">Frei</option>
+          <option value="urlaub">Urlaub</option>
           <option value="krank">Krank</option>
         </select>
       </label>
@@ -530,8 +544,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.22</h2>
+      <h2>One More Day v0.9.23</h2>
       <ul>
+        <li><strong>v0.9.23:</strong> Admin-Push für ARBEIT, ZUHAUSE und neue FREI/KRANK/URLAUB-Anträge vereinheitlicht und Retry-Logik für fehlgeschlagene Pushs ergänzt.</li>
+        <li><strong>v0.9.23:</strong> Guthaben-Anforderung ist jetzt echt: Anfrage wird serverseitig gespeichert, löst Admin-Push aus und kann im Admin-Menü ausgezahlt oder abgelehnt werden.</li>
         <li><strong>v0.9.22:</strong> Snikkers Slot: Lucky Paws v0.1.1 als sechstes Minigame mit eigenem Cover, Start-Overlay, Vollbild, Spiel-Coins und Soundeffekten integriert.</li>
 
         <li><strong>v0.9.21:</strong> Snikkers Puzzle Slide v0.1.2 als fünftes Minigame mit eigenem Cover, 31 Snikkers-Bildern, Theme-Song, Bestwerten und Vollbild-Unterstützung integriert.</li>
