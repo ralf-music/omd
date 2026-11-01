@@ -173,7 +173,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.25</button>
+      <button id="versionBtn" class="version-btn">v0.9.27</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -359,9 +359,23 @@
       <p class="eyebrow">ADMIN</p>
       <h2>Wochenstatus</h2>
       <p class="microcopy">Status wird erst nach bestätigter Cloud-Antwort übernommen.</p>
-      <label>Admin-Schlüssel
-        <input id="adminKey" type="password" autocomplete="off" placeholder="Cloudflare ADMIN_KEY" />
-      </label>
+      <details id="adminAccessDetails" class="admin-access-details">
+        <summary>
+          <span class="admin-access-summary-copy">
+            <strong>Admin-Zugang</strong>
+            <small>Gespeicherten Zugang nur bei Bedarf ändern</small>
+          </span>
+          <span id="adminAccessState" class="badge admin-access-state">PRÜFEN …</span>
+        </summary>
+        <div class="admin-access-body">
+          <p class="microcopy">Der gespeicherte Admin-Schlüssel bleibt unverändert, bis hier bewusst ein neuer Schlüssel geprüft und gespeichert wird.</p>
+          <label>Neuer Admin-Schlüssel
+            <input id="adminKey" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" placeholder="Neuen Cloudflare ADMIN_KEY eingeben" />
+          </label>
+          <button id="saveAdminKeyBtn" class="secondary-btn" type="button">ADMIN-ZUGANG PRÜFEN &amp; SPEICHERN</button>
+          <p id="adminAccessMessage" class="microcopy"></p>
+        </div>
+      </details>
       <div id="adminWeek" class="admin-week"></div>
       <div class="admin-request-section">
         <div class="admin-request-section-head">
@@ -577,8 +591,12 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.25</h2>
+      <h2>One More Day v0.9.27</h2>
       <ul>
+        <li><strong>v0.9.27:</strong> Der gespeicherte Admin-Zugang ist standardmäßig eingeklappt. Beim Öffnen des Adminbereichs erscheint keine Tastatur mehr.</li>
+        <li><strong>v0.9.27:</strong> Ein neuer Admin-Schlüssel ersetzt den bisherigen erst nach erfolgreicher Cloud-Prüfung; bloßes Tippen kann den gespeicherten Zugang nicht mehr überschreiben.</li>
+        <li><strong>v0.9.26:</strong> Zeitkritische Web-Pushs werden mit hoher Priorität gesendet und verfallen nach kurzer Zeit statt verspätet aufzutauchen.</li>
+        <li><strong>v0.9.26:</strong> Die Admin-Push-Testarea meldet korrekt die Übergabe an den Push-Dienst und sperrt nach erfolgreichem Versand 30 Sekunden gegen Doppelversand.</li>
         <li><strong>v0.9.25:</strong> Wallet ist Cloud-first mit lokalem „last known good“-Fallback und Sync-Zeitlinie; Refresh/Resume/Admin-Aufruf laden den Cloud-Stand neu.</li>
         <li><strong>v0.9.25:</strong> Check-in-Push wurde in Einstellungen verschoben; Admin erhält eine User-Push-Testarea für Test, ARBEIT und ZUHAUSE.</li>
         <li><strong>v0.9.25:</strong> Erinnerungen laufen werktags korrekt um 10/12 Uhr für ARBEIT und 14/20 Uhr für ZUHAUSE; Wochenenden sind serverseitig aus Buchungs- und Belohnungslogik ausgeschlossen.</li>

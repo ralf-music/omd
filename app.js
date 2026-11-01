@@ -36,7 +36,7 @@
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
-    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), adminPayoutList:$('adminPayoutList'), refreshAdminPayoutBtn:$('refreshAdminPayoutBtn'), closeAdminBtn:$('closeAdminBtn'),
+    adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminAccessDetails:$('adminAccessDetails'), adminAccessState:$('adminAccessState'), adminAccessMessage:$('adminAccessMessage'), saveAdminKeyBtn:$('saveAdminKeyBtn'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), adminPayoutList:$('adminPayoutList'), refreshAdminPayoutBtn:$('refreshAdminPayoutBtn'), closeAdminBtn:$('closeAdminBtn'),
     adminRangeType:$('adminRangeType'), adminRangeFrom:$('adminRangeFrom'), adminRangeTo:$('adminRangeTo'), adminApplyRangeBtn:$('adminApplyRangeBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
@@ -463,14 +463,66 @@
     return localStorage.getItem('omd-admin-ui')==='1';
   }
 
+  function getStoredAdminKey(){
+    return (localStorage.getItem('omd-admin-key')||'').trim();
+  }
+
+  function renderAdminAccessState(message='',kind=''){
+    const configured=!!getStoredAdminKey();
+    if(refs.adminAccessState){
+      refs.adminAccessState.textContent=configured?'EINGERICHTET':'NICHT EINGERICHTET';
+      refs.adminAccessState.classList.toggle('done',configured);
+      refs.adminAccessState.classList.toggle('error',!configured);
+    }
+    if(refs.adminAccessMessage){
+      refs.adminAccessMessage.textContent=message || (configured
+        ? 'Der gespeicherte Admin-Zugang wird für alle Admin-Aktionen verwendet.'
+        : 'Noch kein Admin-Schlüssel gespeichert.');
+      refs.adminAccessMessage.className='microcopy admin-access-message';
+      if(kind) refs.adminAccessMessage.classList.add(kind);
+    }
+  }
+
+  async function saveAdminAccessKey(){
+    const candidate=(refs.adminKey?.value||'').trim();
+    if(!candidate){
+      renderAdminAccessState('Bitte einen neuen Admin-Schlüssel eingeben.','error');
+      return;
+    }
+    if(refs.saveAdminKeyBtn) refs.saveAdminKeyBtn.disabled=true;
+    renderAdminAccessState('Neuer Admin-Schlüssel wird in der Cloud geprüft …');
+    try{
+      await apiJson('/admin/push/subscriptions',{headers:{'X-Admin-Key':candidate}});
+      localStorage.setItem('omd-admin-key',candidate);
+      if(refs.adminKey) refs.adminKey.value='';
+      renderAdminAccessState('Admin-Zugang erfolgreich geprüft und gespeichert.','success');
+      if(refs.adminAccessDetails) refs.adminAccessDetails.open=false;
+      refs.adminMessage.textContent='Admin-Zugang aktualisiert.';
+      refs.adminMessage.className='geo-success';
+      await Promise.allSettled([
+        syncCurrentWeekFromCloud(new Date()),
+        syncCurrentWeekStatusesFromCloud(new Date()),
+        refreshCloudWallet(),
+        loadAdminAbsenceRequests(),
+        loadAdminPayoutRequests(),
+        loadAdminUserPushOverview()
+      ]);
+      renderAdminWeek();
+      refreshPushUi();
+    }catch(err){
+      renderAdminAccessState('Nicht gespeichert. Der neue Schlüssel wurde von der Cloud nicht akzeptiert.','error');
+    }finally{
+      if(refs.saveAdminKeyBtn) refs.saveAdminKeyBtn.disabled=false;
+    }
+  }
+
   async function setAdminDayStatus(key,status){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey){
       refs.adminMessage.textContent='Admin-Schlüssel fehlt.';
       refs.adminMessage.className='geo-error';
       return;
     }
-    localStorage.setItem('omd-admin-key',adminKey);
     refs.adminMessage.textContent='Cloud wird aktualisiert …';
     refs.adminMessage.className='geo-neutral';
     try{
@@ -562,7 +614,7 @@
   }
 
   async function applyAdminStatusRange(){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     const from=refs.adminRangeFrom?.value||'';
     const to=refs.adminRangeTo?.value||'';
     const status=normalizeDayStatus(refs.adminRangeType?.value||'normal');
@@ -579,7 +631,6 @@
       return;
     }
 
-    localStorage.setItem('omd-admin-key',adminKey);
     refs.adminMessage.textContent='Zeitraum wird gespeichert …';
     refs.adminMessage.className='geo-neutral';
 
@@ -609,13 +660,12 @@
       const extra=booking==='work'?' Falls ZUHAUSE bereits gebucht ist, wird diese Buchung ebenfalls widerrufen.':'';
       if(!window.confirm(`${booking==='work'?'ARBEIT':'ZUHAUSE'} am ${key} wirklich widerrufen?${extra}`)) return;
     }
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey){
       refs.adminMessage.textContent='Admin-Schlüssel fehlt.';
       refs.adminMessage.className='geo-error';
       return;
     }
-    localStorage.setItem('omd-admin-key',adminKey);
     refs.adminMessage.textContent=`${booking==='work'?'ARBEIT':'ZUHAUSE'} wird ${value?'gebucht':'widerrufen'} …`;
     refs.adminMessage.className='geo-neutral';
     try{
@@ -651,14 +701,13 @@
 
   async function loadAdminAbsenceRequests(){
     if(!refs.adminAbsenceList) return;
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
 
     if(!adminKey){
       refs.adminAbsenceList.innerHTML='<p class="microcopy">Admin-Schlüssel eingeben, um offene Anträge zu laden.</p>';
       return;
     }
 
-    localStorage.setItem('omd-admin-key',adminKey);
     refs.adminAbsenceList.innerHTML='<p class="microcopy">Offene Anträge werden geladen …</p>';
 
     try{
@@ -699,7 +748,7 @@
   }
 
   async function decideAdminAbsenceRequest(id,decision){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey) return;
 
     refs.adminMessage.textContent=decision==='approved'?'Antrag wird genehmigt …':'Antrag wird abgelehnt …';
@@ -738,14 +787,13 @@
 
   async function loadAdminPayoutRequests(){
     if(!refs.adminPayoutList) return;
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
 
     if(!adminKey){
       refs.adminPayoutList.innerHTML='<p class="microcopy">Admin-Schlüssel eingeben, um offene Anforderungen zu laden.</p>';
       return;
     }
 
-    localStorage.setItem('omd-admin-key',adminKey);
     refs.adminPayoutList.innerHTML='<p class="microcopy">Offene Anforderungen werden geladen …</p>';
 
     try{
@@ -781,7 +829,7 @@
   }
 
   async function decideAdminPayoutRequest(id,decision){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey) return;
 
     refs.adminMessage.textContent=decision==='approved'?'Auszahlung wird gebucht …':'Anforderung wird abgelehnt …';
@@ -1352,10 +1400,9 @@
   async function postPushSubscription(role,subscription){
     const headers={'Content-Type':'application/json'};
     if(role==='admin-phone'){
-      const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+      const adminKey=getStoredAdminKey();
       if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
-      localStorage.setItem('omd-admin-key',adminKey);
-      headers['X-Admin-Key']=adminKey;
+        headers['X-Admin-Key']=adminKey;
     }
     const result=await apiJson('/push/subscribe',{
       method:'POST',headers,
@@ -1394,7 +1441,7 @@
     if(subscription){
       const headers={'Content-Type':'application/json'};
       if(role==='admin-phone'){
-        const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+        const adminKey=getStoredAdminKey();
         if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
         headers['X-Admin-Key']=adminKey;
       }
@@ -1440,9 +1487,8 @@
   }
 
   async function sendAdminPushTest(){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
-    localStorage.setItem('omd-admin-key',adminKey);
     const result=await apiJson('/admin/push/test',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
@@ -1454,7 +1500,7 @@
 
   async function loadAdminUserPushOverview(){
     if(!refs.adminUserPushStatus||!refs.adminUserPushBadge) return;
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     const buttons=[refs.adminUserTestPushBtn,refs.adminWorkReminderBtn,refs.adminHomeReminderBtn].filter(Boolean);
     if(!adminKey){
       refs.adminUserPushBadge.textContent='SCHLÜSSEL FEHLT';
@@ -1473,7 +1519,7 @@
       if(active){
         refs.adminUserPushBadge.textContent='REGISTRIERT';
         refs.adminUserPushBadge.classList.add('done'); refs.adminUserPushBadge.classList.remove('error');
-        const last=active.last_success_at?` Letzter erfolgreicher Versand: ${active.last_success_at}.`:'';
+        const last=active.last_success_at?` Letzte Annahme durch den Push-Dienst: ${active.last_success_at}.`:'';
         refs.adminUserPushStatus.textContent=`Ein aktives User-Handy ist registriert.${last}`;
         buttons.forEach(btn=>btn.disabled=false);
       }else{
@@ -1491,9 +1537,8 @@
   }
 
   async function sendAdminUserReminder(kind){
-    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const adminKey=getStoredAdminKey();
     if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
-    localStorage.setItem('omd-admin-key',adminKey);
     const result=await apiJson('/admin/push/user-reminder',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
@@ -1503,9 +1548,11 @@
   }
 
   async function runAdminUserPush(kind,button){
+    if(button?.dataset.pushCooldown==='1') return;
     if(button) button.disabled=true;
-    if(refs.adminUserPushStatus) refs.adminUserPushStatus.textContent='Push wird gesendet …';
+    if(refs.adminUserPushStatus) refs.adminUserPushStatus.textContent='Push wird mit hoher Priorität an den Push-Dienst übermittelt …';
     let finalMessage='';
+    let accepted=false;
     try{
       const result=await sendAdminUserReminder(kind);
       if(result.skipped){
@@ -1513,7 +1560,8 @@
         finalMessage=labels[result.reason]||`Nicht gesendet: ${result.reason||'keine Aktion nötig'}.`;
       }else if(result.result?.recipients){
         const label=kind==='test'?'User-Test-Push':kind==='work'?'ARBEIT-Erinnerung':'ZUHAUSE-Erinnerung';
-        finalMessage=`${label} wurde an das User-Handy gesendet.`;
+        finalMessage=`${label} wurde mit hoher Priorität an den Push-Dienst übermittelt.`;
+        accepted=true;
       }else{
         finalMessage='Kein aktives User-Handy als Empfänger gefunden.';
       }
@@ -1521,6 +1569,17 @@
       finalMessage=`Push fehlgeschlagen: ${err.message||err}`;
     }
     await loadAdminUserPushOverview();
+    if(accepted&&button){
+      const originalText=button.textContent;
+      button.dataset.pushCooldown='1';
+      button.disabled=true;
+      button.textContent='ÜBERMITTELT';
+      window.setTimeout(async()=>{
+        button.dataset.pushCooldown='0';
+        button.textContent=originalText;
+        await loadAdminUserPushOverview();
+      },30000);
+    }
     if(refs.adminUserPushStatus) refs.adminUserPushStatus.textContent=finalMessage;
   }
 
@@ -1809,13 +1868,20 @@
   if(refs.adminBtn){
     refs.adminBtn.classList.toggle('hidden',!adminEnabled);
     refs.adminBtn.addEventListener('click',async()=>{
-      refs.adminKey.value=localStorage.getItem('omd-admin-key')||'';
+      if(refs.adminKey) refs.adminKey.value='';
+      if(refs.adminAccessDetails) refs.adminAccessDetails.open=!getStoredAdminKey();
+      renderAdminAccessState();
       refs.adminMessage.textContent='';
       const tomorrow=localTomorrowKey();
       if(refs.adminRangeFrom) refs.adminRangeFrom.value=tomorrow;
       if(refs.adminRangeTo) refs.adminRangeTo.value=tomorrow;
       if(refs.adminRangeType) refs.adminRangeType.value='frei';
       refs.adminDialog.showModal();
+      requestAnimationFrame(()=>{
+        const summary=refs.adminAccessDetails?.querySelector('summary');
+        if(summary) summary.focus({preventScroll:true});
+        else refs.closeAdminBtn?.focus({preventScroll:true});
+      });
       await syncCurrentWeekFromCloud(new Date());
       await syncCurrentWeekStatusesFromCloud(new Date());
       await refreshCloudWallet();
@@ -1829,7 +1895,10 @@
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
   if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
   if(refs.refreshAdminPayoutBtn) refs.refreshAdminPayoutBtn.addEventListener('click',loadAdminPayoutRequests);
-  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests(); loadAdminPayoutRequests(); loadAdminUserPushOverview();});
+  if(refs.saveAdminKeyBtn) refs.saveAdminKeyBtn.addEventListener('click',saveAdminAccessKey);
+  if(refs.adminAccessDetails) refs.adminAccessDetails.addEventListener('toggle',()=>{
+    if(!refs.adminAccessDetails.open && refs.adminKey) refs.adminKey.value='';
+  });
   if(refs.adminApplyRangeBtn) refs.adminApplyRangeBtn.addEventListener('click',applyAdminStatusRange);
 
   if(refs.absenceRequestBtn){
