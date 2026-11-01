@@ -9,6 +9,7 @@
   const FOUR_DAY_WEEK_CENTS = 100;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
   const state = loadState();
+  const walletSyncRuntime={status:state.cloudWallet?.syncedAt?'cached':'none',lastAttemptAt:0,lastError:null};
   let payoutSelectedCents=0;
   let snikkersGame=null;
   const $ = id => document.getElementById(id);
@@ -29,8 +30,9 @@
     dailyCount:$('dailyCount'), weeklyCount:$('weeklyCount'), completedCount:$('completedCount'), pauseBtn:$('pauseBtn'), nextMissionText:$('nextMissionText'),
     historyList:$('historyList'), pauseDialog:$('pauseDialog'), pauseForm:$('pauseForm'), pauseReason:$('pauseReason'), pauseFrom:$('pauseFrom'), pauseTo:$('pauseTo'),
     weeklyDialog:$('weeklyDialog'), weeklyDialogTitle:$('weeklyDialogTitle'), weeklyDialogText:$('weeklyDialogText'), weeklyYoutubeLink:$('weeklyYoutubeLink'),
-    walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'),
+    walletBalance:$('walletBalance'), todayEarned:$('todayEarned'), weekEarned:$('weekEarned'), walletSyncTimeline:$('walletSyncTimeline'), walletSyncStatus:$('walletSyncStatus'), walletSyncTime:$('walletSyncTime'),
     requestPayoutBtn:$('requestPayoutBtn'), bookingHistoryBtn:$('bookingHistoryBtn'), bookingHistoryDialog:$('bookingHistoryDialog'), bookingHistoryBalance:$('bookingHistoryBalance'), bookingHistoryList:$('bookingHistoryList'), bookingHistoryHint:$('bookingHistoryHint'), closeBookingHistoryBtn:$('closeBookingHistoryBtn'), payoutDialog:$('payoutDialog'), payoutAvailable:$('payoutAvailable'), payoutSelected:$('payoutSelected'), customPayoutBtn:$('customPayoutBtn'), customPayoutWrap:$('customPayoutWrap'), customPayoutAmount:$('customPayoutAmount'), payoutWish:$('payoutWish'), payoutMessage:$('payoutMessage'), submitPayoutBtn:$('submitPayoutBtn'), closePayoutBtn:$('closePayoutBtn'),
+    settingsBtn:$('settingsBtn'), settingsDialog:$('settingsDialog'), closeSettingsBtn:$('closeSettingsBtn'),
     versionBtn:$('versionBtn'), versionDialog:$('versionDialog'),
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
@@ -39,6 +41,7 @@
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
     adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
+    adminUserPushBadge:$('adminUserPushBadge'), adminUserTestPushBtn:$('adminUserTestPushBtn'), adminWorkReminderBtn:$('adminWorkReminderBtn'), adminHomeReminderBtn:$('adminHomeReminderBtn'), adminUserPushStatus:$('adminUserPushStatus'),
     miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn'), snikkersPuzzleCoverBtn:$('snikkersPuzzleCoverBtn'), snikkersPuzzleDialog:$('snikkersPuzzleDialog'), snikkersPuzzleFrame:$('snikkersPuzzleFrame'), closeSnikkersPuzzleBtn:$('closeSnikkersPuzzleBtn'), snikkersSlotCoverBtn:$('snikkersSlotCoverBtn'), snikkersSlotDialog:$('snikkersSlotDialog'), snikkersSlotFrame:$('snikkersSlotFrame'), closeSnikkersSlotBtn:$('closeSnikkersSlotBtn')
   };
 
@@ -211,7 +214,7 @@
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 
   async function apiJson(path, options={}){
-    const response=await fetch(`${API_BASE}${path}`,options);
+    const response=await fetch(`${API_BASE}${path}`,{cache:'no-store',...options});
     let result=null;
     try{ result=await response.json(); }catch{}
     if(!response.ok || !result || result.ok!==true) throw new Error(result?.error || `API ${path}`);
@@ -271,17 +274,55 @@
       try{
         await apiJson('/transaction',{
           method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({id,type:t.type,amount_cents:Number(t.cents||0),day_date:t.date||null,note:t.type==='PERFECT_WEEK'?'Perfect Week':'Tagesbelohnung'})
+          body:JSON.stringify({id,type:t.type,amount_cents:Number(t.cents||0),day_date:t.date||null,note:t.type==='PERFECT_WEEK'?'Perfect Week':'Tagesbelohnung',weekly_opened:t.type==='PERFECT_WEEK'?!!state.weeklyOpened?.[t.week]:undefined})
         });
       }catch(err){ console.warn('D1 transaction sync:',id,err); }
     }
   }
+  function formatWalletSyncTime(iso){
+    if(!iso) return 'Noch kein erfolgreicher Sync.';
+    const d=new Date(iso);
+    if(Number.isNaN(d.getTime())) return 'Zeitpunkt unbekannt.';
+    return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(d);
+  }
+  function renderWalletSyncStatus(){
+    if(!refs.walletSyncTimeline||!refs.walletSyncStatus||!refs.walletSyncTime) return;
+    const lastGood=state.cloudWallet?.syncedAt||null;
+    let status='Letzter bekannter Cloud-Stand';
+    let stateName='cached';
+    let detail=lastGood?`Zuletzt erfolgreich: ${formatWalletSyncTime(lastGood)}`:'Noch kein erfolgreicher Cloud-Sync.';
+    if(walletSyncRuntime.status==='syncing'){ status='Cloud wird aktualisiert …'; stateName='syncing'; }
+    else if(walletSyncRuntime.status==='success'){ status='Cloud-Stand aktuell'; stateName='success'; detail=`Synchronisiert: ${formatWalletSyncTime(lastGood)}`; }
+    else if(walletSyncRuntime.status==='error'){ status='Cloud derzeit nicht erreichbar'; stateName='error'; detail=lastGood?`Letzter gültiger Stand: ${formatWalletSyncTime(lastGood)}`:'Kein gespeicherter Cloud-Stand verfügbar.'; }
+    refs.walletSyncTimeline.dataset.state=stateName;
+    refs.walletSyncStatus.textContent=status;
+    refs.walletSyncTime.textContent=detail;
+  }
   async function refreshCloudWallet(){
+    walletSyncRuntime.lastAttemptAt=Date.now();
+    walletSyncRuntime.status='syncing';
+    walletSyncRuntime.lastError=null;
+    renderWalletSyncStatus();
     try{
       const result=await apiJson('/wallet');
-      state.cloudWallet={balanceCents:Number(result.balance_cents||0),transactions:result.transactions||[],syncedAt:new Date().toISOString()};
-      saveState(); renderWallet(new Date());
-    }catch(err){ console.warn('D1 wallet:',err); }
+      state.cloudWallet={balanceCents:Number(result.balance_cents||0),transactions:Array.isArray(result.transactions)?result.transactions:[],syncedAt:new Date().toISOString(),source:'cloud'};
+      walletSyncRuntime.status='success';
+      saveState();
+      renderWallet(new Date());
+      renderWalletSyncStatus();
+      return true;
+    }catch(err){
+      walletSyncRuntime.status='error';
+      walletSyncRuntime.lastError=String(err?.message||err);
+      console.warn('D1 wallet:',err);
+      renderWallet(new Date());
+      renderWalletSyncStatus();
+      return false;
+    }
+  }
+  function refreshWalletIfDue(minAgeMs=15000){
+    if(Date.now()-Number(walletSyncRuntime.lastAttemptAt||0)<minAgeMs) return;
+    refreshCloudWallet();
   }
   async function syncCurrentWeekFromCloud(referenceDate=new Date()){
     const start=getWeekStart(referenceDate);
@@ -321,6 +362,8 @@
   }
 
   async function migrateAndSyncCloud(){
+    // Cloud wallet is authoritative. Load it first; local state is only a last-known-good fallback.
+    await refreshCloudWallet();
     // Discover the whole current Mon-Fri week first. Fresh browsers otherwise only know locally seeded days.
     await syncCurrentWeekFromCloud(new Date());
     await syncCurrentWeekStatusesFromCloud(new Date());
@@ -592,6 +635,8 @@
         ds.rewardOpenedAt=null;
       }
       saveState();
+      reconcileLedger();
+      await syncLedgerToCloud();
       await refreshCloudWallet();
       refs.adminMessage.textContent=`${key}: ${booking==='work'?'ARBEIT':'ZUHAUSE'} ${value?'gebucht':'widerrufen'}.`;
       refs.adminMessage.className='geo-success';
@@ -1034,8 +1079,13 @@
     else refs.weeklyRewardStatus.textContent='3 oder weniger Arbeitstage · kein Wochenbonus';
     refs.weeklyRewardBtn.onclick=()=>openWeekly(weekKey);
   }
-  function openWeekly(weekKey){
-    const idx=hash(weekKey+'weekly')%DATA.weeklyRewards.length, wr=DATA.weeklyRewards[idx]; state.weeklyOpened[weekKey]={index:idx,openedAt:new Date().toISOString()}; saveState();
+  async function openWeekly(weekKey){
+    const idx=hash(weekKey+'weekly')%DATA.weeklyRewards.length, wr=DATA.weeklyRewards[idx];
+    if(!state.weeklyOpened[weekKey]) state.weeklyOpened[weekKey]={index:idx,openedAt:new Date().toISOString()};
+    saveState();
+    reconcileLedger();
+    await syncLedgerToCloud();
+    await refreshCloudWallet();
     refs.weeklyDialogTitle.textContent=wr.title; refs.weeklyDialogText.textContent=wr.text; refs.weeklyYoutubeLink.href='https://www.youtube.com/results?search_query='+encodeURIComponent(wr.query); refs.weeklyDialog.showModal(); render();
   }
 
@@ -1046,6 +1096,17 @@
   }
   function reconcileLedger(){
     let changed=false;
+
+    // v0.9.24: Ein Wochenbonus ist erst verdient, wenn die Wochenbelohnung wirklich geöffnet wurde.
+    // Frühere lokale Vorabbuchungen werden entfernt, damit sie nicht versehentlich in die Cloud synchronisiert werden.
+    const beforeCleanup=(state.ledger||[]).length;
+    state.ledger=(state.ledger||[]).filter(t=>{
+      if(t.type==='PERFECT_WEEK' && t.week && !state.weeklyOpened?.[t.week]) return false;
+      if(t.type==='DAILY_REWARD' && t.date && !isWorkday(localDate(t.date))) return false;
+      return true;
+    });
+    if(state.ledger.length!==beforeCleanup) changed=true;
+
     for(const [key,d] of Object.entries(state.days)){
       const date=localDate(key);
       if(isWorkday(date) && d.work && d.home && getDayStatus(key)==='normal'){
@@ -1055,7 +1116,7 @@
     const starts=new Set(Object.keys(state.days).map(k=>dateKey(getWeekStart(localDate(k)))));
     for(const wk of starts){
       const evaluation=evaluateWeek(localDate(wk));
-      if(evaluation.bonus>0){
+      if(evaluation.bonus>0 && state.weeklyOpened?.[wk]){
         changed=transaction(`week:${wk}`,'PERFECT_WEEK',evaluation.bonus,{week:wk})||changed;
       }
     }
@@ -1083,14 +1144,16 @@
 
     refs.walletBalance.textContent=euro(total); refs.todayEarned.textContent=euro(todayTotal); refs.weekEarned.textContent=euro(weekTotal);
     if(refs.requestPayoutBtn) refs.requestPayoutBtn.disabled=total<=0;
+    renderWalletSyncStatus();
   }
 
   function renderStats(){
-    const entries=Object.entries(state.days), completed=entries.filter(([,d])=>d.work&&d.home).length, opened=entries.filter(([,d])=>d.rewardOpened).length;
+    const entries=Object.entries(state.days).filter(([key])=>isWorkday(localDate(key)));
+    const completed=entries.filter(([,d])=>d.work&&d.home).length, opened=entries.filter(([,d])=>d.rewardOpened).length;
     refs.completedCount.textContent=completed; refs.dailyCount.textContent=opened; refs.weeklyCount.textContent=Object.keys(state.weeklyOpened).length;
   }
   function renderHistory(){
-    const items=Object.entries(state.days).filter(([,d])=>d.rewardOpened).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,5);
+    const items=Object.entries(state.days).filter(([key,d])=>isWorkday(localDate(key))&&d.rewardOpened).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,5);
     refs.historyList.innerHTML='';
     if(!items.length){ refs.historyList.innerHTML='<p class="muted">Noch nichts freigeschaltet.</p>'; return; }
     for(const [key,d] of items){
@@ -1167,7 +1230,7 @@
     return '–';
   }
   function normalizedBookings(){
-    if(Array.isArray(state.cloudWallet?.transactions) && state.cloudWallet.transactions.length){
+    if(Array.isArray(state.cloudWallet?.transactions)){
       return state.cloudWallet.transactions.map(t=>({...t,_cents:Number(t.amount_cents||0)}));
     }
     return (state.ledger||[]).map(t=>({...t,_cents:Number(t.cents||0)})).sort((a,b)=>String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));
@@ -1387,6 +1450,78 @@
     });
     if(!result.result?.recipients) throw new Error('Kein aktives Admin-Handy registriert.');
     return result;
+  }
+
+  async function loadAdminUserPushOverview(){
+    if(!refs.adminUserPushStatus||!refs.adminUserPushBadge) return;
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    const buttons=[refs.adminUserTestPushBtn,refs.adminWorkReminderBtn,refs.adminHomeReminderBtn].filter(Boolean);
+    if(!adminKey){
+      refs.adminUserPushBadge.textContent='SCHLÜSSEL FEHLT';
+      refs.adminUserPushBadge.classList.remove('done'); refs.adminUserPushBadge.classList.add('error');
+      refs.adminUserPushStatus.textContent='Admin-Schlüssel eingeben, um die User-Push-Registrierung zu prüfen.';
+      buttons.forEach(btn=>btn.disabled=true);
+      return;
+    }
+    refs.adminUserPushBadge.textContent='PRÜFEN …';
+    refs.adminUserPushBadge.classList.remove('done','error');
+    refs.adminUserPushStatus.textContent='User-Handy wird geprüft …';
+    buttons.forEach(btn=>btn.disabled=true);
+    try{
+      const result=await apiJson('/admin/push/subscriptions',{headers:{'X-Admin-Key':adminKey}});
+      const active=(result.subscriptions||[]).find(s=>s.device_role==='user-phone'&&Number(s.enabled)===1);
+      if(active){
+        refs.adminUserPushBadge.textContent='REGISTRIERT';
+        refs.adminUserPushBadge.classList.add('done'); refs.adminUserPushBadge.classList.remove('error');
+        const last=active.last_success_at?` Letzter erfolgreicher Versand: ${active.last_success_at}.`:'';
+        refs.adminUserPushStatus.textContent=`Ein aktives User-Handy ist registriert.${last}`;
+        buttons.forEach(btn=>btn.disabled=false);
+      }else{
+        refs.adminUserPushBadge.textContent='NICHT REGISTRIERT';
+        refs.adminUserPushBadge.classList.remove('done'); refs.adminUserPushBadge.classList.add('error');
+        refs.adminUserPushStatus.textContent='Kein aktives User-Handy registriert. Push muss auf dem User-Handy unter Einstellungen aktiviert werden.';
+        buttons.forEach(btn=>btn.disabled=true);
+      }
+    }catch(err){
+      refs.adminUserPushBadge.textContent='PRÜFUNG FEHLER';
+      refs.adminUserPushBadge.classList.remove('done'); refs.adminUserPushBadge.classList.add('error');
+      refs.adminUserPushStatus.textContent=`Push-Status konnte nicht geladen werden: ${err.message||err}`;
+      buttons.forEach(btn=>btn.disabled=true);
+    }
+  }
+
+  async function sendAdminUserReminder(kind){
+    const adminKey=(refs.adminKey?.value||localStorage.getItem('omd-admin-key')||'').trim();
+    if(!adminKey) throw new Error('Admin-Schlüssel fehlt.');
+    localStorage.setItem('omd-admin-key',adminKey);
+    const result=await apiJson('/admin/push/user-reminder',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+      body:JSON.stringify({kind})
+    });
+    return result;
+  }
+
+  async function runAdminUserPush(kind,button){
+    if(button) button.disabled=true;
+    if(refs.adminUserPushStatus) refs.adminUserPushStatus.textContent='Push wird gesendet …';
+    let finalMessage='';
+    try{
+      const result=await sendAdminUserReminder(kind);
+      if(result.skipped){
+        const labels={weekend:'Heute ist Wochenende. Kein Arbeits-Push.','inactive-day':'Heute ist FREI/URLAUB/KRANK. Kein Arbeits-Push.','work-already-confirmed':'ARBEIT ist bereits gebucht.','home-already-confirmed':'ZUHAUSE ist bereits gebucht.','work-not-confirmed':'ARBEIT ist noch nicht gebucht; ZUHAUSE-Erinnerung wurde deshalb nicht gesendet.'};
+        finalMessage=labels[result.reason]||`Nicht gesendet: ${result.reason||'keine Aktion nötig'}.`;
+      }else if(result.result?.recipients){
+        const label=kind==='test'?'User-Test-Push':kind==='work'?'ARBEIT-Erinnerung':'ZUHAUSE-Erinnerung';
+        finalMessage=`${label} wurde an das User-Handy gesendet.`;
+      }else{
+        finalMessage='Kein aktives User-Handy als Empfänger gefunden.';
+      }
+    }catch(err){
+      finalMessage=`Push fehlgeschlagen: ${err.message||err}`;
+    }
+    await loadAdminUserPushOverview();
+    if(refs.adminUserPushStatus) refs.adminUserPushStatus.textContent=finalMessage;
   }
 
   function destroySnikkersRun(){
@@ -1653,10 +1788,22 @@
     catch(err){ if(refs.adminPushStatus) refs.adminPushStatus.textContent=`Test-Push fehlgeschlagen: ${err.message||err}`; }
     await refreshPushUi();
   });
+  if(refs.adminUserTestPushBtn) refs.adminUserTestPushBtn.addEventListener('click',()=>runAdminUserPush('test',refs.adminUserTestPushBtn));
+  if(refs.adminWorkReminderBtn) refs.adminWorkReminderBtn.addEventListener('click',()=>runAdminUserPush('work',refs.adminWorkReminderBtn));
+  if(refs.adminHomeReminderBtn) refs.adminHomeReminderBtn.addEventListener('click',()=>runAdminUserPush('home',refs.adminHomeReminderBtn));
 
   refs.locationBtn.addEventListener('click',checkLocation); refs.openRewardBtn.addEventListener('click',openDailyReward);
 
   const adminEnabled=adminUiEnabled();
+  if(refs.settingsBtn){
+    refs.settingsBtn.classList.toggle('hidden',adminEnabled);
+    refs.settingsBtn.addEventListener('click',async()=>{
+      await refreshPushUi();
+      refs.settingsDialog?.showModal();
+    });
+  }
+  if(refs.closeSettingsBtn) refs.closeSettingsBtn.addEventListener('click',()=>refs.settingsDialog?.close());
+  if(refs.settingsDialog) refs.settingsDialog.addEventListener('click',e=>{if(e.target===refs.settingsDialog) refs.settingsDialog.close();});
   if(refs.miniGamesLaunchCard) refs.miniGamesLaunchCard.classList.remove('hidden');
 
   if(refs.adminBtn){
@@ -1671,16 +1818,18 @@
       refs.adminDialog.showModal();
       await syncCurrentWeekFromCloud(new Date());
       await syncCurrentWeekStatusesFromCloud(new Date());
+      await refreshCloudWallet();
       renderAdminWeek();
       loadAdminAbsenceRequests();
       loadAdminPayoutRequests();
+      loadAdminUserPushOverview();
       refreshPushUi();
     });
   }
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
   if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
   if(refs.refreshAdminPayoutBtn) refs.refreshAdminPayoutBtn.addEventListener('click',loadAdminPayoutRequests);
-  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests(); loadAdminPayoutRequests();});
+  if(refs.adminKey) refs.adminKey.addEventListener('change',()=>{localStorage.setItem('omd-admin-key',refs.adminKey.value.trim()); loadAdminAbsenceRequests(); loadAdminPayoutRequests(); loadAdminUserPushOverview();});
   if(refs.adminApplyRangeBtn) refs.adminApplyRangeBtn.addEventListener('click',applyAdminStatusRange);
 
   if(refs.absenceRequestBtn){
@@ -1707,6 +1856,9 @@
   const cancelPauseBtn=$('cancelPauseBtn');
   if(cancelPauseBtn && refs.pauseDialog) cancelPauseBtn.addEventListener('click',()=>refs.pauseDialog.close());
   refs.versionBtn.addEventListener('click',()=>refs.versionDialog.showModal());
-  if('serviceWorker' in navigator) window.addEventListener('load',async()=>{ try{ await navigator.serviceWorker.register('./sw.js'); }catch{} await refreshPushUi(); });
-  render(); refreshPushUi(); migrateAndSyncCloud(); setInterval(render,60000);
+  if('serviceWorker' in navigator) window.addEventListener('load',async()=>{ try{ await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}); }catch{} await refreshPushUi(); refreshWalletIfDue(0); });
+  window.addEventListener('pageshow',()=>refreshWalletIfDue(5000));
+  window.addEventListener('focus',()=>refreshWalletIfDue(15000));
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refreshWalletIfDue(15000); });
+  render(); renderWalletSyncStatus(); refreshPushUi(); migrateAndSyncCloud(); setInterval(render,60000);
 })();

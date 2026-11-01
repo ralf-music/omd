@@ -60,24 +60,7 @@
         <button id="locationBtn" class="primary-btn">STANDORT PRÜFEN</button>
         <p id="locationHint" class="microcopy">Standort wird nur beim Tippen geprüft. Keine Hintergrund-Ortung.</p>
       </section>
-
-      <section id="pushReminderCard" class="card push-card hidden">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">ERINNERUNGEN</p>
-            <h2>Check-in Push</h2>
-          </div>
-          <div id="pushPermissionBadge" class="badge">AUS</div>
-        </div>
-        <p class="muted">Erinnert auf dem User-Handy nur dann an ARBEIT oder ZUHAUSE, wenn die jeweilige Buchung zu den festgelegten Zeiten noch fehlt.</p>
-        <div class="push-actions">
-          <button id="enableUserPushBtn" class="secondary-btn" type="button">ERINNERUNGEN AKTIVIEREN</button>
-          <button id="disableUserPushBtn" class="ghost-btn hidden" type="button">DEAKTIVIEREN</button>
-        </div>
-        <p id="userPushStatus" class="microcopy">Noch nicht eingerichtet.</p>
-      </section>
-
-      <section id="rewardCard" class="card reward-card locked">
+<section id="rewardCard" class="card reward-card locked">
         <div class="reward-lock" id="rewardLock">🔒</div>
         <p class="eyebrow">TAGESBELOHNUNG</p>
         <h2 id="rewardTitle">Noch gesperrt</h2>
@@ -133,9 +116,17 @@
         </div>
         <div class="stat-row"><span>Heute verdient</span><strong id="todayEarned">0,00 €</strong></div>
         <div class="stat-row"><span>Diese Woche</span><strong id="weekEarned">0,00 €</strong></div>
+        <div id="walletSyncTimeline" class="wallet-sync-timeline" data-state="cached">
+          <span class="wallet-sync-dot" aria-hidden="true"></span>
+          <div>
+            <strong id="walletSyncStatus">Cloud-Stand wird geprüft …</strong>
+            <small id="walletSyncTime">Noch kein erfolgreicher Sync.</small>
+          </div>
+        </div>
         <p class="microcopy">+0,50 € je echtem Arbeitstag. Wochenbonus: 5 Arbeitstage = 2,00 €, 4 Arbeitstage = 1,00 €, 3 oder weniger = 0 €. KRANK sperrt den Wochenbonus; FREI schützt vor einem normalen Fehltag.</p>
         <button id="requestPayoutBtn" class="secondary-btn wallet-request-btn" type="button">GUTHABEN ANFORDERN</button>
         <button id="bookingHistoryBtn" class="ghost-btn booking-history-btn" type="button">BUCHUNGEN ANZEIGEN</button>
+        <button id="settingsBtn" class="ghost-btn booking-history-btn" type="button">EINSTELLUNGEN</button>
         <button id="adminBtn" class="ghost-btn booking-history-btn hidden" type="button">ADMIN</button>
       </section>
 
@@ -182,7 +173,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.23</button>
+      <button id="versionBtn" class="version-btn">v0.9.25</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -338,6 +329,31 @@
     </div>
   </dialog>
 
+
+  <dialog id="settingsDialog">
+    <div class="dialog-card settings-dialog-card">
+      <p class="eyebrow">EINSTELLUNGEN</p>
+      <h2>App-Einstellungen</h2>
+      <section id="pushReminderCard" class="settings-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ERINNERUNGEN</p>
+            <h3>Check-in Push</h3>
+          </div>
+          <div id="pushPermissionBadge" class="badge">AUS</div>
+        </div>
+        <p class="muted">Erinnert dieses User-Handy werktags an fehlende Buchungen: ARBEIT um 10:00 und 12:00 Uhr, ZUHAUSE um 14:00 und 20:00 Uhr.</p>
+        <div class="push-actions">
+          <button id="enableUserPushBtn" class="secondary-btn" type="button">ERINNERUNGEN AKTIVIEREN</button>
+          <button id="disableUserPushBtn" class="ghost-btn hidden" type="button">DEAKTIVIEREN</button>
+        </div>
+        <p id="userPushStatus" class="microcopy">Noch nicht eingerichtet.</p>
+      </section>
+      <p class="microcopy settings-weekend-note">Samstag und Sonntag sind vollständig arbeitsfrei. An diesen Tagen werden keine Buchungen, Erinnerungen oder Arbeitsbelohnungen erzeugt.</p>
+      <button id="closeSettingsBtn" class="ghost-btn" type="button">SCHLIESSEN</button>
+    </div>
+  </dialog>
+
   <dialog id="adminDialog">
     <div class="dialog-card admin-dialog-card">
       <p class="eyebrow">ADMIN</p>
@@ -397,6 +413,23 @@
           <p class="microcopy">Noch nicht geladen.</p>
         </div>
       </div>
+      <div class="admin-request-section admin-user-push-section">
+        <div class="admin-request-section-head">
+          <div>
+            <p class="eyebrow">PUSH-TESTAREA</p>
+            <h3>User-Handy</h3>
+          </div>
+          <span id="adminUserPushBadge" class="badge">PRÜFEN …</span>
+        </div>
+        <p class="microcopy">Manuelle Pushs sind unabhängig vom automatischen Zeitplan. ARBEIT/ZUHAUSE werden nur gesendet, wenn die jeweilige Buchung heute tatsächlich noch fehlt.</p>
+        <div class="admin-user-push-actions">
+          <button id="adminUserTestPushBtn" class="ghost-btn" type="button">USER TEST-PUSH</button>
+          <button id="adminWorkReminderBtn" class="secondary-btn" type="button">ARBEIT ERINNERN</button>
+          <button id="adminHomeReminderBtn" class="secondary-btn" type="button">ZUHAUSE ERINNERN</button>
+        </div>
+        <p id="adminUserPushStatus" class="microcopy">Registrierung wird beim Öffnen geprüft.</p>
+      </div>
+
       <div class="admin-request-section admin-push-section">
         <div class="admin-request-section-head">
           <div>
@@ -544,8 +577,12 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.23</h2>
+      <h2>One More Day v0.9.25</h2>
       <ul>
+        <li><strong>v0.9.25:</strong> Wallet ist Cloud-first mit lokalem „last known good“-Fallback und Sync-Zeitlinie; Refresh/Resume/Admin-Aufruf laden den Cloud-Stand neu.</li>
+        <li><strong>v0.9.25:</strong> Check-in-Push wurde in Einstellungen verschoben; Admin erhält eine User-Push-Testarea für Test, ARBEIT und ZUHAUSE.</li>
+        <li><strong>v0.9.25:</strong> Erinnerungen laufen werktags korrekt um 10/12 Uhr für ARBEIT und 14/20 Uhr für ZUHAUSE; Wochenenden sind serverseitig aus Buchungs- und Belohnungslogik ausgeschlossen.</li>
+        <li><strong>v0.9.24:</strong> Nachträgliche Admin-Buchungen gleichen fehlende Tagesbelohnungen automatisch mit der Cloud ab; der Wochenbonus wird erst beim Öffnen gebucht.</li>
         <li><strong>v0.9.23:</strong> Admin-Push für ARBEIT, ZUHAUSE und neue FREI/KRANK/URLAUB-Anträge vereinheitlicht und Retry-Logik für fehlgeschlagene Pushs ergänzt.</li>
         <li><strong>v0.9.23:</strong> Guthaben-Anforderung ist jetzt echt: Anfrage wird serverseitig gespeichert, löst Admin-Push aus und kann im Admin-Menü ausgezahlt oder abgelehnt werden.</li>
         <li><strong>v0.9.22:</strong> Snikkers Slot: Lucky Paws v0.1.1 als sechstes Minigame mit eigenem Cover, Start-Overlay, Vollbild, Spiel-Coins und Soundeffekten integriert.</li>
