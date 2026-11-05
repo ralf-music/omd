@@ -173,7 +173,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.27</button>
+      <button id="versionBtn" class="version-btn">v0.9.29</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -427,6 +427,34 @@
           <p class="microcopy">Noch nicht geladen.</p>
         </div>
       </div>
+      <div class="admin-request-section admin-wallet-section">
+        <div class="admin-request-section-head">
+          <div>
+            <p class="eyebrow">GUTHABEN-KORREKTUR</p>
+            <h3>Kontostand manuell korrigieren</h3>
+          </div>
+          <button id="refreshAdminWalletBtn" class="ghost-btn admin-refresh-btn" type="button">AKTUALISIEREN</button>
+        </div>
+        <div class="admin-wallet-balance"><span>Cloud-Kontostand</span><strong id="adminWalletBalance">0,00 €</strong></div>
+        <p class="microcopy">Manuelle Änderungen werden niemals in alte Buchungen hineingeschrieben. Jede Änderung erscheint als neue, nachvollziehbare Cloud-Buchung.</p>
+        <div class="admin-wallet-form">
+          <label>Betrag in Euro
+            <input id="adminWalletAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. +5,00 oder -2,50" />
+          </label>
+          <label>Grund / Notiz
+            <textarea id="adminWalletReason" rows="2" maxlength="300" placeholder="Warum wird der Kontostand korrigiert?"></textarea>
+          </label>
+          <button id="adminWalletBookBtn" class="secondary-btn" type="button">BETRAG BUCHEN</button>
+        </div>
+        <p id="adminWalletStatus" class="microcopy"></p>
+        <div class="admin-wallet-history-head">
+          <strong>Letzte Cloud-Buchungen</strong>
+          <small>Storno erzeugt immer eine Gegenbuchung.</small>
+        </div>
+        <div id="adminWalletTransactions" class="admin-wallet-transactions">
+          <p class="microcopy">Noch nicht geladen.</p>
+        </div>
+      </div>
       <div class="admin-request-section admin-user-push-section">
         <div class="admin-request-section-head">
           <div>
@@ -591,8 +619,11 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.27</h2>
+      <h2>One More Day v0.9.29</h2>
       <ul>
+        <li><strong>v0.9.29:</strong> Jede neu in der Cloud verbuchte Guthabenänderung sendet einen Push ans User-Handy mit Buchungsart, Betrag und aktuellem Kontostand. Wiederholte Syncs bestehender Transaktionen erzeugen keine Doppelmeldung.</li>
+        <li><strong>v0.9.28:</strong> Admin kann Guthaben manuell positiv oder negativ buchen; jede manuelle Buchung verlangt einen Grund und wird als eigene Cloud-Transaktion protokolliert.</li>
+        <li><strong>v0.9.28:</strong> Bestehende Guthaben-Buchungen können im Adminbereich per Gegenbuchung storniert werden. Originalbuchungen bleiben erhalten und können nicht versehentlich doppelt storniert werden.</li>
         <li><strong>v0.9.27:</strong> Der gespeicherte Admin-Zugang ist standardmäßig eingeklappt. Beim Öffnen des Adminbereichs erscheint keine Tastatur mehr.</li>
         <li><strong>v0.9.27:</strong> Ein neuer Admin-Schlüssel ersetzt den bisherigen erst nach erfolgreicher Cloud-Prüfung; bloßes Tippen kann den gespeicherten Zugang nicht mehr überschreiben.</li>
         <li><strong>v0.9.26:</strong> Zeitkritische Web-Pushs werden mit hoher Priorität gesendet und verfallen nach kurzer Zeit statt verspätet aufzutauchen.</li>

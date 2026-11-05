@@ -37,6 +37,7 @@
     historyDialog:$('historyDialog'), historyDialogDate:$('historyDialogDate'), historyDialogTitle:$('historyDialogTitle'), historyPicture:$('historyPicture'), historyPictureInfo:$('historyPictureInfo'), historyPictureSource:$('historyPictureSource'), historySpotifyCover:$('historySpotifyCover'), historySpotifyFallback:$('historySpotifyFallback'), historySongTitle:$('historySongTitle'), historySongArtist:$('historySongArtist'), historySpotifyBtn:$('historySpotifyBtn'), historyRewardExtras:$('historyRewardExtras'),
     pictureFullscreenDialog:$('pictureFullscreenDialog'), pictureFullscreenImage:$('pictureFullscreenImage'), pictureFullscreenInfo:$('pictureFullscreenInfo'), pictureFullscreenSource:$('pictureFullscreenSource'), closePictureFullscreen:$('closePictureFullscreen'),
     adminBtn:$('adminBtn'), adminDialog:$('adminDialog'), adminWeek:$('adminWeek'), adminKey:$('adminKey'), adminAccessDetails:$('adminAccessDetails'), adminAccessState:$('adminAccessState'), adminAccessMessage:$('adminAccessMessage'), saveAdminKeyBtn:$('saveAdminKeyBtn'), adminMessage:$('adminMessage'), adminAbsenceList:$('adminAbsenceList'), refreshAdminAbsenceBtn:$('refreshAdminAbsenceBtn'), adminPayoutList:$('adminPayoutList'), refreshAdminPayoutBtn:$('refreshAdminPayoutBtn'), closeAdminBtn:$('closeAdminBtn'),
+    adminWalletBalance:$('adminWalletBalance'), adminWalletAmount:$('adminWalletAmount'), adminWalletReason:$('adminWalletReason'), adminWalletBookBtn:$('adminWalletBookBtn'), adminWalletStatus:$('adminWalletStatus'), adminWalletTransactions:$('adminWalletTransactions'), refreshAdminWalletBtn:$('refreshAdminWalletBtn'),
     adminRangeType:$('adminRangeType'), adminRangeFrom:$('adminRangeFrom'), adminRangeTo:$('adminRangeTo'), adminApplyRangeBtn:$('adminApplyRangeBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
@@ -505,6 +506,7 @@
         refreshCloudWallet(),
         loadAdminAbsenceRequests(),
         loadAdminPayoutRequests(),
+        loadAdminWalletTools(),
         loadAdminUserPushOverview()
       ]);
       renderAdminWeek();
@@ -851,6 +853,155 @@
       const msg=String(err?.message||'');
       refs.adminMessage.textContent=msg.includes('Insufficient balance')?'Auszahlung nicht möglich: Guthaben reicht nicht aus.':'Entscheidung konnte nicht gespeichert werden.';
       refs.adminMessage.className='geo-error';
+    }
+  }
+
+  function parseSignedEuroCents(value){
+    const normalized=String(value||'').trim().replace(/\s/g,'').replace('€','').replace(',', '.');
+    if(!/^[+-]?\d+(?:\.\d{0,2})?$/.test(normalized)) return 0;
+    const amount=Number(normalized);
+    if(!Number.isFinite(amount)) return 0;
+    return Math.round(amount*100);
+  }
+
+  function adminWalletTypeLabel(t){
+    const type=String(t?.type||'').toUpperCase();
+    if(type==='ADMIN_ADJUSTMENT') return 'Manuelle Buchung';
+    if(type==='ADMIN_CORRECTION') return 'Korrektur / Storno';
+    return bookingLabel(t);
+  }
+
+  async function loadAdminWalletTools(){
+    if(!refs.adminWalletTransactions) return;
+    const adminKey=getStoredAdminKey();
+    if(!adminKey){
+      refs.adminWalletTransactions.innerHTML='<p class="microcopy">Admin-Zugang erforderlich.</p>';
+      if(refs.adminWalletBalance) refs.adminWalletBalance.textContent='–';
+      return;
+    }
+
+    refs.adminWalletTransactions.innerHTML='<p class="microcopy">Cloud-Buchungen werden geladen …</p>';
+    try{
+      const result=await apiJson('/admin/wallet-transactions',{headers:{'X-Admin-Key':adminKey}});
+      const items=Array.isArray(result.transactions)?result.transactions:[];
+      if(refs.adminWalletBalance) refs.adminWalletBalance.textContent=euro(Number(result.balance_cents||0));
+      refs.adminWalletTransactions.innerHTML='';
+      if(!items.length){
+        refs.adminWalletTransactions.innerHTML='<p class="microcopy">Noch keine Cloud-Buchungen vorhanden.</p>';
+        return;
+      }
+
+      for(const t of items){
+        const cents=Number(t.amount_cents||0), sign=cents>0?'+':'';
+        const type=String(t.type||'').toUpperCase();
+        const reversed=Number(t.reversed||0)===1;
+        const canReverse=!reversed && type!=='ADMIN_CORRECTION' && cents!==0;
+        const row=document.createElement('div');
+        row.className='admin-wallet-row';
+        const note=t.note?`<small class="admin-wallet-note">${escapeHtml(t.note)}</small>`:'';
+        row.innerHTML=`<div class="admin-wallet-row-main">
+          <div class="admin-wallet-row-copy"><strong>${escapeHtml(adminWalletTypeLabel(t))}</strong><span>${escapeHtml(bookingDate(t))}</span>${note}</div>
+          <strong class="booking-amount ${cents<0?'negative':'positive'}">${sign}${euro(cents)}</strong>
+        </div>
+        <div class="admin-wallet-row-actions">
+          ${reversed?'<span class="badge admin-wallet-reversed">STORNIERT</span>':canReverse?`<button type="button" class="ghost-btn admin-wallet-reverse-btn" data-transaction-id="${escapeHtml(String(t.id||''))}" data-transaction-label="${escapeHtml(adminWalletTypeLabel(t))}" data-transaction-cents="${cents}">STORNIEREN</button>`:''}
+        </div>`;
+        refs.adminWalletTransactions.appendChild(row);
+      }
+
+      refs.adminWalletTransactions.querySelectorAll('.admin-wallet-reverse-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>reverseAdminWalletTransaction(btn));
+      });
+    }catch(err){
+      refs.adminWalletTransactions.innerHTML='<p class="geo-error">Cloud-Buchungen konnten nicht geladen werden.</p>';
+      if(refs.adminWalletStatus){
+        refs.adminWalletStatus.textContent='Admin-Wallet konnte nicht geladen werden.';
+        refs.adminWalletStatus.className='geo-error';
+      }
+    }
+  }
+
+  async function bookAdminWalletAdjustment(){
+    const adminKey=getStoredAdminKey();
+    if(!adminKey) return;
+    const cents=parseSignedEuroCents(refs.adminWalletAmount?.value||'');
+    const reason=(refs.adminWalletReason?.value||'').trim();
+    if(cents===0){
+      refs.adminWalletStatus.textContent='Bitte einen Betrag ungleich 0,00 € eingeben.';
+      refs.adminWalletStatus.className='geo-error';
+      return;
+    }
+    if(reason.length<3){
+      refs.adminWalletStatus.textContent='Bitte einen nachvollziehbaren Grund eingeben.';
+      refs.adminWalletStatus.className='geo-error';
+      return;
+    }
+
+    const sign=cents>0?'+':'';
+    if(!window.confirm(`${sign}${euro(cents)} wirklich manuell buchen?\n\nGrund: ${reason}`)) return;
+
+    refs.adminWalletBookBtn.disabled=true;
+    refs.adminWalletStatus.textContent='Manuelle Buchung wird gespeichert …';
+    refs.adminWalletStatus.className='geo-neutral';
+    try{
+      await apiJson('/admin/wallet-adjustment',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({action:'manual',amount_cents:cents,reason})
+      });
+      refs.adminWalletAmount.value='';
+      refs.adminWalletReason.value='';
+      await Promise.all([refreshCloudWallet(),loadAdminWalletTools()]);
+      refs.adminWalletStatus.textContent=`${sign}${euro(cents)} wurde als manuelle Cloud-Buchung gespeichert.`;
+      refs.adminWalletStatus.className='geo-success';
+      render();
+    }catch(err){
+      refs.adminWalletStatus.textContent='Manuelle Buchung konnte nicht gespeichert werden.';
+      refs.adminWalletStatus.className='geo-error';
+    }finally{
+      refs.adminWalletBookBtn.disabled=false;
+    }
+  }
+
+  async function reverseAdminWalletTransaction(button){
+    const adminKey=getStoredAdminKey();
+    if(!adminKey) return;
+    const transactionId=String(button?.dataset.transactionId||'');
+    const label=String(button?.dataset.transactionLabel||'Buchung');
+    const cents=Number(button?.dataset.transactionCents||0);
+    if(!transactionId||!Number.isFinite(cents)||cents===0) return;
+
+    const reason=window.prompt(`Grund für das Storno von „${label}“ (${euro(cents)})?`,'Fehlbuchung korrigiert');
+    if(reason===null) return;
+    const cleanReason=reason.trim();
+    if(cleanReason.length<3){
+      refs.adminWalletStatus.textContent='Storno abgebrochen: Ein Grund ist erforderlich.';
+      refs.adminWalletStatus.className='geo-error';
+      return;
+    }
+    const correction=-cents, sign=correction>0?'+':'';
+    if(!window.confirm(`Diese Buchung wirklich stornieren?\n\nOriginal: ${euro(cents)}\nGegenbuchung: ${sign}${euro(correction)}\nGrund: ${cleanReason}`)) return;
+
+    button.disabled=true;
+    refs.adminWalletStatus.textContent='Gegenbuchung wird erstellt …';
+    refs.adminWalletStatus.className='geo-neutral';
+    try{
+      await apiJson('/admin/wallet-adjustment',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Admin-Key':adminKey},
+        body:JSON.stringify({action:'reverse',transaction_id:transactionId,reason:cleanReason})
+      });
+      await Promise.all([refreshCloudWallet(),loadAdminWalletTools()]);
+      refs.adminWalletStatus.textContent=`${label} wurde per Gegenbuchung storniert.`;
+      refs.adminWalletStatus.className='geo-success';
+      render();
+    }catch(err){
+      const msg=String(err?.message||'');
+      refs.adminWalletStatus.textContent=msg.includes('already reversed')?'Diese Buchung wurde bereits storniert.':'Storno konnte nicht gespeichert werden.';
+      refs.adminWalletStatus.className='geo-error';
+      loadAdminWalletTools();
+    }finally{
+      button.disabled=false;
     }
   }
 
@@ -1267,7 +1418,8 @@
     if(type==='SURPRISE_BONUS'||type==='RANDOM_BONUS') return 'Überraschungsbonus';
     if(type==='CHALLENGE_BONUS') return 'Bonus Challenge';
     if(type==='PAYOUT'||type==='PAYOUT_COMPLETED') return 'Auszahlung';
-    if(type==='ADMIN_ADJUSTMENT'||type==='ADMIN_CORRECTION') return 'Admin-Korrektur';
+    if(type==='ADMIN_ADJUSTMENT') return 'Manuelle Buchung';
+    if(type==='ADMIN_CORRECTION') return 'Korrektur / Storno';
     return t?.note || 'Buchung';
   }
   function bookingDate(t){
@@ -1291,7 +1443,9 @@
     for(const t of items){
       const row=document.createElement('div'); row.className='booking-row';
       const cents=Number(t._cents||0), sign=cents>0?'+':'';
-      row.innerHTML=`<div class="booking-copy"><strong>${bookingLabel(t)}</strong><small>${bookingDate(t)}</small></div><strong class="booking-amount ${cents<0?'negative':'positive'}">${sign}${euro(cents)}</strong>`;
+      const type=String(t?.type||'').toUpperCase();
+      const detail=(type==='ADMIN_ADJUSTMENT'||type==='ADMIN_CORRECTION')&&t?.note?`<small class="booking-note">${escapeHtml(t.note)}</small>`:'';
+      row.innerHTML=`<div class="booking-copy"><strong>${bookingLabel(t)}</strong><small>${bookingDate(t)}</small>${detail}</div><strong class="booking-amount ${cents<0?'negative':'positive'}">${sign}${euro(cents)}</strong>`;
       refs.bookingHistoryList.appendChild(row);
     }
     refs.bookingHistoryHint.textContent=Array.isArray(state.cloudWallet?.transactions)?'Cloud-Buchungen · automatisch synchronisiert':'Lokale Buchungen · Cloud derzeit nicht geladen';
@@ -1888,6 +2042,7 @@
       renderAdminWeek();
       loadAdminAbsenceRequests();
       loadAdminPayoutRequests();
+      loadAdminWalletTools();
       loadAdminUserPushOverview();
       refreshPushUi();
     });
@@ -1895,6 +2050,8 @@
   if(refs.closeAdminBtn) refs.closeAdminBtn.addEventListener('click',()=>refs.adminDialog.close());
   if(refs.refreshAdminAbsenceBtn) refs.refreshAdminAbsenceBtn.addEventListener('click',loadAdminAbsenceRequests);
   if(refs.refreshAdminPayoutBtn) refs.refreshAdminPayoutBtn.addEventListener('click',loadAdminPayoutRequests);
+  if(refs.refreshAdminWalletBtn) refs.refreshAdminWalletBtn.addEventListener('click',loadAdminWalletTools);
+  if(refs.adminWalletBookBtn) refs.adminWalletBookBtn.addEventListener('click',bookAdminWalletAdjustment);
   if(refs.saveAdminKeyBtn) refs.saveAdminKeyBtn.addEventListener('click',saveAdminAccessKey);
   if(refs.adminAccessDetails) refs.adminAccessDetails.addEventListener('toggle',()=>{
     if(!refs.adminAccessDetails.open && refs.adminKey) refs.adminKey.value='';
