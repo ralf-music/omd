@@ -388,3 +388,48 @@ html[data-access="public"] .public-access-shell{
 html[data-access="private"] #privateAppShell{
   display:block;
 }
+
+/* v0.9.30 public layout hotfix – Minigames im Mittelpunkt */
+.public-access-shell .public-hero{
+  margin-bottom:24px;
+}
+.public-access-shell .public-games-primary{
+  margin-top:0;
+}
+.public-access-shell .public-private-note{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:14px 4px 0;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
+  color:var(--muted);
+}
+.public-access-shell .public-private-lock{
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  background:rgba(255,255,255,.04);
+  font-size:15px;
+}
+.public-access-shell .public-private-note strong{
+  display:block;
+  color:#f4edf2;
+  font-size:.85rem;
+  margin-bottom:2px;
+}
+.public-access-shell .public-private-note p{
+  margin:0;
+  color:var(--muted);
+  font-size:.76rem;
+  line-height:1.35;
+}
+@media(max-width:560px){
+  .public-access-shell .public-hero{margin-bottom:18px}
+  .public-access-shell .public-private-note{margin-left:0;margin-right:0}
+}

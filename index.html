@@ -22,19 +22,11 @@
       <div class="hero-copy">
         <h1>ONE MORE DAY</h1>
         <p class="hero-claim">PRIVATE APP</p>
-        <p class="today-date">Öffentlicher Minigame-Bereich</p>
       </div>
     </header>
 
     <main>
-      <section class="card public-access-card">
-        <p class="eyebrow">PRIVATER BEREICH</p>
-        <h2>Dieses Gerät ist nicht registriert.</h2>
-        <p id="publicAccessStatus" class="muted">Gerätefreigabe wird geprüft …</p>
-        <p class="microcopy">Arbeitsguthaben, Buchungen, Wochenstatus, Auszahlungen, Einstellungen und Adminfunktionen sind nur auf den fest registrierten Geräten verfügbar.</p>
-      </section>
-
-      <section class="card mini-games-launch-card public-games-card">
+      <section class="card mini-games-launch-card public-games-card public-games-primary">
         <div class="section-heading">
           <div>
             <p class="eyebrow">MINIGAMES</p>
@@ -42,14 +34,21 @@
           </div>
           <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
         </div>
-        <p class="muted snikkers-launch-copy">Run, Catch, Chase, Memory, Puzzle Slide und Slot: Lucky Paws bleiben öffentlich spielbar.</p>
+        <p class="muted snikkers-launch-copy">Run, Catch, Chase, Memory, Puzzle Slide und Slot: Lucky Paws.</p>
         <button id="publicOpenMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
-        <p class="microcopy">Die Minispiele und ihre Snikkers-Bilder sind bewusst öffentlich. Sie haben keinen Zugriff auf private App-Daten.</p>
+      </section>
+
+      <section class="public-private-note" aria-label="Privater Bereich">
+        <span class="public-private-lock" aria-hidden="true">🔒</span>
+        <div>
+          <strong>Privater Bereich</strong>
+          <p id="publicAccessStatus">Gerätefreigabe wird geprüft …</p>
+        </div>
       </section>
     </main>
 
     <footer>
-      <span>One More Day · Öffentlicher Minigame-Bereich</span>
+      <span>One More Day · Snikkers Spielesammlung</span>
     </footer>
   </div>
 

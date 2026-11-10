@@ -68,7 +68,7 @@
         authorized:false,
         token:'',
         device:null,
-        reason:'Dieses Gerät ist nicht registriert. Der private Bereich bleibt gesperrt.'
+        reason:'Dieses Gerät ist nicht registriert.'
       };
     }
 
@@ -88,7 +88,7 @@
         authorized:false,
         token,
         device:null,
-        reason:'Dieses Gerät ist nicht registriert. Der private Bereich bleibt gesperrt.'
+        reason:'Dieses Gerät ist nicht registriert.'
       };
     }catch{
       const cached=await cachedAuthorization(token);
