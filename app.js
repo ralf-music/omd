@@ -1,4 +1,5 @@
 (() => {
+  if(!window.OMD_ACCESS?.authorized) return;
   const DATA = window.OMD_DATA;
   const CONTENT = window.OMD_CONTENT || {items:[]};
   const ACTIVE_CONTENT_IDS = new Set((CONTENT.items||[]).map(x=>x.id).filter(Boolean));
@@ -8,6 +9,8 @@
   const FULL_WEEK_CENTS = 200;
   const FOUR_DAY_WEEK_CENTS = 100;
   const API_BASE = 'https://one-more-day-api.ralf-music.workers.dev/api/v1';
+  const DEVICE_TOKEN_KEY='omd-device-token-v1';
+  const deviceToken=String(window.OMD_ACCESS?.token||localStorage.getItem(DEVICE_TOKEN_KEY)||'').trim();
   const state = loadState();
   const walletSyncRuntime={status:state.cloudWallet?.syncedAt?'cached':'none',lastAttemptAt:0,lastError:null};
   let payoutSelectedCents=0;
@@ -41,7 +44,7 @@
     adminRangeType:$('adminRangeType'), adminRangeFrom:$('adminRangeFrom'), adminRangeTo:$('adminRangeTo'), adminApplyRangeBtn:$('adminApplyRangeBtn'),
     absenceRequestBtn:$('absenceRequestBtn'), absenceRequestDialog:$('absenceRequestDialog'), absenceRequestForm:$('absenceRequestForm'), absenceRequestType:$('absenceRequestType'), absenceRequestFrom:$('absenceRequestFrom'), absenceRequestTo:$('absenceRequestTo'), absenceRequestNote:$('absenceRequestNote'), absenceRequestMessage:$('absenceRequestMessage'), closeAbsenceRequestBtn:$('closeAbsenceRequestBtn'),
     pushReminderCard:$('pushReminderCard'), pushPermissionBadge:$('pushPermissionBadge'), enableUserPushBtn:$('enableUserPushBtn'), disableUserPushBtn:$('disableUserPushBtn'), userPushStatus:$('userPushStatus'),
-    adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
+    adminPushSection:$('adminPushSection'), adminPushBadge:$('adminPushBadge'), enableAdminPushBtn:$('enableAdminPushBtn'), disableAdminPushBtn:$('disableAdminPushBtn'), testAdminPushBtn:$('testAdminPushBtn'), adminPushStatus:$('adminPushStatus'),
     adminUserPushBadge:$('adminUserPushBadge'), adminUserTestPushBtn:$('adminUserTestPushBtn'), adminWorkReminderBtn:$('adminWorkReminderBtn'), adminHomeReminderBtn:$('adminHomeReminderBtn'), adminUserPushStatus:$('adminUserPushStatus'),
     miniGamesLaunchCard:$('miniGamesLaunchCard'), openMiniGamesBtn:$('openMiniGamesBtn'), miniGamesDialog:$('miniGamesDialog'), closeMiniGamesBtn:$('closeMiniGamesBtn'), snikkersRunCoverBtn:$('snikkersRunCoverBtn'), snikkersRunDialog:$('snikkersRunDialog'), snikkersRunMount:$('snikkersRunMount'), snikkersFullscreenBtn:$('snikkersFullscreenBtn'), closeSnikkersRunBtn:$('closeSnikkersRunBtn'), snikkersCatchCoverBtn:$('snikkersCatchCoverBtn'), snikkersCatchDialog:$('snikkersCatchDialog'), snikkersCatchFrame:$('snikkersCatchFrame'), closeSnikkersCatchBtn:$('closeSnikkersCatchBtn'), snikkersChaseCoverBtn:$('snikkersChaseCoverBtn'), snikkersChaseDialog:$('snikkersChaseDialog'), snikkersChaseFrame:$('snikkersChaseFrame'), closeSnikkersChaseBtn:$('closeSnikkersChaseBtn'), snikkersMemoryCoverBtn:$('snikkersMemoryCoverBtn'), snikkersMemoryDialog:$('snikkersMemoryDialog'), snikkersMemoryFrame:$('snikkersMemoryFrame'), closeSnikkersMemoryBtn:$('closeSnikkersMemoryBtn'), snikkersPuzzleCoverBtn:$('snikkersPuzzleCoverBtn'), snikkersPuzzleDialog:$('snikkersPuzzleDialog'), snikkersPuzzleFrame:$('snikkersPuzzleFrame'), closeSnikkersPuzzleBtn:$('closeSnikkersPuzzleBtn'), snikkersSlotCoverBtn:$('snikkersSlotCoverBtn'), snikkersSlotDialog:$('snikkersSlotDialog'), snikkersSlotFrame:$('snikkersSlotFrame'), closeSnikkersSlotBtn:$('closeSnikkersSlotBtn')
   };
@@ -214,11 +217,31 @@
   }
   function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 
+  function deviceHeaders(inputHeaders={}){
+    const headers=new Headers(inputHeaders||{});
+    if(deviceToken) headers.set('X-Device-Token',deviceToken);
+    return headers;
+  }
+
   async function apiJson(path, options={}){
-    const response=await fetch(`${API_BASE}${path}`,{cache:'no-store',...options});
+    const {headers:inputHeaders,...rest}=options||{};
+    const response=await fetch(`${API_BASE}${path}`,{
+      cache:'no-store',
+      ...rest,
+      headers:deviceHeaders(inputHeaders)
+    });
     let result=null;
     try{ result=await response.json(); }catch{}
-    if(!response.ok || !result || result.ok!==true) throw new Error(result?.error || `API ${path}`);
+    if(!response.ok || !result || result.ok!==true){
+      if(
+        response.status===401 &&
+        result?.registered===false &&
+        window.OMDAccess?.handleUnauthorized
+      ){
+        window.OMDAccess.handleUnauthorized();
+      }
+      throw new Error(result?.error || `API ${path}`);
+    }
     return result;
   }
   function snapshotFromCloudReward(reward){
@@ -459,6 +482,7 @@
   }
 
   function adminUiEnabled(){
+    if(window.OMD_ACCESS?.device?.device_role!=='ADMIN') return false;
     const q=new URLSearchParams(location.search);
     if(q.get('admin')==='1') localStorage.setItem('omd-admin-ui','1');
     return localStorage.getItem('omd-admin-ui')==='1';
@@ -1108,7 +1132,7 @@
       try{
         const response=await fetch(`${API_BASE}/geo/${target}`,{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:deviceHeaders({'Content-Type':'application/json'}),
           body:JSON.stringify({latitude,longitude,accuracy})
         });
         let result=null;
@@ -1611,7 +1635,9 @@
   async function refreshPushUi(){
     const supported=pushSupported();
     const admin=adminUiEnabled();
-    if(refs.pushReminderCard) refs.pushReminderCard.classList.toggle('hidden',admin);
+    const accessDeviceId=window.OMD_ACCESS?.device?.device_id||'';
+    if(refs.pushReminderCard) refs.pushReminderCard.classList.toggle('hidden',accessDeviceId!=='user-phone');
+    if(refs.adminPushSection) refs.adminPushSection.classList.toggle('hidden',accessDeviceId!=='admin-phone');
     if(!supported){
       if(refs.userPushStatus) refs.userPushStatus.textContent='Push wird auf diesem Gerät/Browser nicht unterstützt.';
       if(refs.enableUserPushBtn) refs.enableUserPushBtn.disabled=true;

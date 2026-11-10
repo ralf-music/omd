@@ -363,3 +363,28 @@ body.snikkers-fullscreen-lock #snikkersRunDialog::backdrop{background:#0b0b0f!im
 
 /* v0.9.28 · Admin Wallet-Korrekturen */
 .admin-wallet-section{display:grid;gap:14px}.admin-wallet-balance{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.035)}.admin-wallet-balance span{color:var(--muted)}.admin-wallet-balance strong{font-size:1.25rem;color:var(--accent)}.admin-wallet-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:12px;align-items:end}.admin-wallet-form label{display:grid;gap:7px}.admin-wallet-form textarea{min-height:76px;resize:vertical}.admin-wallet-form .secondary-btn{grid-column:1/-1}.admin-wallet-history-head{display:flex;justify-content:space-between;align-items:end;gap:12px;padding-top:4px}.admin-wallet-history-head small{color:var(--muted);text-align:right}.admin-wallet-transactions{display:grid;gap:10px}.admin-wallet-row{padding:13px 14px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(255,255,255,.025)}.admin-wallet-row-main{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.admin-wallet-row-copy{display:grid;gap:3px;min-width:0}.admin-wallet-row-copy>span,.admin-wallet-note{color:var(--muted);font-size:.8rem;line-height:1.35;overflow-wrap:anywhere}.admin-wallet-row-actions{display:flex;justify-content:flex-end;align-items:center;margin-top:10px}.admin-wallet-reverse-btn{padding:8px 11px;font-size:.75rem}.admin-wallet-reversed{font-size:.7rem;opacity:.85}.booking-note{display:block;max-width:460px;margin-top:3px;color:var(--muted);line-height:1.35}.admin-wallet-status:empty{display:none}@media(max-width:700px){.admin-wallet-form{grid-template-columns:1fr}.admin-wallet-history-head{align-items:flex-start;flex-direction:column}.admin-wallet-history-head small{text-align:left}.admin-wallet-row-main{align-items:flex-start}.admin-wallet-row .booking-amount{white-space:nowrap}}
+
+
+/* v0.9.30 – Device access gate */
+.public-access-shell .public-access-card{
+  border:1px solid rgba(255,255,255,.10);
+}
+.public-access-shell .public-access-card h2{
+  margin-top:.2rem;
+}
+.public-access-shell .public-games-card{
+  margin-top:1rem;
+}
+.public-brand-icon{
+  cursor:default;
+  pointer-events:none;
+}
+html[data-access="public"] body{
+  min-height:100vh;
+}
+html[data-access="public"] .public-access-shell{
+  display:block;
+}
+html[data-access="private"] #privateAppShell{
+  display:block;
+}

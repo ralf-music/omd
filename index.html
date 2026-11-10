@@ -13,7 +13,47 @@
   <title>One More Day</title>
 </head>
 <body>
-  <div class="app-shell">
+
+  <div id="publicAccessShell" class="app-shell public-access-shell hidden">
+    <header class="hero public-hero">
+      <div class="brand-icon-button public-brand-icon">
+        <img class="brand-icon" src="assets/icons/icon-512.png" alt="One More Day" />
+      </div>
+      <div class="hero-copy">
+        <h1>ONE MORE DAY</h1>
+        <p class="hero-claim">PRIVATE APP</p>
+        <p class="today-date">Öffentlicher Minigame-Bereich</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="card public-access-card">
+        <p class="eyebrow">PRIVATER BEREICH</p>
+        <h2>Dieses Gerät ist nicht registriert.</h2>
+        <p id="publicAccessStatus" class="muted">Gerätefreigabe wird geprüft …</p>
+        <p class="microcopy">Arbeitsguthaben, Buchungen, Wochenstatus, Auszahlungen, Einstellungen und Adminfunktionen sind nur auf den fest registrierten Geräten verfügbar.</p>
+      </section>
+
+      <section class="card mini-games-launch-card public-games-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">MINIGAMES</p>
+            <h2>Snikkers Spielesammlung</h2>
+          </div>
+          <div class="snikkers-launch-badge" aria-hidden="true">🎮</div>
+        </div>
+        <p class="muted snikkers-launch-copy">Run, Catch, Chase, Memory, Puzzle Slide und Slot: Lucky Paws bleiben öffentlich spielbar.</p>
+        <button id="publicOpenMiniGamesBtn" class="secondary-btn" type="button">MINIGAMES ÖFFNEN</button>
+        <p class="microcopy">Die Minispiele und ihre Snikkers-Bilder sind bewusst öffentlich. Sie haben keinen Zugriff auf private App-Daten.</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>One More Day · Öffentlicher Minigame-Bereich</span>
+    </footer>
+  </div>
+
+  <div id="privateAppShell" class="app-shell hidden">
     <header class="hero">
       <button id="joeyMotivationBtn" class="brand-icon-button" type="button" aria-label="Joey Kelly Motivation im Vollbild öffnen">
         <img class="brand-icon" src="assets/icons/icon-512.png" alt="One More Day – Joey Kelly Motivation" />
@@ -173,7 +213,7 @@
     </main>
 
     <footer>
-      <button id="versionBtn" class="version-btn">v0.9.29</button>
+      <button id="versionBtn" class="version-btn">v0.9.30</button>
       <span>One More Day · Kelly Me to Work</span>
     </footer>
   </div>
@@ -472,7 +512,7 @@
         <p id="adminUserPushStatus" class="microcopy">Registrierung wird beim Öffnen geprüft.</p>
       </div>
 
-      <div class="admin-request-section admin-push-section">
+      <div id="adminPushSection" class="admin-request-section admin-push-section">
         <div class="admin-request-section-head">
           <div>
             <p class="eyebrow">PUSH</p>
@@ -619,8 +659,10 @@
   <dialog id="versionDialog">
     <div class="dialog-card">
       <p class="eyebrow">ÄNDERUNGEN</p>
-      <h2>One More Day v0.9.29</h2>
+      <h2>One More Day v0.9.30</h2>
       <ul>
+        <li><strong>v0.9.30:</strong> Private App-Bereiche und alle privaten API-Routen sind auf vier fest registrierte Geräte begrenzt. Nicht registrierte Geräte sehen nur den öffentlichen Snikkers-Minispiele-Bereich.</li>
+        <li><strong>v0.9.30:</strong> Device-Token werden bei privaten API-Aufrufen serverseitig geprüft; Admin-Endpunkte verlangen zusätzlich weiterhin Admin-Gerät und ADMIN_KEY. Push-Abos sind nur auf dem fest registrierten User- bzw. Admin-Handy zulässig.</li>
         <li><strong>v0.9.29:</strong> Jede neu in der Cloud verbuchte Guthabenänderung sendet einen Push ans User-Handy mit Buchungsart, Betrag und aktuellem Kontostand. Wiederholte Syncs bestehender Transaktionen erzeugen keine Doppelmeldung.</li>
         <li><strong>v0.9.28:</strong> Admin kann Guthaben manuell positiv oder negativ buchen; jede manuelle Buchung verlangt einen Grund und wird als eigene Cloud-Transaktion protokolliert.</li>
         <li><strong>v0.9.28:</strong> Bestehende Guthaben-Buchungen können im Adminbereich per Gegenbuchung storniert werden. Originalbuchungen bleiben erhalten und können nicht versehentlich doppelt storniert werden.</li>
@@ -670,10 +712,6 @@
     </div>
   </dialog>
 
-  <script src="data.js"></script>
-  <script src="content.js"></script>
-  <script src="games/game-viewport.js"></script>
-  <script src="games/snikkers-run/snikkers-run.js"></script>
-  <script src="app.js"></script>
+  <script src="access.js"></script>
 </body>
 </html>
